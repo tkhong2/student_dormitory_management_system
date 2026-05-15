@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RoomBuilding", "RoomBuilding", "{A27268A0-130F-492E-81A4-4AF3F1252A78}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ContractStudent", "ContractStudent", "{F6257A42-05A0-4236-9955-D38C0CD77DB4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BillingMaintenance", "BillingMaintenance", "{54F69944-3D1F-43E9-8BEC-B3A2F697C8FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIGateway", "APIGateway\APIGateway.csproj", "{FAA1510F-78E3-4363-8E74-7AC60A02E700}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A27268A0-130F-492E-81A4-4AF3F1252A78} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F6257A42-05A0-4236-9955-D38C0CD77DB4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{54F69944-3D1F-43E9-8BEC-B3A2F697C8FF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5082CCC0-A171-4BBF-94D2-8153D681E634}
+	EndGlobalSection
+EndGlobal
