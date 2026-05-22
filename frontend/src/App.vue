@@ -1,7 +1,11 @@
+<template>
+  <router-view />
+</template>
+
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+// Main entry point
 </script>
 
-<template>
-  <HelloWorld />
-</template>
+<style>
+/* Toàn bộ style chung sẽ nằm ở đây hoặc style.css */
+</style>
