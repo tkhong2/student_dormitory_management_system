@@ -2,63 +2,73 @@
   <div>
     <!-- Hero Section -->
     <section class="hero-section">
-      <v-container style="max-width: 1280px;">
-        <div class="text-center py-16">
-          <h1 class="text-h3 text-md-h2 font-weight-bold mb-4">Đăng ký phòng ký túc xá</h1>
-          <p class="text-h6 text-md-h5 opacity-80 mb-8">Chọn phòng phù hợp với nhu cầu của bạn</p>
-          
-          <!-- Search & Filter -->
-          <v-card class="mx-auto pa-6 rounded-xl elevation-8" max-width="900">
-            <v-row align="center">
-              <v-col cols="12" md="3">
-                <v-select
-                  v-model="filters.building"
-                  :items="buildings"
-                  label="Tòa nhà"
-                  variant="outlined"
-                  density="comfortable"
-                  hide-details
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-select
-                  v-model="filters.roomType"
-                  :items="roomTypes"
-                  label="Loại phòng"
-                  variant="outlined"
-                  density="comfortable"
-                  hide-details
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-select
-                  v-model="filters.priceRange"
-                  :items="priceRanges"
-                  label="Mức giá"
-                  variant="outlined"
-                  density="comfortable"
-                  hide-details
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-btn
-                  color="primary"
-                  size="large"
-                  block
-                  class="font-weight-bold"
-                  @click="searchRooms"
-                >
-                  <v-icon start>mdi-magnify</v-icon>
-                  Tìm kiếm
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-card>
-        </div>
-      </v-container>
+      <div class="hero-overlay">
+        <v-container style="max-width: 1280px;">
+          <div class="text-center py-16">
+            <div class="hero-badge mb-6">
+              <v-icon size="20" class="mr-2">mdi-home-heart</v-icon>
+              <span>TÌM PHÒNG PHÙ HỢP</span>
+            </div>
+            <h1 class="hero-title mb-4">Đăng ký phòng ký túc xá</h1>
+            <p class="hero-subtitle mb-10">Chọn phòng phù hợp với nhu cầu và ngân sách của bạn</p>
+            
+            <!-- Search & Filter -->
+            <v-card class="mx-auto pa-8 rounded-xl elevation-12" max-width="1000" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.98);">
+              <v-row align="center">
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="filters.building"
+                    :items="buildings"
+                    label="Tòa nhà"
+                    variant="outlined"
+                    density="comfortable"
+                    hide-details
+                    clearable
+                    prepend-inner-icon="mdi-office-building"
+                  />
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="filters.roomType"
+                    :items="roomTypes"
+                    label="Loại phòng"
+                    variant="outlined"
+                    density="comfortable"
+                    hide-details
+                    clearable
+                    prepend-inner-icon="mdi-account-group"
+                  />
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="filters.priceRange"
+                    :items="priceRanges"
+                    label="Mức giá"
+                    variant="outlined"
+                    density="comfortable"
+                    hide-details
+                    clearable
+                    prepend-inner-icon="mdi-cash"
+                  />
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-btn
+                    color="primary"
+                    size="large"
+                    block
+                    class="font-weight-bold"
+                    height="48"
+                    @click="searchRooms"
+                  >
+                    <v-icon start>mdi-magnify</v-icon>
+                    Tìm kiếm
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card>
+          </div>
+        </v-container>
+      </div>
     </section>
 
     <!-- Room List Section -->
@@ -510,18 +520,64 @@ const submitRegistration = async () => {
 
 <style scoped>
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.95), rgba(255, 136, 0, 0.9)), url('/images/hero_dormitory.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-overlay {
+  position: relative;
+  z-index: 1;
   color: white;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  letter-spacing: -1px;
+}
+.hero-subtitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  opacity: 0.95;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .room-card {
   transition: all 0.3s ease;
   height: 100%;
+  border: 2px solid transparent;
 }
 
 .room-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(255, 107, 0, 0.2) !important;
+  border-color: #ff6b00;
 }
 
 .room-image {

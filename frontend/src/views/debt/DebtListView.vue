@@ -1,11 +1,8 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Công nợ sinh viên</h1>
-        <p class="text-body-2 text-medium-emphasis">Theo dõi các khoản nợ chưa thanh toán</p>
-      </div>
-      <v-btn prepend-icon="mdi-bell-ring" variant="tonal" color="warning">Nhắc nợ hàng loạt</v-btn>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Công nợ sinh viên</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Theo dõi các khoản nợ chưa thanh toán</p>
     </div>
 
     <v-card style="border:1px solid #e5e7eb">

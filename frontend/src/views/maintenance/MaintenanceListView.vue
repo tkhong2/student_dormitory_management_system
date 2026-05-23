@@ -1,15 +1,12 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6 flex-wrap ga-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Yêu cầu Bảo trì</h1>
-        <p class="text-body-2 text-medium-emphasis">{{ requests.length }} yêu cầu — {{ requests.filter(r=>r.status==='Chờ xử lý').length }} đang chờ</p>
-      </div>
-      <v-btn prepend-icon="mdi-plus" color="primary" @click="dialog=true">Tạo yêu cầu</v-btn>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Yêu cầu Bảo trì</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">{{ requests.length }} yêu cầu — {{ requests.filter(r=>r.status==='Chờ xử lý').length }} đang chờ</p>
     </div>
 
     <!-- Status tabs -->
-    <v-tabs v-model="tab" color="primary" class="mb-6">
+    <v-tabs v-model="tab" color="primary" style="margin-bottom: 16px;">
       <v-tab value="all">Tất cả</v-tab>
       <v-tab value="pending">Chờ xử lý <v-badge :content="requests.filter(r=>r.status==='Chờ xử lý').length" color="warning" inline class="ml-1" /></v-tab>
       <v-tab value="progress">Đang xử lý</v-tab>

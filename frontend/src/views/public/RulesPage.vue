@@ -1,14 +1,26 @@
 <template>
   <div class="rules-page">
-    <section class="banner py-12 text-white">
-      <v-container style="max-width:1280px">
-        <h1 class="text-h3 font-weight-black mb-2">NỘI QUY KTX</h1>
-        <div class="d-flex align-center ga-2 text-caption font-weight-bold opacity-80 uppercase">
-          <router-link to="/" class="text-white text-decoration-none hover-underline">Trang chủ</router-link>
-          <v-icon size="14">mdi-chevron-right</v-icon>
-          <span>Quy định & Nội quy</span>
-        </div>
-      </v-container>
+    <section class="banner">
+      <div class="banner-overlay">
+        <v-container style="max-width:1280px">
+          <div class="banner-content">
+            <div class="banner-badge mb-4">
+              <v-icon size="18" class="mr-2">mdi-shield-check-outline</v-icon>
+              <span>QUY ĐỊNH & NỘI QUY</span>
+            </div>
+            <h1 class="banner-title mb-4">NỘI QUY KÝ TÚC XÁ</h1>
+            <p class="banner-subtitle mb-6">Quy định chung về sinh hoạt, an ninh và trách nhiệm của sinh viên nội trú</p>
+            <div class="d-flex align-center ga-2 banner-breadcrumb">
+              <router-link to="/" class="text-white text-decoration-none hover-underline">
+                <v-icon size="16" class="mr-1">mdi-home</v-icon>
+                Trang chủ
+              </router-link>
+              <v-icon size="16">mdi-chevron-right</v-icon>
+              <span>Nội quy</span>
+            </div>
+          </div>
+        </v-container>
+      </div>
     </section>
 
     <v-container class="py-16" style="max-width:1280px">
@@ -82,11 +94,68 @@ const documents = [{ name: 'Nội quy đầy đủ (PDF)' }, { name: 'Quy địn
 </script>
 
 <style scoped>
-.banner { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
+.banner { 
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.95), rgba(255, 136, 0, 0.9)), url('/images/hero_dormitory.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.banner-overlay {
+  position: relative;
+  z-index: 1;
+  padding: 100px 0 80px;
+  color: white;
+}
+.banner-content {
+  max-width: 700px;
+}
+.banner-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.banner-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  letter-spacing: -1px;
+}
+.banner-subtitle {
+  font-size: 1.2rem;
+  font-weight: 500;
+  opacity: 0.95;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.banner-breadcrumb {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+}
 .section-title { font-size: 1.8rem; font-weight: 900; color: #ff6b00; position: relative; padding-left: 20px; }
 .section-title::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #ff6b00; border-radius: 3px; }
 .rule-list { list-style: disc; padding-left: 20px; }
 .rule-list li { margin-bottom: 12px; }
 .sticky-top { position: sticky; top: 100px; }
 .doc-link:hover { border-color: #ff6b00 !important; color: #ff6b00; }
+.hover-underline:hover { text-decoration: underline; }
 </style>

@@ -1,10 +1,8 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Sơ đồ tầng</h1>
-        <p class="text-body-2 text-medium-emphasis">Xem trực quan trạng thái phòng theo từng tầng</p>
-      </div>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Sơ đồ tầng</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Xem trực quan trạng thái phòng theo từng tầng</p>
     </div>
 
     <v-card class="pa-6" style="border:1px solid #e5e7eb">

@@ -1,150 +1,110 @@
 <template>
-  <v-app>
-    <v-container fluid class="pa-0 fill-height">
-      <v-row no-gutters class="fill-height">
-        <!-- Left Panel - Brand Section -->
-        <v-col 
-          cols="12" 
-          md="6" 
-          class="d-none d-md-flex align-center justify-center text-white left-panel"
+  <div class="login-container">
+    <!-- Back Button -->
+    <router-link to="/" class="back-button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+      </svg>
+      Về trang chủ
+    </router-link>
+
+    <!-- Login Card -->
+    <div class="login-card">
+      <!-- Logo & Brand as Header -->
+      <div class="login-header brand-header">
+        <img src="/images/logo.png" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: -4px;" alt="DNU Logo" />
+        <div class="brand-text">
+          <div class="brand-title">Đăng nhập</div>
+        </div>
+        <p style="margin-top: 8px;">Nhập thông tin tài khoản để truy cập hệ thống quản lý ký túc xá.</p>
+      </div>
+
+      <a-form 
+        :model="form"
+        @finish="handleLogin"
+        layout="vertical"
+      >
+        <a-form-item 
+          label="MÃ SINH VIÊN"
+          name="username"
+          :rules="[{ required: true, message: 'Vui lòng nhập mã sinh viên!' }]"
         >
-          <div class="pa-12">
-            <div class="brand-logo mb-8">
-              <v-icon size="60" color="white">mdi-white-balance-sunny</v-icon>
-            </div>
-            
-            <h1 class="text-h2 font-weight-black mb-4">DNU KTX</h1>
-            <div class="brand-divider mb-8"></div>
-            
-            <p class="text-h6 font-weight-regular mb-12" style="opacity: 0.95; line-height: 1.8; max-width: 500px;">
-              Hệ thống quản lý ký túc xá thông minh — Môi trường sống lý tưởng cho sinh viên Đại học Đại Nam.
-            </p>
-            
-            <div class="features-list">
-              <div class="feature-item">
-                <v-icon color="white" size="24">mdi-check-circle</v-icon>
-                <span class="text-body-1">Quản lý phòng hiện đại</span>
-              </div>
-              <div class="feature-item">
-                <v-icon color="white" size="24">mdi-check-circle</v-icon>
-                <span class="text-body-1">Thanh toán điện tử tiện lợi</span>
-              </div>
-              <div class="feature-item">
-                <v-icon color="white" size="24">mdi-check-circle</v-icon>
-                <span class="text-body-1">Hỗ trợ SV 24/7</span>
-              </div>
-            </div>
-          </div>
-        </v-col>
+          <a-input 
+            v-model:value="form.username" 
+            size="large"
+            placeholder="VD: DNU2021xxxxx"
+          >
+            <template #prefix>
+              <UserOutlined style="color: #bfbfbf;" />
+            </template>
+          </a-input>
+        </a-form-item>
 
-        <!-- Right Panel - Login Form -->
-        <v-col 
-          cols="12" 
-          md="6" 
-          class="d-flex align-center justify-center right-panel"
+        <a-form-item 
+          label="MẬT KHẨU"
+          name="password"
+          :rules="[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]"
         >
-          <div class="login-container">
-            <!-- Mobile Logo -->
-            <div class="d-md-none text-center mb-8">
-              <div class="mobile-logo mb-3">
-                <v-icon size="48" color="primary">mdi-white-balance-sunny</v-icon>
-              </div>
-              <h2 class="text-h4 font-weight-black text-primary">DNU KTX</h2>
-            </div>
+          <a-input-password 
+            v-model:value="form.password" 
+            size="large"
+            placeholder="••••••••"
+          >
+            <template #prefix>
+              <LockOutlined style="color: #bfbfbf;" />
+            </template>
+          </a-input-password>
+        </a-form-item>
 
-            <!-- Login Header -->
-            <div class="mb-8">
-              <h2 class="text-h4 font-weight-bold mb-2">Đăng nhập</h2>
-              <p class="text-body-1 text-medium-emphasis">Nhập thông tin tài khoản để truy cập hệ thống</p>
-            </div>
+        <div class="form-options">
+          <a-checkbox v-model:checked="rememberMe">
+            Ghi nhớ đăng nhập
+          </a-checkbox>
+          <a href="#" class="forgot-link">Quên mật khẩu?</a>
+        </div>
 
-            <!-- Login Form -->
-            <v-form @submit.prevent="handleLogin">
-              <div class="mb-6">
-                <label class="form-label">Tên đăng nhập / Mã SV</label>
-                <v-text-field
-                  v-model="form.username"
-                  placeholder="VD: admin, staff, hoặc sv001"
-                  prepend-inner-icon="mdi-account-outline"
-                  variant="outlined"
-                  color="primary"
-                  density="comfortable"
-                  :error-messages="errors.username"
-                  hide-details="auto"
-                />
-              </div>
+        <a-button 
+          type="primary" 
+          html-type="submit"
+          size="large" 
+          block
+          :loading="loading"
+          class="login-button"
+        >
+          Đăng nhập
+        </a-button>
 
-              <div class="mb-4">
-                <label class="form-label">Mật khẩu</label>
-                <v-text-field
-                  v-model="form.password"
-                  placeholder="Nhập mật khẩu của bạn"
-                  prepend-inner-icon="mdi-lock-outline"
-                  :type="showPw ? 'text' : 'password'"
-                  :append-inner-icon="showPw ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
-                  @click:append-inner="showPw = !showPw"
-                  variant="outlined"
-                  color="primary"
-                  density="comfortable"
-                  :error-messages="errors.password"
-                  @keyup.enter="handleLogin"
-                  hide-details="auto"
-                />
-              </div>
+        <div class="divider-text">hoặc</div>
 
-              <div class="d-flex align-center justify-space-between mb-6">
-                <v-checkbox 
-                  label="Ghi nhớ đăng nhập" 
-                  density="compact" 
-                  hide-details 
-                  color="primary"
-                />
-                <a href="#" class="text-primary text-decoration-none font-weight-medium">Quên mật khẩu?</a>
-              </div>
+        <div class="register-text">
+          Chưa có tài khoản? <a href="#" class="register-link">Liên hệ quản trị viên</a>
+        </div>
+      </a-form>
+    </div>
 
-              <v-btn 
-                type="submit" 
-                block 
-                size="large"
-                color="primary" 
-                :loading="loading"
-                class="font-weight-bold text-none mb-6"
-                style="background-color: #ff6b00;"
-              >
-                Đăng nhập ngay
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
 
-              <div class="text-center">
-                <p class="text-body-2 text-medium-emphasis">
-                  Bạn chưa có tài khoản? 
-                  <a href="#" class="text-primary font-weight-bold text-decoration-none">Liên hệ Quản trị viên</a>
-                </p>
-              </div>
-            </v-form>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-app>
+  </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { 
+  LockOutlined,
+  UserOutlined
+} from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const showPw = ref(false)
 const loading = ref(false)
+const rememberMe = ref(false)
 const form = reactive({ username: '', password: '' })
-const errors = reactive({ username: '', password: '' })
 
 const handleLogin = () => {
-  errors.username = form.username ? '' : 'Vui lòng nhập tên đăng nhập'
-  errors.password = form.password ? '' : 'Vui lòng nhập mật khẩu'
-  if (errors.username || errors.password) return
+  if (!form.username || !form.password) {
+    return
+  }
 
   loading.value = true
   setTimeout(() => {
@@ -162,104 +122,238 @@ const handleLogin = () => {
 </script>
 
 <style scoped>
-.left-panel {
-  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.left-panel::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-  animation: pulse 15s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.2); opacity: 0.8; }
-}
-
-.brand-logo {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.brand-divider {
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(90deg, #ff6b00, transparent);
-  border-radius: 2px;
-}
-
-.features-list {
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ff8800 0%, #ff6b00 100%);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 0;
-}
-
-.right-panel {
-  background-color: #f8fafc;
-}
-
-.login-container {
-  width: 100%;
-  max-width: 480px;
-  padding: 32px;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.mobile-logo {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #ff8800, #ff6b00);
-  border-radius: 16px;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 40px 20px;
+  position: relative;
 }
 
-.form-label {
-  display: block;
+/* Back Button */
+.back-button {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+/* Brand Header */
+.brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand-header .brand-text {
+  color: #ff6b00;
+  text-align: center;
+}
+
+.brand-header .brand-title {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ff6b00 0%, #ffaa00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #ff6b00;
+}
+
+
+
+/* Login Card */
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 24px;
+  padding: 32px 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  margin: 0 0 20px 0;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+}
+
+.login-header p {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Form Styling */
+:deep(.ant-form-item-label > label) {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8c8c8c;
+  letter-spacing: 0.5px;
+}
+
+:deep(.ant-input-affix-wrapper),
+:deep(.ant-input-password) {
+  border-radius: 10px;
+  border: 2px solid #e8e8e8;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+:deep(.ant-input-affix-wrapper:hover),
+:deep(.ant-input-password:hover) {
+  border-color: #ffb366;
+}
+
+:deep(.ant-input-affix-wrapper:focus),
+:deep(.ant-input-affix-wrapper-focused),
+:deep(.ant-input-password:focus) {
+  border-color: #ff6b00;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.15);
+}
+
+:deep(.ant-input) {
+  font-size: 15px;
+  color: #1a1a1a;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #d9d9d9;
+}
+
+:deep(.ant-input-prefix) {
+  margin-right: 12px;
+  font-size: 16px;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+:deep(.ant-checkbox-wrapper) {
+  font-size: 14px;
+  color: #666;
+}
+
+:deep(.ant-checkbox-checked .ant-checkbox-inner) {
+  background-color: #ff6b00;
+  border-color: #ff6b00;
+}
+
+.forgot-link {
+  color: #ff6b00;
+  text-decoration: none;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
-  margin-bottom: 8px;
 }
 
-:deep(.v-field) {
-  border-radius: 12px;
+.forgot-link:hover {
+  color: #ff8800;
 }
 
-:deep(.v-btn) {
-  border-radius: 12px;
-  text-transform: none;
-  letter-spacing: 0;
+.login-button {
+  height: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff8800 0%, #ff6b00 100%);
+  border: none;
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-@media (max-width: 960px) {
-  .login-container {
-    box-shadow: none;
-    border-radius: 0;
+.login-button:hover {
+  background: linear-gradient(135deg, #ff9900 0%, #ff7700 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 107, 0, 0.4);
+}
+
+.divider-text {
+  text-align: center;
+  color: #bfbfbf;
+  font-size: 13px;
+  margin: 24px 0;
+  position: relative;
+}
+
+.divider-text::before,
+.divider-text::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e8e8e8;
+}
+
+.divider-text::before {
+  left: 0;
+}
+
+.divider-text::after {
+  right: 0;
+}
+
+.register-text {
+  text-align: center;
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.register-link {
+  color: #ff6b00;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link:hover {
+  color: #ff8800;
+}
+
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .back-button {
+    position: static;
+    margin-bottom: 20px;
+  }
+  
+  .login-card {
+    padding: 32px 24px;
+    margin: 20px 0;
   }
 }
 </style>

@@ -1,46 +1,37 @@
 <template>
-  <v-container fluid class="pa-4">
-    <div class="d-flex align-center justify-space-between mb-8">
-      <div>
-        <h2 class="text-h4 font-weight-black mb-1">Quản lý Sinh viên</h2>
-        <p class="text-subtitle-2 text-medium-emphasis">Tổng số: {{ students.length }} sinh viên nội trú</p>
-      </div>
-      <v-btn prepend-icon="mdi-account-plus" color="primary" class="rounded-lg font-weight-bold">Thêm sinh viên</v-btn>
+  <div>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Quản lý Sinh viên</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Tổng số: {{ students.length }} sinh viên nội trú</p>
     </div>
 
-    <v-card flat border class="rounded-xl overflow-hidden">
-      <v-card-title class="pa-6 d-flex flex-wrap align-center ga-4">
+    <v-card flat border style="border:1px solid #e5e7eb; background: #fafafa;">
+      <v-card-title class="pa-4 d-flex flex-wrap align-center" style="gap: 12px;">
         <v-text-field
           v-model="search"
           placeholder="Tìm theo tên, mã SV, CMND..."
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
-          density="comfortable"
-          rounded="lg"
+          density="compact"
           hide-details
-          class="max-width-300 flex-grow-1"
+          style="max-width: 300px; flex: 1;"
         />
         <v-select
           placeholder="Tòa nhà"
           :items="['Tất cả', 'Tòa A1', 'Tòa A2', 'Tòa B1']"
           variant="outlined"
-          density="comfortable"
-          rounded="lg"
+          density="compact"
           hide-details
-          class="max-width-150"
+          style="max-width: 150px;"
         />
         <v-select
           placeholder="Trạng thái"
           :items="['Đang ở', 'Đã rời đi', 'Sắp hết hạn']"
           variant="outlined"
-          density="comfortable"
-          rounded="lg"
+          density="compact"
           hide-details
-          class="max-width-150"
+          style="max-width: 150px;"
         />
-        <v-spacer class="d-none d-lg-block" />
-        <v-btn icon="mdi-refresh" variant="text" />
-        <v-btn icon="mdi-filter-variant" variant="text" />
       </v-card-title>
 
       <v-data-table
@@ -73,7 +64,7 @@
         </template>
       </v-data-table>
     </v-card>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
@@ -100,7 +91,5 @@ const students = ref([
 </script>
 
 <style scoped>
-.max-width-300 { max-width: 300px; }
-.max-width-150 { max-width: 150px; }
 :deep(.v-data-table__th) { font-weight: 800 !important; text-transform: uppercase; font-size: 11px !important; letter-spacing: 0.5px; color: #64748b !important; }
 </style>

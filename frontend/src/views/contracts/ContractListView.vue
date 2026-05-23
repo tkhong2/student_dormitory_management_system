@@ -1,15 +1,12 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6 flex-wrap ga-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Hợp đồng thuê phòng</h1>
-        <p class="text-body-2 text-medium-emphasis">Quản lý hợp đồng KTX của sinh viên</p>
-      </div>
-      <v-btn prepend-icon="mdi-plus" color="primary" @click="dialog=true">Tạo hợp đồng mới</v-btn>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Hợp đồng thuê phòng</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Quản lý hợp đồng KTX của sinh viên</p>
     </div>
 
     <!-- Summary -->
-    <v-row class="mb-6">
+    <v-row style="margin-bottom: 16px;">
       <v-col cols="6" md="3">
         <v-card class="pa-4" style="border:1px solid #e5e7eb">
           <div class="d-flex align-center ga-3">

@@ -4,9 +4,9 @@
     <v-navigation-drawer v-model="drawer" width="280" border="none" class="elevation-4">
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
-        <router-link to="/admin" class="d-flex align-center ga-3 pa-8 text-decoration-none border-b">
+        <router-link to="/admin" class="d-flex align-center ga-2 pa-8 text-decoration-none border-b">
           <div class="uni-logo-sm">
-            <v-icon size="24" color="white">mdi-white-balance-sunny</v-icon>
+            <img src="/images/logo.png" style="width: 100%; height: 100%; object-fit: contain;" alt="DNU Logo" />
           </div>
           <div>
             <div class="text-h6 font-weight-black text-primary leading-tight">DNU KTX</div>
@@ -36,7 +36,7 @@
         </div>
 
         <!-- User Info Bottom -->
-        <div class="pa-6">
+        <div class="user-info-fixed">
           <v-card flat color="grey-darken-4" class="pa-4 rounded-xl d-flex align-center ga-3">
             <v-avatar size="40">
               <v-img src="https://i.pravatar.cc/150?u=admin" />
@@ -90,7 +90,7 @@
 
     <!-- Content Area -->
     <v-main>
-      <v-container fluid class="pa-2 pa-md-3" style="max-width: 1600px">
+      <v-container fluid class="pa-6" style="max-width: 1600px">
         <router-view v-slot="{ Component }">
           <transition name="page" mode="out-in">
             <component :is="Component" />
@@ -130,7 +130,18 @@ const logout = () => { localStorage.clear(); router.push('/login') }
 </script>
 
 <style scoped>
-.uni-logo-sm { width: 34px; height: 34px; background: linear-gradient(135deg, #ff8800, #ff6b00); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.uni-logo-sm { 
+  width: 60px; 
+  height: 60px; 
+  background: white; 
+  border-radius: 8px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+  flex-shrink: 0;
+}
 .text-primary { color: #ff6b00 !important; }
 .max-width-300 { max-width: 300px; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -141,5 +152,16 @@ const logout = () => { localStorage.clear(); router.push('/login') }
 
 .search-field :deep(.v-field--focused .v-field__outline) {
   border-color: #ff6b00 !important;
+}
+
+.user-info-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 280px;
+  padding: 16px;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+  z-index: 10;
 }
 </style>

@@ -4,20 +4,61 @@
     <section class="hero">
       <v-carousel
         cycle
-        height="550"
+        height="650"
         hide-delimiter-background
         show-arrows="hover"
+        :interval="5000"
       >
         <v-carousel-item v-for="(slide, i) in slides" :key="i" :src="slide.image" cover>
           <div class="hero-overlay">
             <v-container style="max-width:1280px">
-              <v-row>
+              <v-row align="center" style="height: 100%;">
                 <v-col cols="12" md="8" lg="7">
+                  <div class="hero-badge mb-6">
+                    <v-icon size="20" class="mr-2">mdi-shield-check</v-icon>
+                    <span>HỆ THỐNG KÝ TÚC XÁ HIỆN ĐẠI</span>
+                  </div>
                   <h1 class="hero-title">{{ slide.title }}</h1>
                   <p class="hero-subtitle">{{ slide.desc }}</p>
-                  <div class="d-flex ga-4 mt-8">
-                    <v-btn color="warning" size="x-large" class="font-weight-bold px-8 rounded-lg" to="/login">ĐĂNG KÝ NGAY</v-btn>
-                    <v-btn variant="outlined" color="white" size="x-large" class="font-weight-bold px-8 rounded-lg">XEM THỦ TỤC</v-btn>
+                  <div class="d-flex ga-4 mt-10 flex-wrap">
+                    <v-btn 
+                      color="white" 
+                      size="x-large" 
+                      class="font-weight-bold px-10 rounded-xl text-primary" 
+                      height="60"
+                      to="/rooms"
+                      elevation="8"
+                    >
+                      <v-icon class="mr-2">mdi-home-search</v-icon>
+                      ĐĂNG KÝ PHÒNG
+                    </v-btn>
+                    <v-btn 
+                      variant="outlined" 
+                      color="white" 
+                      size="x-large" 
+                      class="font-weight-bold px-10 rounded-xl" 
+                      height="60"
+                      to="/about"
+                    >
+                      <v-icon class="mr-2">mdi-information</v-icon>
+                      TÌM HIỂU THÊM
+                    </v-btn>
+                  </div>
+
+                  <!-- Stats Row -->
+                  <div class="hero-stats mt-12">
+                    <div class="stat-item">
+                      <div class="stat-value">2.000+</div>
+                      <div class="stat-label">Sinh viên</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-value">500+</div>
+                      <div class="stat-label">Phòng ở</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-value">24/7</div>
+                      <div class="stat-label">Bảo vệ</div>
+                    </div>
                   </div>
                 </v-col>
               </v-row>
@@ -132,7 +173,7 @@
 
 <script setup>
 const slides = [
-  { title: 'KHÔNG GIAN SỐNG LÝ TƯỞNG', desc: 'Hệ thống KTX hiện đại, tiện nghi với đầy đủ các khu chức năng hỗ trợ học tập và giải trí tại Đại học Đại Nam.', image: '/images/hero_dormitory.png' },
+  { title: 'Không gian sống lý tưởng', desc: 'Hệ thống KTX hiện đại, tiện nghi với đầy đủ các khu chức năng hỗ trợ học tập và giải trí tại Đại học Đại Nam.', image: '/images/hero_dormitory.png' },
   { title: 'AN TOÀN & HIỆN ĐẠI', desc: 'Môi trường sinh hoạt kỷ luật, văn minh giúp sinh viên an tâm học tập và rèn luyện kỹ năng sống.', image: '/images/student_life.png' }
 ]
 
@@ -164,9 +205,75 @@ const statsItems = [
 </script>
 
 <style scoped>
-.hero-overlay { height: 100%; display: flex; align-items: center; background: linear-gradient(90deg, rgba(255,107,0,0.8) 0%, rgba(255,107,0,0.4) 100%); color: white; }
-.hero-title { font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 24px; text-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-.hero-subtitle { font-size: 1.25rem; font-weight: 500; opacity: 0.9; max-width: 600px; line-height: 1.6; }
+.hero-overlay { 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  background: linear-gradient(135deg, rgba(255,107,0,0.95) 0%, rgba(255,136,0,0.85) 50%, rgba(255,107,0,0.75) 100%);
+  color: white; 
+  position: relative;
+}
+.hero-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.hero-title { 
+  font-size: 3.5rem; 
+  font-weight: 900; 
+  line-height: 1.1; 
+  margin-bottom: 24px; 
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  letter-spacing: -1px;
+}
+.hero-subtitle { 
+  font-size: 1.25rem; 
+  font-weight: 500; 
+  opacity: 0.95; 
+  max-width: 600px; 
+  line-height: 1.7;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Hero Stats */
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  align-items: center;
+}
+.stat-item {
+  text-align: left;
+}
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+}
 
 .info-card { transition: all .3s; }
 .info-card:hover { transform: translateY(-5px); border-color: #ff6b00 !important; box-shadow: 0 10px 30px rgba(255,107,0,0.1) !important; }

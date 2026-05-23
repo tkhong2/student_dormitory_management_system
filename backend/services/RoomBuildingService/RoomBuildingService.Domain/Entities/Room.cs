@@ -11,6 +11,7 @@ namespace RoomBuildingService.Domain.Entities
         public Guid RoomTypeId { get; set; }
         public RoomStatus Status { get; set; } = RoomStatus.Available;
         public int CurrentOccupancy { get; set; } = 0;
+        public string? ImageUrl { get; set; }
 
         // Navigation properties
         public Building? Building { get; set; }

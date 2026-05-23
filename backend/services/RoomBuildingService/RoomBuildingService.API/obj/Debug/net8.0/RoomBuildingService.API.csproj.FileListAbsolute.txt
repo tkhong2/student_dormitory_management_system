@@ -1,0 +1,11 @@
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.csproj.AssemblyReference.cache
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.GeneratedMSBuildEditorConfig.editorconfig
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.AssemblyInfoInputs.cache
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.AssemblyInfo.cs
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.csproj.CoreCompileInputs.cache
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.MvcApplicationPartsAssemblyInfo.cs
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.MvcApplicationPartsAssemblyInfo.cache
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.sourcelink.json
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.dll
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\refint\RoomBuildingService.API.dll
+F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.API\obj\Debug\net8.0\RoomBuildingService.API.pdb

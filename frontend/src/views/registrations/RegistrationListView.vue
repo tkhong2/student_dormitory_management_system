@@ -1,15 +1,12 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6 flex-wrap ga-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Đăng ký phòng</h1>
-        <p class="text-body-2 text-medium-emphasis">Quản lý các đơn đăng ký phòng ở của sinh viên</p>
-      </div>
-      <v-btn prepend-icon="mdi-plus" color="primary" @click="dialog=true">Tạo đơn đăng ký</v-btn>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Đăng ký phòng</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Quản lý các đơn đăng ký phòng ở của sinh viên</p>
     </div>
 
     <!-- Stats -->
-    <v-row class="mb-6">
+    <v-row style="margin-bottom: 16px;">
       <v-col v-for="s in regStats" :key="s.label" cols="6" md="3">
         <v-card class="pa-4 text-center" style="border:1px solid #e5e7eb">
           <div class="text-h5 font-weight-bold" :class="'text-'+s.color">{{ s.value }}</div>

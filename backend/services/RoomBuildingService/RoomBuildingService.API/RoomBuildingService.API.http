@@ -1,6 +1,106 @@
-@RoomBuildingService.API_HostAddress = http://localhost:5119
+### RoomBuildingService API Tests
+@baseUrl = https://localhost:7037/api
 
-GET {{RoomBuildingService.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### Get all buildings
+GET {{baseUrl}}/buildings
+
+### Get building by ID
+GET {{baseUrl}}/buildings/11111111-1111-1111-1111-111111111111
+
+### Create new building
+POST {{baseUrl}}/buildings
+Content-Type: application/json
+
+{
+  "name": "Tòa E - Nữ",
+  "description": "Tòa nhà mới dành cho sinh viên nữ",
+  "numberOfFloors": 7,
+  "type": "Female"
+}
+
+### Update building
+PUT {{baseUrl}}/buildings/11111111-1111-1111-1111-111111111111
+Content-Type: application/json
+
+{
+  "name": "Tòa A - Nam (Đã sửa)",
+  "description": "Tòa nhà dành cho sinh viên nam, 8 tầng - Đã cải tạo",
+  "numberOfFloors": 8,
+  "type": "Male"
+}
+
+### Delete building
+DELETE {{baseUrl}}/buildings/11111111-1111-1111-1111-111111111111
 
 ###
+
+### Get all room types
+GET {{baseUrl}}/roomtypes
+
+### Get room type by ID
+GET {{baseUrl}}/roomtypes/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+
+### Create new room type
+POST {{baseUrl}}/roomtypes
+Content-Type: application/json
+
+{
+  "name": "Phòng 3 người",
+  "price": 600000,
+  "capacity": 3,
+  "description": "Phòng cao cấp 3 người, đầy đủ tiện nghi"
+}
+
+### Update room type
+PUT {{baseUrl}}/roomtypes/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+Content-Type: application/json
+
+{
+  "name": "Phòng 4 người (Đã cập nhật)",
+  "price": 550000,
+  "capacity": 4,
+  "description": "Phòng tiêu chuẩn 4 người, có điều hòa, nước nóng - Giá mới"
+}
+
+### Delete room type
+DELETE {{baseUrl}}/roomtypes/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+
+###
+
+### Get all rooms
+GET {{baseUrl}}/rooms
+
+### Get room by ID (use actual ID from GetAll response)
+# GET {{baseUrl}}/rooms/[REPLACE_WITH_ACTUAL_ID]
+
+### Get rooms by building ID
+GET {{baseUrl}}/rooms/building/11111111-1111-1111-1111-111111111111
+
+### Create new room
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "E101",
+  "floor": 1,
+  "buildingId": "11111111-1111-1111-1111-111111111111",
+  "roomTypeId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "status": "Available",
+  "currentOccupancy": 0
+}
+
+### Update room (use actual ID from GetAll response)
+# PUT {{baseUrl}}/rooms/[REPLACE_WITH_ACTUAL_ID]
+# Content-Type: application/json
+#
+# {
+#   "roomNumber": "E101",
+#   "floor": 1,
+#   "buildingId": "11111111-1111-1111-1111-111111111111",
+#   "roomTypeId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+#   "status": "Occupied",
+#   "currentOccupancy": 4
+# }
+
+### Delete room (use actual ID from GetAll response)
+# DELETE {{baseUrl}}/rooms/[REPLACE_WITH_ACTUAL_ID]

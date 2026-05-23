@@ -4,9 +4,9 @@
     <v-navigation-drawer v-model="drawer" width="280" border="none" class="elevation-4">
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
-        <router-link to="/student" class="d-flex align-center ga-3 pa-8 text-decoration-none border-b">
+        <router-link to="/student" class="d-flex align-center ga-2 pa-8 text-decoration-none border-b">
           <div class="uni-logo-sm">
-            <v-icon size="24" color="white">mdi-white-balance-sunny</v-icon>
+            <img src="/images/logo.png" style="width: 100%; height: 100%; object-fit: contain;" alt="DNU Logo" />
           </div>
           <div>
             <div class="text-h6 font-weight-black text-primary leading-tight">DNU KTX</div>
@@ -112,7 +112,18 @@ const logout = () => { localStorage.clear(); router.push('/login') }
 </script>
 
 <style scoped>
-.uni-logo-sm { width: 34px; height: 34px; background: linear-gradient(135deg, #ff8800, #ff6b00); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.uni-logo-sm { 
+  width: 60px; 
+  height: 60px; 
+  background: white; 
+  border-radius: 8px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+  flex-shrink: 0;
+}
 .text-primary { color: #ff6b00 !important; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 </style>

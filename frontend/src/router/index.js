@@ -32,9 +32,9 @@ const routes = [
   // ══ TRANG QUẢN TRỊ ══════════════════════════
   {
     path: '/admin',
-    component: () => import('../layouts/DefaultLayout.vue'),
+    component: () => import('../layouts/DefaultLayoutAnt.vue'),
     children: [
-      { path: '', name: 'dashboard', meta: { title: 'Dashboard' }, component: () => import('../views/dashboard/DashboardView.vue') },
+      { path: '', name: 'dashboard', meta: { title: 'Dashboard' }, component: () => import('../views/dashboard/DashboardViewAnt.vue') },
       { path: 'buildings', name: 'buildings', meta: { title: 'Tòa nhà' }, component: () => import('../views/buildings/BuildingListView.vue') },
       { path: 'room-types', name: 'room-types', meta: { title: 'Loại phòng' }, component: () => import('../views/room-types/RoomTypeListView.vue') },
       { path: 'rooms', name: 'rooms', meta: { title: 'Phòng ở' }, component: () => import('../views/rooms/RoomListView.vue') },

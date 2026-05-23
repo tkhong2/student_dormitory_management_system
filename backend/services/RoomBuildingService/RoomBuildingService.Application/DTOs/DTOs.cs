@@ -7,6 +7,7 @@ namespace RoomBuildingService.Application.DTOs
         public string Description { get; set; } = string.Empty;
         public int NumberOfFloors { get; set; }
         public string Type { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
     }
 
     public class RoomTypeDto
@@ -27,5 +28,6 @@ namespace RoomBuildingService.Application.DTOs
         public Guid RoomTypeId { get; set; }
         public string Status { get; set; } = string.Empty;
         public int CurrentOccupancy { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

@@ -1,15 +1,12 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6 flex-wrap ga-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Quản lý Người dùng</h1>
-        <p class="text-body-2 text-medium-emphasis">Quản lý tài khoản Admin, Nhân viên và Sinh viên</p>
-      </div>
-      <v-btn prepend-icon="mdi-account-plus" color="primary" @click="dialog=true">Thêm người dùng</v-btn>
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Quản lý Người dùng</h1>
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Quản lý tài khoản Admin, Nhân viên và Sinh viên</p>
     </div>
 
     <!-- Role stats -->
-    <v-row class="mb-6">
+    <v-row style="margin-bottom: 16px;">
       <v-col v-for="r in roleStats" :key="r.role" cols="12" sm="4">
         <v-card class="pa-5 d-flex align-center ga-4" style="border:1px solid #e5e7eb">
           <v-avatar :color="r.bg" size="48" rounded="lg">
