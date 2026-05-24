@@ -16,7 +16,7 @@
         <div class="brand-text">
           <div class="brand-title">Đăng nhập</div>
         </div>
-        <p style="margin-top: 8px;">Nhập thông tin tài khoản để truy cập hệ thống quản lý ký túc xá.</p>
+        <!-- <p style="margin-top: 8px;">Nhập thông tin tài khoản để truy cập hệ thống quản lý ký túc xá.</p> -->
       </div>
 
       <a-form 
