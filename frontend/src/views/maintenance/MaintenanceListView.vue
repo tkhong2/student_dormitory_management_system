@@ -66,13 +66,24 @@ import { ref, computed } from 'vue'
 const tab = ref('all')
 const dialog = ref(false)
 
-const requests = ref([
-  { id:1,title:'Hỏng vòi nước',room:'101-A1',student:'Nguyễn Văn An',date:'15/05/2026',status:'Chờ xử lý',priority:'Bình thường',desc:'Vòi nước trong nhà vệ sinh bị rò rỉ mạnh, cần thay mới gấp.' },
-  { id:2,title:'Cháy bóng đèn',room:'202-B2',student:'Trần Thị Bình',date:'14/05/2026',status:'Đang xử lý',priority:'Bình thường',desc:'Bóng đèn chính phòng bị hỏng, hiện tại rất tối.' },
-  { id:3,title:'Hỏng khóa cửa',room:'305-C1',student:'Võ Thanh Phong',date:'15/05/2026',status:'Chờ xử lý',priority:'Khẩn cấp',desc:'Khóa cửa chính bị kẹt, không thể đóng được. Cần sửa gấp để đảm bảo an toàn.' },
-  { id:4,title:'Điều hòa không mát',room:'105-A2',student:'Ngô Thị Giang',date:'12/05/2026',status:'Hoàn thành',priority:'Bình thường',desc:'Điều hòa chạy nhưng không ra hơi lạnh. Đã nạp gas xong.' },
-  { id:5,title:'Tắc bồn rửa',room:'203-B1',student:'Phạm Hoàng Duy',date:'16/05/2026',status:'Chờ xử lý',priority:'Bình thường',desc:'Bồn rửa mặt bị tắc, nước thoát rất chậm.' },
-])
+
+import maintenanceRequestService from '@/services/maintenanceRequestService'
+import { onMounted } from 'vue'
+const requests = ref([])
+onMounted(async () => {
+  const res = await maintenanceRequestService.getAll()
+  // Giả sử API trả về đúng định dạng, nếu cần map lại thì xử lý ở đây
+  requests.value = res.data.map(r => ({
+    id: r.id,
+    title: r.description?.slice(0, 20) || '', // hoặc r.title nếu có
+    room: r.roomId || '', // cần map tên nếu có API room
+    student: r.studentId || '', // cần map tên nếu có API student
+    date: new Date(r.createdAt).toLocaleDateString('vi-VN'),
+    status: r.status === 'Completed' ? 'Hoàn thành' : (r.status === 'InProgress' ? 'Đang xử lý' : 'Chờ xử lý'),
+    priority: 'Bình thường', // nếu có trường priority thì lấy, không thì mặc định
+    desc: r.description
+  }))
+})
 
 const filtered = computed(() => {
   if (tab.value === 'all') return requests.value

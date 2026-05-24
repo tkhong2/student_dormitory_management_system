@@ -71,15 +71,23 @@ const headers = [
   { title:'Trạng thái', key:'status', align:'center' },
   { title:'', key:'actions', align:'end', sortable:false },
 ]
-const bills = ref([
-  { id:1,code:'INV-05-001',student:'Nguyễn Văn An',room:'101-A1',amount:800000,due:'20/05/2026',status:'Chưa TT' },
-  { id:2,code:'INV-05-002',student:'Trần Thị Bình',room:'102-A2',amount:1500000,due:'20/05/2026',status:'Đã TT' },
-  { id:3,code:'INV-05-003',student:'Phạm Hoàng Duy',room:'201-B1',amount:800000,due:'20/05/2026',status:'Đã TT' },
-  { id:4,code:'INV-04-004',student:'Lê Minh Cường',room:'103-A1',amount:800000,due:'20/04/2026',status:'Quá hạn' },
-  { id:5,code:'INV-05-005',student:'Hoàng Thị Ê',room:'—',amount:1500000,due:'20/05/2026',status:'Chưa TT' },
-  { id:6,code:'INV-05-006',student:'Võ Thanh Phong',room:'301-C1',amount:2500000,due:'20/05/2026',status:'Đã TT' },
-  { id:7,code:'INV-04-007',student:'Ngô Thị Giang',room:'103-A2',amount:1500000,due:'20/04/2026',status:'Quá hạn' },
-])
+
+import billService from '@/services/billService'
+import { onMounted } from 'vue'
+const bills = ref([])
+onMounted(async () => {
+  const res = await billService.getAll()
+  // Giả sử API trả về đúng định dạng, nếu cần map lại thì xử lý ở đây
+  bills.value = res.data.map(b => ({
+    id: b.id,
+    code: b.id?.slice(0,8) || '', // hoặc b.code nếu có
+    student: b.studentId || '', // cần map tên nếu có API student
+    room: b.roomId || '', // cần map tên nếu có API room
+    amount: b.amount,
+    due: new Date(b.dueDate).toLocaleDateString('vi-VN'),
+    status: b.status === 'Paid' ? 'Đã TT' : (b.status === 'Overdue' ? 'Quá hạn' : 'Chưa TT')
+  }) )
+})
 
 const fmt = v => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(v)
 const sColor = s => ({'Đã TT':'success','Chưa TT':'warning','Quá hạn':'error'}[s]||'grey')

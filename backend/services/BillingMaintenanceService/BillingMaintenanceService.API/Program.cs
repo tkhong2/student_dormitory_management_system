@@ -1,11 +1,13 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// Add Swagger services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-
 app.UseHttpsRedirection();
 
 var summaries = new[]
@@ -25,6 +27,13 @@ app.MapGet("/weatherforecast", () =>
         .ToArray();
     return forecast;
 });
+
+// Enable Swagger UI in development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.Run();
 

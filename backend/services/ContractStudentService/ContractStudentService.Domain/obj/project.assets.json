@@ -8,23 +8,23 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {},
+    "C:\\Users\\HUU HUNG\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
+      "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
       "projectName": "ContractStudentService.Domain",
-      "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\obj\\",
+      "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
+      "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+      "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -72,7 +72,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
