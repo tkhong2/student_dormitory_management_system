@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vkdZ29bsyO4=",
+  "dgSpecHash": "85BF+ZI93kY=",
   "success": true,
-  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\BillingMaintenanceService\\BillingMaintenanceService.Domain\\BillingMaintenanceService.Domain.csproj",
+  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\BillingMaintenanceService\\BillingMaintenanceService.Domain\\BillingMaintenanceService.Domain.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

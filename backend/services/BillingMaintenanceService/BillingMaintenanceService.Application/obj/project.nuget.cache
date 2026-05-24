@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "itjHTLma1Es=",
+  "dgSpecHash": "OU7cDY83pTY=",
   "success": true,
-  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\BillingMaintenanceService\\BillingMaintenanceService.Application\\BillingMaintenanceService.Application.csproj",
+  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\BillingMaintenanceService\\BillingMaintenanceService.Application\\BillingMaintenanceService.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\automapper\\16.1.1\\automapper.16.1.1.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
