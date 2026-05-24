@@ -1,6 +1,91 @@
-@ContractStudentService.API_HostAddress = http://localhost:5059
+@baseUrl = http://localhost:5059/api
 
-GET {{ContractStudentService.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### Get all contracts
+GET {{baseUrl}}/contracts
 
-###
+### Get contract by ID
+GET {{baseUrl}}/contracts/11111111-1111-1111-1111-111111111111
+
+### Create contract
+POST {{baseUrl}}/contracts
+Content-Type: application/json
+
+{
+  "code": "HD-006",
+  "studentId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6",
+  "studentCode": "SV006",
+  "studentName": "Le Minh Cuong",
+  "roomId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb6",
+  "roomNumber": "103-A1",
+  "startDate": "2026-06-01",
+  "endDate": "2027-05-31",
+  "price": 800000,
+  "status": "Active"
+}
+
+### Update contract
+PUT {{baseUrl}}/contracts/11111111-1111-1111-1111-111111111111
+Content-Type: application/json
+
+{
+  "code": "HD-001",
+  "studentId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+  "studentCode": "SV001",
+  "studentName": "Nguyen Van An",
+  "roomId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+  "roomNumber": "101-A1",
+  "startDate": "2026-01-01",
+  "endDate": "2027-12-31",
+  "price": 800000,
+  "status": "Renewed"
+}
+
+### Delete contract
+DELETE {{baseUrl}}/contracts/55555555-5555-5555-5555-555555555555
+
+### Get all students
+GET {{baseUrl}}/students
+
+### Get student by ID
+GET {{baseUrl}}/students/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1
+
+### Create student
+POST {{baseUrl}}/students
+Content-Type: application/json
+
+{
+  "studentCode": "SV006",
+  "fullName": "Lê Minh Cường",
+  "email": "sv006@student.dnu.edu.vn",
+  "phoneNumber": "0900000006",
+  "address": "",
+  "dateOfBirth": "2005-01-01",
+  "gender": "Male",
+  "roomNumber": "103",
+  "buildingName": "A1",
+  "className": "K66-CNTT",
+  "joinDate": "2026-06-01",
+  "status": "Active"
+}
+
+### Update student
+PUT {{baseUrl}}/students/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1
+Content-Type: application/json
+
+{
+  "studentCode": "SV001",
+  "fullName": "Nguyễn Văn An",
+  "email": "sv001@student.dnu.edu.vn",
+  "phoneNumber": "0900000000",
+  "address": "",
+  "dateOfBirth": "2005-01-01",
+  "gender": "Male",
+  "roomNumber": "101",
+  "buildingName": "A1",
+  "className": "K65-CNTT",
+  "joinDate": "2026-05-15",
+  "status": "Expiring"
+}
+
+### Delete student
+DELETE {{baseUrl}}/students/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4

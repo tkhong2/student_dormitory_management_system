@@ -1,0 +1,16 @@
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\bin\Release\net8.0\ContractStudentService.Application.deps.json
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\bin\Release\net8.0\ContractStudentService.Application.dll
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\bin\Release\net8.0\ContractStudentService.Application.pdb
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\bin\Release\net8.0\ContractStudentService.Domain.dll
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\bin\Release\net8.0\ContractStudentService.Domain.pdb
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.csproj.AssemblyReference.cache
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.AssemblyInfoInputs.cache
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.AssemblyInfo.cs
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.csproj.CoreCompileInputs.cache
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.sourcelink.json
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\Contract.70E2946F.Up2Date
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.dll
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\refint\ContractStudentService.Application.dll
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ContractStudentService.Application.pdb
+C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Application\obj\Release\net8.0\ref\ContractStudentService.Application.dll

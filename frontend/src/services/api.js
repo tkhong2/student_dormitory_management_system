@@ -1,28 +1,38 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'http://localhost:5119/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+function createApi(baseURL) {
+  const api = axios.create({
+    baseURL,
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    return config
-  },
-  (error) => Promise.reject(error)
+  api.interceptors.request.use(
+    (config) => config,
+    (error) => Promise.reject(error)
+  )
+
+  api.interceptors.response.use(
+    (response) => response.data,
+    (error) => {
+      const message = error.response?.data?.message || 'Lỗi kết nối máy chủ'
+      return Promise.reject({ message, status: error.response?.status })
+    }
+  )
+
+  return api
+}
+
+const api = createApi(
+  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5119/api'
 )
 
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    const message = error.response?.data?.message || 'Lỗi kết nối máy chủ'
-    return Promise.reject({ message, status: error.response?.status })
-  }
+export const contractStudentApi = createApi(
+  import.meta.env.VITE_CONTRACT_STUDENT_API_URL ||
+    import.meta.env.VITE_CONTRACT_API_URL ||
+    'http://localhost:5059/api'
 )
 
 export default api

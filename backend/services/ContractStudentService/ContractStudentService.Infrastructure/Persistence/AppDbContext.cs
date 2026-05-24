@@ -22,6 +22,10 @@ namespace ContractStudentService.Infrastructure.Persistence
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.StudentCode).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.RoomNumber).HasMaxLength(20);
+                entity.Property(e => e.BuildingName).HasMaxLength(50);
+                entity.Property(e => e.ClassName).HasMaxLength(50);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             });
 
             modelBuilder.Entity<Registration>(entity =>
@@ -35,6 +39,9 @@ namespace ContractStudentService.Infrastructure.Persistence
             modelBuilder.Entity<Contract>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.RoomNumber).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Price).HasPrecision(18, 2);
                 entity.HasOne(e => e.Student)
                     .WithMany()
                     .HasForeignKey(e => e.StudentId);

@@ -13,6 +13,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BillingMaintenance", "Billi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIGateway", "APIGateway\APIGateway.csproj", "{FAA1510F-78E3-4363-8E74-7AC60A02E700}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractStudentService.Domain", "services\ContractStudentService\ContractStudentService.Domain\ContractStudentService.Domain.csproj", "{9A833AFC-CB51-428C-8801-C531147F9D6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractStudentService.Application", "services\ContractStudentService\ContractStudentService.Application\ContractStudentService.Application.csproj", "{C343720D-961C-4895-B62D-61F0ED48A25E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractStudentService.Infrastructure", "services\ContractStudentService\ContractStudentService.Infrastructure\ContractStudentService.Infrastructure.csproj", "{48B3519D-20AD-41F2-87E5-45DB1888AF66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractStudentService.API", "services\ContractStudentService\ContractStudentService.API\ContractStudentService.API.csproj", "{15C08426-B748-423C-B356-44B21CD8CEB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoomBuildingService.Domain", "services\RoomBuildingService\RoomBuildingService.Domain\RoomBuildingService.Domain.csproj", "{768AEAB4-25F9-4978-9096-F86421EF64E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoomBuildingService.Application", "services\RoomBuildingService\RoomBuildingService.Application\RoomBuildingService.Application.csproj", "{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoomBuildingService.Infrastructure", "services\RoomBuildingService\RoomBuildingService.Infrastructure\RoomBuildingService.Infrastructure.csproj", "{E95B3C06-FB42-4BDE-854D-204472A8FC87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoomBuildingService.API", "services\RoomBuildingService\RoomBuildingService.API\RoomBuildingService.API.csproj", "{55534B32-27E4-4C2B-8CB9-415813E1C99F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +39,38 @@ Global
 		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAA1510F-78E3-4363-8E74-7AC60A02E700}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A833AFC-CB51-428C-8801-C531147F9D6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A833AFC-CB51-428C-8801-C531147F9D6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A833AFC-CB51-428C-8801-C531147F9D6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A833AFC-CB51-428C-8801-C531147F9D6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C343720D-961C-4895-B62D-61F0ED48A25E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C343720D-961C-4895-B62D-61F0ED48A25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C343720D-961C-4895-B62D-61F0ED48A25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C343720D-961C-4895-B62D-61F0ED48A25E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48B3519D-20AD-41F2-87E5-45DB1888AF66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48B3519D-20AD-41F2-87E5-45DB1888AF66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48B3519D-20AD-41F2-87E5-45DB1888AF66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48B3519D-20AD-41F2-87E5-45DB1888AF66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15C08426-B748-423C-B356-44B21CD8CEB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15C08426-B748-423C-B356-44B21CD8CEB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15C08426-B748-423C-B356-44B21CD8CEB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15C08426-B748-423C-B356-44B21CD8CEB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{768AEAB4-25F9-4978-9096-F86421EF64E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{768AEAB4-25F9-4978-9096-F86421EF64E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{768AEAB4-25F9-4978-9096-F86421EF64E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{768AEAB4-25F9-4978-9096-F86421EF64E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E95B3C06-FB42-4BDE-854D-204472A8FC87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E95B3C06-FB42-4BDE-854D-204472A8FC87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E95B3C06-FB42-4BDE-854D-204472A8FC87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E95B3C06-FB42-4BDE-854D-204472A8FC87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55534B32-27E4-4C2B-8CB9-415813E1C99F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55534B32-27E4-4C2B-8CB9-415813E1C99F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55534B32-27E4-4C2B-8CB9-415813E1C99F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55534B32-27E4-4C2B-8CB9-415813E1C99F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -31,6 +79,14 @@ Global
 		{A27268A0-130F-492E-81A4-4AF3F1252A78} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F6257A42-05A0-4236-9955-D38C0CD77DB4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{54F69944-3D1F-43E9-8BEC-B3A2F697C8FF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{9A833AFC-CB51-428C-8801-C531147F9D6B} = {F6257A42-05A0-4236-9955-D38C0CD77DB4}
+		{C343720D-961C-4895-B62D-61F0ED48A25E} = {F6257A42-05A0-4236-9955-D38C0CD77DB4}
+		{48B3519D-20AD-41F2-87E5-45DB1888AF66} = {F6257A42-05A0-4236-9955-D38C0CD77DB4}
+		{15C08426-B748-423C-B356-44B21CD8CEB1} = {F6257A42-05A0-4236-9955-D38C0CD77DB4}
+		{768AEAB4-25F9-4978-9096-F86421EF64E8} = {A27268A0-130F-492E-81A4-4AF3F1252A78}
+		{EA79F1BE-05AF-46B4-A456-64DA3B5C5BAD} = {A27268A0-130F-492E-81A4-4AF3F1252A78}
+		{E95B3C06-FB42-4BDE-854D-204472A8FC87} = {A27268A0-130F-492E-81A4-4AF3F1252A78}
+		{55534B32-27E4-4C2B-8CB9-415813E1C99F} = {A27268A0-130F-492E-81A4-4AF3F1252A78}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5082CCC0-A171-4BBF-94D2-8153D681E634}

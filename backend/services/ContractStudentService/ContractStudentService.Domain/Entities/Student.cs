@@ -10,5 +10,10 @@ namespace ContractStudentService.Domain.Entities
         public string Address { get; set; } = string.Empty;
         public DateTime DateOfBirth { get; set; }
         public string Gender { get; set; } = string.Empty;
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public DateTime JoinDate { get; set; }
+        public string Status { get; set; } = "Active";
     }
 }

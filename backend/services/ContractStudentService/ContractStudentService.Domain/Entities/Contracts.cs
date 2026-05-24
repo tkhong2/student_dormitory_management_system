@@ -18,8 +18,10 @@ namespace ContractStudentService.Domain.Entities
     public class Contract
     {
         public Guid Id { get; set; }
+        public string Code { get; set; } = string.Empty;
         public Guid StudentId { get; set; }
         public Guid RoomId { get; set; } // Reference ID from RoomBuildingService
+        public string RoomNumber { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public decimal Price { get; set; }
