@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj": {}
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj": {}
   },
   "projects": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj",
         "projectName": "ContractStudentService.API",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.API\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.API\\ContractStudentService.API.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -32,11 +32,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj"
               },
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj"
               }
             }
           }
@@ -81,24 +81,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj",
         "projectName": "ContractStudentService.Application",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -113,8 +113,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj"
               }
             }
           }
@@ -134,6 +134,20 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[16.1.1, )"
+            },
+            "FluentValidation.DependencyInjectionExtensions": {
+              "target": "Package",
+              "version": "[12.1.1, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[14.1.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -150,24 +164,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
         "projectName": "ContractStudentService.Domain",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -215,24 +229,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj",
         "projectName": "ContractStudentService.Infrastructure",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\ContractStudentService.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -247,11 +261,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Application\\ContractStudentService.Application.csproj"
               },
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj"
               }
             }
           }
@@ -271,6 +285,14 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.8, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -287,7 +309,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

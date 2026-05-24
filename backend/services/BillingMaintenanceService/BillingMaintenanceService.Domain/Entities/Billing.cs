@@ -4,6 +4,8 @@ namespace BillingMaintenanceService.Domain.Entities
 {
     public class Bill
     {
+        public Guid RoomId { get; set; }
+
         public Guid Id { get; set; }
         public Guid ContractId { get; set; } // Reference ID from ContractStudentService
         public Guid StudentId { get; set; } // Reference ID from ContractStudentService

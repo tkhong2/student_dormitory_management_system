@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "6Duv2MizawRnkOx48qb+ImgeMlhGnT8Q2riuvOG3kTo=",
+  "Source": "BillingMaintenanceService.API",
+  "BasePath": "_content/BillingMaintenanceService.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
