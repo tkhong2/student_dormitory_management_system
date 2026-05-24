@@ -7,11 +7,11 @@ namespace ContractStudentService.Infrastructure.Repositories
     {
         private readonly List<Student> _students = new()
         {
-            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1", "SV001", "Nguyễn Văn Quyền", "101", "A1", "K65-CNTT", new DateTime(2026, 5, 15), "Active"),
-            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2", "SV002", "Trần Thị Quyền", "102", "A1", "K64-KT", new DateTime(2026, 5, 20), "Active"),
-            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3", "SV003", "Lê Văn Quyền", "201", "B1", "K66-NN", new DateTime(2026, 6, 1), "Expiring"),
-            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4", "SV004", "Phạm Thị Quyền", "305", "C1", "K65-QTKD", new DateTime(2026, 6, 10), "Active"),
-            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5", "SV005", "Ngô Thị Quyền", "103", "A2", "K64-TCNH", new DateTime(2025, 1, 15), "Departed")
+            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1", "SV001", "Nguyễn Văn An", "101", "A1", "K65-CNTT", new DateTime(2026, 5, 15), "Active"),
+            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2", "SV002", "Trần Thị Dung", "102", "A1", "K64-KT", new DateTime(2026, 5, 20), "Active"),
+            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3", "SV003", "Lê Văn Đạt", "201", "B1", "K66-NN", new DateTime(2026, 6, 1), "Expiring"),
+            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4", "SV004", "Phạm Thị Ánh", "305", "C1", "K65-QTKD", new DateTime(2026, 6, 10), "Active"),
+            CreateSeed("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5", "SV005", "Ngô Thị Nhâm", "103", "A2", "K64-TCNH", new DateTime(2025, 1, 15), "Departed")
         };
 
         public Task<Student?> GetByIdAsync(Guid id)
