@@ -85,6 +85,7 @@ namespace RoomBuildingService.Infrastructure.Repositories
                 existing.RoomTypeId = room.RoomTypeId;
                 existing.Status = room.Status;
                 existing.CurrentOccupancy = room.CurrentOccupancy;
+                existing.ImageUrl = room.ImageUrl;
             }
             return Task.CompletedTask;
         }

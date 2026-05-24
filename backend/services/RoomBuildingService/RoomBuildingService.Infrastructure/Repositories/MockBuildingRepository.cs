@@ -88,6 +88,7 @@ namespace RoomBuildingService.Infrastructure.Repositories
                 existing.Description = building.Description;
                 existing.NumberOfFloors = building.NumberOfFloors;
                 existing.Type = building.Type;
+                existing.ImageUrl = building.ImageUrl;
                 existing.UpdatedAt = DateTime.Now;
             }
             return Task.CompletedTask;

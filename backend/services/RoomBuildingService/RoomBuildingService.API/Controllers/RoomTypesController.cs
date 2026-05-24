@@ -10,10 +10,14 @@ namespace RoomBuildingService.API.Controllers
     public class RoomTypesController : ControllerBase
     {
         private readonly IRoomTypeRepository _roomTypeRepository;
+        private readonly IRoomRepository _roomRepository;
 
-        public RoomTypesController(IRoomTypeRepository roomTypeRepository)
+        public RoomTypesController(
+            IRoomTypeRepository roomTypeRepository,
+            IRoomRepository roomRepository)
         {
             _roomTypeRepository = roomTypeRepository;
+            _roomRepository = roomRepository;
         }
 
         [HttpGet]
@@ -99,6 +103,10 @@ namespace RoomBuildingService.API.Controllers
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
                 return NotFound(new { message = "Không tìm thấy loại phòng" });
+
+            var rooms = await _roomRepository.GetAllAsync();
+            if (rooms.Any(r => r.RoomTypeId == id))
+                return Conflict(new { message = "Không thể xóa loại phòng vì vẫn còn phòng đang sử dụng" });
 
             await _roomTypeRepository.DeleteAsync(roomType);
 

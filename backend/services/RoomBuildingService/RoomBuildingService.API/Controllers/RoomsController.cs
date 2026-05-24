@@ -99,7 +99,7 @@ namespace RoomBuildingService.API.Controllers
             if (roomType == null)
                 return BadRequest(new { message = "Loại phòng không tồn tại" });
 
-            if (!Enum.TryParse<RoomStatus>(dto.Status, out var roomStatus))
+            if (!Enum.TryParse<RoomStatus>(dto.Status, true, out var roomStatus))
                 return BadRequest(new { message = "Trạng thái phòng không hợp lệ" });
 
             var room = new Room
@@ -145,7 +145,7 @@ namespace RoomBuildingService.API.Controllers
             if (roomType == null)
                 return BadRequest(new { message = "Loại phòng không tồn tại" });
 
-            if (!Enum.TryParse<RoomStatus>(dto.Status, out var roomStatus))
+            if (!Enum.TryParse<RoomStatus>(dto.Status, true, out var roomStatus))
                 return BadRequest(new { message = "Trạng thái phòng không hợp lệ" });
 
             room.RoomNumber = dto.RoomNumber;

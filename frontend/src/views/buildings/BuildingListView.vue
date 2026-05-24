@@ -8,7 +8,7 @@
           Danh sách các dãy nhà trong khuôn viên KTX
         </p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" variant="flat" class="rounded-lg font-weight-bold" @click="openCreate">
+      <v-btn style="color:white;" color="primary" prepend-icon="mdi-plus" variant="flat" class="rounded-lg font-weight-bold " @click="openCreate">
         Thêm tòa nhà
       </v-btn>
     </div>

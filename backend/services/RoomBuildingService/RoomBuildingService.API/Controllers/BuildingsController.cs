@@ -11,10 +11,14 @@ namespace RoomBuildingService.API.Controllers
     public class BuildingsController : ControllerBase
     {
         private readonly IBuildingRepository _buildingRepository;
+        private readonly IRoomRepository _roomRepository;
 
-        public BuildingsController(IBuildingRepository buildingRepository)
+        public BuildingsController(
+            IBuildingRepository buildingRepository,
+            IRoomRepository roomRepository)
         {
             _buildingRepository = buildingRepository;
+            _roomRepository = roomRepository;
         }
 
         [HttpGet]
@@ -57,7 +61,7 @@ namespace RoomBuildingService.API.Controllers
         [HttpPost]
         public async Task<ActionResult<BuildingDto>> Create([FromBody] CreateBuildingDto dto)
         {
-            if (!Enum.TryParse<BuildingType>(dto.Type, out var buildingType))
+            if (!Enum.TryParse<BuildingType>(dto.Type, true, out var buildingType))
                 return BadRequest(new { message = "Loại tòa nhà không hợp lệ" });
 
             var building = new Building
@@ -91,7 +95,7 @@ namespace RoomBuildingService.API.Controllers
             if (building == null)
                 return NotFound(new { message = "Không tìm thấy tòa nhà" });
 
-            if (!Enum.TryParse<BuildingType>(dto.Type, out var buildingType))
+            if (!Enum.TryParse<BuildingType>(dto.Type, true, out var buildingType))
                 return BadRequest(new { message = "Loại tòa nhà không hợp lệ" });
 
             building.Name = dto.Name;
@@ -111,6 +115,10 @@ namespace RoomBuildingService.API.Controllers
             var building = await _buildingRepository.GetByIdAsync(id);
             if (building == null)
                 return NotFound(new { message = "Không tìm thấy tòa nhà" });
+
+            var rooms = await _roomRepository.GetByBuildingIdAsync(id);
+            if (rooms.Any())
+                return Conflict(new { message = "Không thể xóa tòa nhà vì vẫn còn phòng thuộc tòa nhà này" });
 
             await _buildingRepository.DeleteAsync(building);
 
