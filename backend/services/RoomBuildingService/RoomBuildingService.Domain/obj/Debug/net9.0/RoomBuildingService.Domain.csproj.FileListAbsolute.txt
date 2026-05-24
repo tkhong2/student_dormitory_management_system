@@ -10,3 +10,15 @@ F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\Room
 F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\refint\RoomBuildingService.Domain.dll
 F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.pdb
 F:\DocumentsDNU\Web\FullStack\student-dormitory-management\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\ref\RoomBuildingService.Domain.dll
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\bin\Debug\net9.0\RoomBuildingService.Domain.deps.json
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\bin\Debug\net9.0\RoomBuildingService.Domain.dll
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\bin\Debug\net9.0\RoomBuildingService.Domain.pdb
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.GeneratedMSBuildEditorConfig.editorconfig
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.AssemblyInfoInputs.cache
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.AssemblyInfo.cs
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.csproj.CoreCompileInputs.cache
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.sourcelink.json
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.dll
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\refint\RoomBuildingService.Domain.dll
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\RoomBuildingService.Domain.pdb
+F:\DocumentsDNU\Web\FullStack\repo\backend\services\RoomBuildingService\RoomBuildingService.Domain\obj\Debug\net9.0\ref\RoomBuildingService.Domain.dll

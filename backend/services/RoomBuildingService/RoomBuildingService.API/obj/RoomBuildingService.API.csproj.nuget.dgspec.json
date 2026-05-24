@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj": {}
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj": {}
   },
   "projects": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj": {
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
+        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
         "projectName": "RoomBuildingService.API",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
+        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\obj\\",
+        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -32,11 +32,11 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
+              "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
+                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
               },
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj"
+              "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
+                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj"
               }
             }
           }
@@ -85,14 +85,14 @@
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
+        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
         "projectName": "RoomBuildingService.Application",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
+        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\obj\\",
+        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -113,8 +113,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
+              "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
               }
             }
           }
@@ -168,14 +168,14 @@
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
         "projectName": "RoomBuildingService.Domain",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
+        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -233,14 +233,14 @@
         }
       }
     },
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
+        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
         "projectName": "RoomBuildingService.Infrastructure",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
+        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\obj\\",
+        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -261,11 +261,11 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
+              "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
+                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
               },
-              "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
-                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
+              "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+                "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
               }
             }
           }

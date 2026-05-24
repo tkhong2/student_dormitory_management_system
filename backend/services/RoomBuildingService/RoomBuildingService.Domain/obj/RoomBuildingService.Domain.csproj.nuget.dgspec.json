@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {}
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {}
   },
   "projects": {
-    "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+    "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "projectUniqueName": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
         "projectName": "RoomBuildingService.Domain",
-        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "projectPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
+        "outputPath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

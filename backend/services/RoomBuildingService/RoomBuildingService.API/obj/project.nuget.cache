@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "x3sitJ3UQG0=",
+  "dgSpecHash": "+nI/6uNKFUA=",
   "success": true,
-  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
+  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.API\\RoomBuildingService.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\automapper\\16.1.1\\automapper.16.1.1.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",

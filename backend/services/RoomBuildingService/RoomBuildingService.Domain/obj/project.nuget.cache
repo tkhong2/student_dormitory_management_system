@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "bq0l3zvtQAk=",
+  "dgSpecHash": "X4RyaaFZZBI=",
   "success": true,
-  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\student-dormitory-management\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+  "projectFilePath": "F:\\DocumentsDNU\\Web\\FullStack\\repo\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
