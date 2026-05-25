@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "S7Sqnxg/gnU0wkLEmXbItd5MlUBA089K1mhSRJ5eTTY=",
+  "Hash": "2JTOv9MlGXTmy+3mXnk41CpOwNquAnYQoSLRsPvxoXU=",
   "Source": "ContractStudentService.API",
   "BasePath": "_content/ContractStudentService.API",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

@@ -10,3 +10,15 @@ C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractSt
 C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\refint\ContractStudentService.Domain.dll
 C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.pdb
 C:\Users\W10.TQC\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ref\ContractStudentService.Domain.dll
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\bin\Debug\net8.0\ContractStudentService.Domain.deps.json
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\bin\Debug\net8.0\ContractStudentService.Domain.dll
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\bin\Debug\net8.0\ContractStudentService.Domain.pdb
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.AssemblyInfoInputs.cache
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.AssemblyInfo.cs
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.csproj.CoreCompileInputs.cache
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.sourcelink.json
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.dll
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\refint\ContractStudentService.Domain.dll
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ContractStudentService.Domain.pdb
+D:\backend\student_dormitory_management_system\backend\services\ContractStudentService\ContractStudentService.Domain\obj\Debug\net8.0\ref\ContractStudentService.Domain.dll

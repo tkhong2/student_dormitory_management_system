@@ -26,13 +26,21 @@ function createApi(baseURL) {
 }
 
 const api = createApi(
-  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5119/api'
+  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5000/api'
 )
 
 export const contractStudentApi = createApi(
   import.meta.env.VITE_CONTRACT_STUDENT_API_URL ||
     import.meta.env.VITE_CONTRACT_API_URL ||
-    'http://localhost:5059/api'
+    'http://localhost:5000/api/contracts'
+)
+
+export const studentApi = createApi(
+  import.meta.env.VITE_STUDENT_API_URL || 'http://localhost:5000/api'
+)
+
+export const billingApi = createApi(
+  import.meta.env.VITE_BILLING_API_URL || 'http://localhost:5000/api/billing'
 )
 
 export default api

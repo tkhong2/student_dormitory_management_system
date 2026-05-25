@@ -1,33 +1,39 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {}
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {}
   },
   "projects": {
-    "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
         "projectName": "RoomBuildingService.Application",
-        "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
-        "packagesPath": "C:\\Users\\W10.TQC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\W10.TQC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
-                "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
               }
             }
           }
@@ -41,7 +47,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -76,26 +83,32 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
         "projectName": "RoomBuildingService.Domain",
-        "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
-        "packagesPath": "C:\\Users\\W10.TQC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\W10.TQC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -113,7 +126,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -134,37 +148,43 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
+    "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
+        "projectUniqueName": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
         "projectName": "RoomBuildingService.Infrastructure",
-        "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\W10.TQC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\obj\\",
+        "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\RoomBuildingService.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\HUU HUNG\\.nuget\\packages\\",
+        "outputPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\W10.TQC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HUU HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
-                "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Application\\RoomBuildingService.Application.csproj"
               },
-              "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
-                "projectPath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
+              "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj": {
+                "projectPath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\RoomBuildingService\\RoomBuildingService.Domain\\RoomBuildingService.Domain.csproj"
               }
             }
           }
@@ -178,7 +198,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -211,7 +232,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

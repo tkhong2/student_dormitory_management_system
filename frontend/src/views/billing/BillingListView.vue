@@ -129,56 +129,48 @@ const headers = [
   { title: "", key: "actions", align: "end", sortable: false },
 ];
 
-const studentMap = {
-  "30000000-0000-0000-0000-000000000001": "Nguyễn Văn A",
-  "30000000-0000-0000-0000-000000000002": "Trần Thị B",
-  "30000000-0000-0000-0000-000000000003": "Lê Văn C",
-  "30000000-0000-0000-0000-000000000004": "Phạm Thị D",
-  "30000000-0000-0000-0000-000000000005": "Hoàng Anh E",
-  "30000000-0000-0000-0000-000000000006": "Ngô Minh F",
-  "30000000-0000-0000-0000-000000000007": "Đỗ Thị G",
-  "30000000-0000-0000-0000-000000000008": "Vũ Văn H",
-  "30000000-0000-0000-0000-000000000009": "Bùi Thị I",
-  "30000000-0000-0000-0000-000000000010": "Trương Văn K",
-  "30000000-0000-0000-0000-000000000011": "Nguyễn Thị L",
-  "30000000-0000-0000-0000-000000000012": "Lê Thị M",
-  "30000000-0000-0000-0000-000000000013": "Phan Văn N",
-  "30000000-0000-0000-0000-000000000014": "Nguyễn Hữu O",
-  "30000000-0000-0000-0000-000000000015": "Trần Văn P",
-  "30000000-0000-0000-0000-000000000016": "Lê Minh Q",
-  "30000000-0000-0000-0000-000000000017": "Hoàng Thị R",
-  "30000000-0000-0000-0000-000000000018": "Võ Văn S",
-  "30000000-0000-0000-0000-000000000019": "Đặng Thị T",
-};
-
-const roomMap = {
-  "40000000-0000-0000-0000-000000000101": "A101",
-  "40000000-0000-0000-0000-000000000102": "A102",
-  "40000000-0000-0000-0000-000000000103": "A103",
-  "40000000-0000-0000-0000-000000000104": "A104",
-  "40000000-0000-0000-0000-000000000105": "A105",
-  "40000000-0000-0000-0000-000000000106": "A106",
-  "40000000-0000-0000-0000-000000000107": "A107",
-  "40000000-0000-0000-0000-000000000108": "A108",
-  "40000000-0000-0000-0000-000000000109": "A109",
-  "40000000-0000-0000-0000-000000000110": "A110",
-  "40000000-0000-0000-0000-000000000111": "A111",
-  "40000000-0000-0000-0000-000000000112": "A112",
-  "40000000-0000-0000-0000-000000000201": "B201",
-  "40000000-0000-0000-0000-000000000202": "B202",
-  "40000000-0000-0000-0000-000000000203": "B203",
-  "40000000-0000-0000-0000-000000000301": "C301",
-  "40000000-0000-0000-0000-000000000302": "C302",
-  "40000000-0000-0000-0000-000000000303": "C303",
-  "40000000-0000-0000-0000-000000000304": "C304",
-};
-
 import billService from "@/services/billService";
+import { studentService } from "@/services/studentService";
+import { roomService } from "@/services/roomService";
 const bills = ref([]);
 
 onMounted(async () => {
   try {
     const loaded = await billService.getAll();
+    let students = [];
+    let rooms = [];
+
+    try {
+      students = await studentService.getAll();
+    } catch (error) {
+      console.error("Lỗi tải sinh viên:", error);
+    }
+
+    try {
+      rooms = await roomService.getAll();
+    } catch (error) {
+      console.error("Lỗi tải phòng:", error);
+    }
+
+    const studentNameById = new Map(
+      students
+        .map((s) => {
+          const id = s.id || s.Id;
+          const name = s.fullName || s.FullName;
+          return [typeof id === "string" ? id.toLowerCase() : id, name];
+        })
+        .filter(([id, name]) => id && name),
+    );
+    const roomNumberById = new Map(
+      rooms
+        .map((r) => {
+          const id = r.id || r.Id;
+          const number = r.roomNumber || r.RoomNumber;
+          return [typeof id === "string" ? id.toLowerCase() : id, number];
+        })
+        .filter(([id, number]) => id && number),
+    );
+
     bills.value = loaded.map((b, index) => {
       const roomId = b.RoomId || b.roomId || "";
       const studentId = b.StudentId || b.studentId || "";
@@ -190,13 +182,13 @@ onMounted(async () => {
         id: b.id,
         code: `HD${String(index + 1).padStart(4, "0")}`,
         student:
-          studentMap[studentId] ||
-          studentMap[studentKey] ||
+          studentNameById.get(studentKey) ||
+          studentNameById.get(studentId) ||
           (typeof studentId === "string" ? studentId.slice(0, 8) : "") ||
           "Không xác định",
         room:
-          roomMap[roomId] ||
-          roomMap[roomKey] ||
+          roomNumberById.get(roomKey) ||
+          roomNumberById.get(roomId) ||
           (typeof roomId === "string"
             ? roomId.slice(-4).toUpperCase()
             : "Không xác định"),
