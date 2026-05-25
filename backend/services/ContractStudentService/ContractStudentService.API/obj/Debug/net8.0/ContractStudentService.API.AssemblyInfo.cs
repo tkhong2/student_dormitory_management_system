@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ContractStudentService.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8397e13a82edd640700999d1c1dc3bde34058ac6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e6258e20f6643289c65882f1f1f1d0378509521c")]
 [assembly: System.Reflection.AssemblyProductAttribute("ContractStudentService.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ContractStudentService.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

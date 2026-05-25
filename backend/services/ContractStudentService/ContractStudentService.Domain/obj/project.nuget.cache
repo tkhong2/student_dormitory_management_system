@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "V6/EJtz8rx8=",
+  "dgSpecHash": "sZP6vxVZW0o=",
   "success": true,
-  "projectFilePath": "C:\\Users\\W10.TQC\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
+  "projectFilePath": "D:\\backend\\student_dormitory_management_system\\backend\\services\\ContractStudentService\\ContractStudentService.Domain\\ContractStudentService.Domain.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

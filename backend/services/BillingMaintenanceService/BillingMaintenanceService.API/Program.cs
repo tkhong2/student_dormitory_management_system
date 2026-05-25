@@ -1,5 +1,7 @@
 using BillingMaintenanceService.Application.Interfaces;
+using BillingMaintenanceService.Infrastructure.Persistence;
 using BillingMaintenanceService.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,10 +10,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register fake repositories for Billing/Maintenance
-builder.Services.AddSingleton<IBillRepository, MockBillRepository>();
-builder.Services.AddSingleton<IPaymentRepository, MockPaymentRepository>();
-builder.Services.AddSingleton<IMaintenanceRequestRepository, MockMaintenanceRequestRepository>();
+// Register SQL Server DbContext and repositories
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.MigrationsAssembly("BillingMaintenanceService.API")));
+builder.Services.AddScoped<IBillRepository, BillRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
 
 // Enable CORS for local frontend development
 builder.Services.AddCors(options =>

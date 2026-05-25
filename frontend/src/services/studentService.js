@@ -1,4 +1,4 @@
-import { contractStudentApi as api } from './api'
+import { studentApi as api } from './api'
 
 export const studentService = {
   getAll() {

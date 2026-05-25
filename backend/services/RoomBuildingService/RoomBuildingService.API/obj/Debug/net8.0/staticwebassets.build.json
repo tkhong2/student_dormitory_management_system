@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "zl0UJRCfSpg+UsfghimZe1X5PbG/m9OFN+IP/FjKvLU=",
+  "Hash": "BWBP8tOH2bFOk/PNlnMpoA5cW8BIROFw6V7w88zIjC8=",
   "Source": "RoomBuildingService.API",
   "BasePath": "_content/RoomBuildingService.API",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }
