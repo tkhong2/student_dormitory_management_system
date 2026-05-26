@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\RoomBuildingService.Application\RoomBuildingService.Application.csproj" />
-    <ProjectReference Include="..\RoomBuildingService.Domain\RoomBuildingService.Domain.csproj" />
+    <ProjectReference Include="..\..\RoomBuildingService.Application\RoomBuildingService.Application.csproj" />
+    <ProjectReference Include="..\RoomBuildingService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

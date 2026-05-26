@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using RoomBuildingService.Application.Interfaces;
+using RoomBuildingService.Infrastructure.Persistence;
 using RoomBuildingService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,10 +10,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register Mock Repositories (using fake data)
-builder.Services.AddSingleton<IBuildingRepository, MockBuildingRepository>();
-builder.Services.AddSingleton<IRoomTypeRepository, MockRoomTypeRepository>();
-builder.Services.AddSingleton<IRoomRepository, MockRoomRepository>();
+// Configure EF Core and SQL Server repository implementations
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

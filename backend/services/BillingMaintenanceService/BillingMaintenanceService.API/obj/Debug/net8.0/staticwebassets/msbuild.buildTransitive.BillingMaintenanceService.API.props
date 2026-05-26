@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\BillingMaintenanceService.API.props" />
-</Project>

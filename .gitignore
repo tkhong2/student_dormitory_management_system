@@ -1,1 +1,23 @@
-.vscode/*
+# Build
+bin/
+obj/
+# Visual Studio
+.vs/
+# VS Code
+.vscode/
+# User files
+*.user
+*.suo
+# NuGet
+project.assets.json
+project.nuget.cache
+# Logs
+*.log
+# ASP.NET
+appsettings.Development.json
+# Node
+node_modules/
+dist/
+# OS
+.DS_Store
+Thumbs.db
