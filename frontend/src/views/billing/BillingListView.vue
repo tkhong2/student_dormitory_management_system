@@ -48,85 +48,108 @@
       </v-col>
     </v-row>
 
-    <v-card style="border: 1px solid #e5e7eb">
-      <div class="pa-4 d-flex flex-wrap ga-3 align-center">
-        <v-text-field
-          v-model="search"
-          placeholder="Tìm mã HĐ, sinh viên..."
-          prepend-inner-icon="mdi-magnify"
-          density="compact"
-          hide-details
-          style="max-width: 300px"
-        />
-        <v-select
-          label="Tháng"
-          :items="months"
-          density="compact"
-          hide-details
-          style="max-width: 180px"
-        />
-        <v-chip-group class="ml-auto">
-          <v-chip filter value="all">Tất cả</v-chip>
-          <v-chip filter value="unpaid" color="warning">Chưa TT</v-chip>
-          <v-chip filter value="overdue" color="error">Quá hạn</v-chip>
-        </v-chip-group>
-      </div>
+    <DataStatus
+      :loading="loading"
+      :error="error"
+      :items="bills"
+      @retry="loadData"
+    >
+      <template #default>
+        <a-card
+          style="border: 1px solid #e5e7eb"
+          :body-style="{ padding: '0' }"
+        >
+          <div class="pa-4 d-flex flex-wrap align-center" style="gap: 12px">
+            <a-input-search
+              v-model:value="search"
+              placeholder="Tìm mã HĐ, sinh viên..."
+              allowClear
+              style="max-width: 300px; flex: 1"
+            />
+            <a-select
+              v-model:value="monthFilter"
+              placeholder="Tháng"
+              allowClear
+              style="max-width: 180px"
+            >
+              <a-select-option value="all">Tất cả</a-select-option>
+              <a-select-option
+                v-for="month in months"
+                :key="month"
+                :value="month"
+              >
+                {{ month }}
+              </a-select-option>
+            </a-select>
+            <a-segmented
+              v-model:value="statusFilter"
+              :options="statusFilterOptions"
+              class="ml-auto"
+            />
+          </div>
 
-      <v-data-table
-        :headers="headers"
-        :items="bills"
-        :search="search"
-        items-per-page="10"
-      >
-        <template #item.description="{ item }">
-          <span class="text-caption" style="white-space: normal">{{
-            item.description
-          }}</span>
-        </template>
-        <template #item.amount="{ item }">
-          <span class="font-weight-bold">{{ fmt(item.amount) }}</span>
-        </template>
-        <template #item.status="{ item }">
-          <v-chip :color="sColor(item.status)" size="x-small" variant="tonal">{{
-            item.status
-          }}</v-chip>
-        </template>
-        <template #item.actions="{ item }">
-          <v-btn
-            v-if="item.status !== 'Đã TT'"
-            size="small"
-            color="success"
-            variant="tonal"
-            class="mr-1"
-            prepend-icon="mdi-cash-check"
-            >Thu tiền</v-btn
+          <a-table
+            :columns="billingColumns"
+            :data-source="filteredBills"
+            row-key="id"
+            :pagination="{ pageSize: 10 }"
+            style="width: 100%"
           >
-          <v-btn icon="mdi-printer" size="small" variant="text" />
-          <v-btn
-            icon="mdi-eye-outline"
-            size="small"
-            variant="text"
-            color="primary"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+            <template #bodyCell_amount="{ record }">
+              <span class="font-weight-bold">{{ fmt(record.amount) }}</span>
+            </template>
+            <template #bodyCell_status="{ record }">
+              <a-tag :color="sColor(record.status)">{{ record.status }}</a-tag>
+            </template>
+            <template #bodyCell_actions="{ record }">
+              <a-space size="small">
+                <a-button
+                  v-if="record.status !== 'Đã TT'"
+                  type="primary"
+                  size="small"
+                  @click="payBill(record)"
+                >
+                  Thu tiền
+                </a-button>
+                <a-button type="text" size="small">In</a-button>
+                <a-button type="text" size="small">Xem</a-button>
+              </a-space>
+            </template>
+          </a-table>
+        </a-card>
+      </template>
+    </DataStatus>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import DataStatus from "@/components/common/DataStatus.vue";
 const search = ref("");
+const monthFilter = ref("all");
+const statusFilter = ref("all");
 const months = ["Tháng 5/2026", "Tháng 4/2026", "Tháng 3/2026", "Tháng 2/2026"];
-const headers = [
-  { title: "Mã HĐ", key: "code" },
-  { title: "Sinh viên", key: "student" },
-  { title: "Phòng", key: "room", align: "center" },
-  { title: "Mô tả", key: "description" },
-  { title: "Số tiền", key: "amount", align: "end" },
-  { title: "Hạn TT", key: "due", align: "center" },
-  { title: "Trạng thái", key: "status", align: "center" },
-  { title: "", key: "actions", align: "end", sortable: false },
+const statusFilterOptions = [
+  { label: "Tất cả", value: "all" },
+  { label: "Đã TT", value: "Đã TT" },
+  { label: "Chưa TT", value: "Chưa TT" },
+  { label: "Quá hạn", value: "Quá hạn" },
+];
+const billingColumns = [
+  { title: "Mã HĐ", dataIndex: "code", key: "code" },
+  { title: "Sinh viên", dataIndex: "student", key: "student" },
+  { title: "Phòng", dataIndex: "room", key: "room", align: "center" },
+  { title: "Mô tả", dataIndex: "description", key: "description" },
+  { title: "Số tiền", dataIndex: "amount", key: "amount", align: "end" },
+  { title: "Hạn TT", dataIndex: "due", key: "due", align: "center" },
+  { title: "Trạng thái", dataIndex: "status", key: "status", align: "center" },
+  {
+    title: "",
+    dataIndex: "actions",
+    key: "actions",
+    align: "center",
+    width: 180,
+  },
 ];
 
 const studentMap = {
@@ -175,8 +198,12 @@ const roomMap = {
 
 import billService from "@/services/billService";
 const bills = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-onMounted(async () => {
+async function loadData() {
+  loading.value = true;
+  error.value = null;
   try {
     const loaded = await billService.getAll();
     bills.value = loaded.map((b, index) => {
@@ -186,6 +213,7 @@ onMounted(async () => {
         typeof roomId === "string" ? roomId.toLowerCase() : roomId;
       const studentKey =
         typeof studentId === "string" ? studentId.toLowerCase() : studentId;
+      const dueDate = new Date(b.dueDate);
       return {
         id: b.id,
         code: `HD${String(index + 1).padStart(4, "0")}`,
@@ -202,7 +230,9 @@ onMounted(async () => {
             : "Không xác định"),
         description: b.description || "Hóa đơn tiền phòng",
         amount: b.amount,
-        due: new Date(b.dueDate).toLocaleDateString("vi-VN"),
+        due: dueDate.toLocaleDateString("vi-VN"),
+        dueDate: dueDate.toISOString(),
+        monthLabel: `Tháng ${dueDate.getMonth() + 1}/${dueDate.getFullYear()}`,
         status:
           b.status === "Paid"
             ? "Đã TT"
@@ -211,11 +241,19 @@ onMounted(async () => {
               : "Chưa TT",
       };
     });
-  } catch (error) {
-    console.error("Lỗi tải hóa đơn:", error);
+    if (Array.isArray(bills.value) && bills.value.length === 0) {
+      error.value = "Lỗi kết nối máy chủ";
+    }
+  } catch (err) {
+    console.error("Lỗi tải hóa đơn:", err);
     bills.value = [];
+    error.value = "Lỗi kết nối máy chủ";
+  } finally {
+    loading.value = false;
   }
-});
+}
+
+onMounted(loadData);
 
 const totalRevenue = computed(() =>
   bills.value
@@ -232,12 +270,32 @@ const overdueAmount = computed(() =>
     .filter((b) => b.status === "Quá hạn")
     .reduce((sum, b) => sum + b.amount, 0),
 );
+const filteredBills = computed(() => {
+  const keyword = search.value.trim().toLowerCase();
+  return bills.value.filter((item) => {
+    const matchesText =
+      !keyword ||
+      item.code.toLowerCase().includes(keyword) ||
+      item.student.toLowerCase().includes(keyword) ||
+      item.room.toLowerCase().includes(keyword);
+    const matchesStatus =
+      statusFilter.value === "all" || item.status === statusFilter.value;
+    const matchesMonth =
+      monthFilter.value === "all" || item.monthLabel === monthFilter.value;
+    return matchesText && matchesStatus && matchesMonth;
+  });
+});
+
 const unpaidCount = computed(
   () => bills.value.filter((b) => b.status === "Chưa TT").length,
 );
 const overdueCount = computed(
   () => bills.value.filter((b) => b.status === "Quá hạn").length,
 );
+
+function payBill(record) {
+  console.log("Pay bill", record.id);
+}
 
 const fmt = (v) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(

@@ -11,88 +11,100 @@
     </div>
 
     <!-- Status tabs -->
-    <v-tabs v-model="tab" color="primary" style="margin-bottom: 16px">
-      <v-tab value="all">Tất cả</v-tab>
-      <v-tab value="pending"
-        >Chờ xử lý
-        <v-badge
-          :content="requests.filter((r) => r.status === 'Chờ xử lý').length"
-          color="warning"
-          inline
-          class="ml-1"
-      /></v-tab>
-      <v-tab value="progress">Đang xử lý</v-tab>
-      <v-tab value="done">Hoàn thành</v-tab>
-    </v-tabs>
+    <DataStatus
+      :loading="loading"
+      :error="error"
+      :items="requests"
+      @retry="loadData"
+    >
+      <template #default>
+        <v-tabs v-model="tab" color="primary" style="margin-bottom: 16px">
+          <v-tab value="all">Tất cả</v-tab>
+          <v-tab value="pending"
+            >Chờ xử lý
+            <v-badge
+              :content="requests.filter((r) => r.status === 'Chờ xử lý').length"
+              color="warning"
+              inline
+              class="ml-1"
+          /></v-tab>
+          <v-tab value="progress">Đang xử lý</v-tab>
+          <v-tab value="done">Hoàn thành</v-tab>
+        </v-tabs>
 
-    <v-row>
-      <v-col v-for="r in filtered" :key="r.id" cols="12" md="6">
-        <v-card style="border: 1px solid #e5e7eb" class="pa-5">
-          <div class="d-flex align-start justify-space-between mb-3">
-            <div class="d-flex ga-3 align-start">
-              <v-avatar
-                :color="priColor(r.priority)"
-                size="40"
-                rounded="lg"
-                variant="tonal"
-              >
-                <v-icon size="20">{{
-                  r.priority === "Khẩn cấp" ? "mdi-alert" : "mdi-wrench"
-                }}</v-icon>
-              </v-avatar>
-              <div>
-                <div class="text-subtitle-1 font-weight-bold">
-                  {{ r.title }}
+        <v-row>
+          <v-col v-for="r in filtered" :key="r.id" cols="12" md="6">
+            <v-card style="border: 1px solid #e5e7eb" class="pa-5">
+              <div class="d-flex align-start justify-space-between mb-3">
+                <div class="d-flex ga-3 align-start">
+                  <v-avatar
+                    :color="priColor(r.priority)"
+                    size="40"
+                    rounded="lg"
+                    variant="tonal"
+                  >
+                    <v-icon size="20">{{
+                      r.priority === "Khẩn cấp" ? "mdi-alert" : "mdi-wrench"
+                    }}</v-icon>
+                  </v-avatar>
+                  <div>
+                    <div class="text-subtitle-1 font-weight-bold">
+                      {{ r.title }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      #{{ r.code }} · Phòng {{ r.room }} · {{ r.date }}
+                    </div>
+                  </div>
                 </div>
-                <div class="text-caption text-medium-emphasis">
-                  #{{ r.code }} · Phòng {{ r.room }} · {{ r.date }}
+                <v-chip
+                  :color="stColor(r.status)"
+                  size="x-small"
+                  variant="tonal"
+                  >{{ r.status }}</v-chip
+                >
+              </div>
+              <p class="text-body-2 text-medium-emphasis mb-2">{{ r.desc }}</p>
+              <p v-if="r.note" class="text-caption text-medium-emphasis mb-4">
+                Ghi chú: {{ r.note }}
+              </p>
+              <v-divider class="mb-3" />
+              <div class="d-flex align-center justify-space-between">
+                <div
+                  class="d-flex align-center ga-2 text-caption text-medium-emphasis"
+                >
+                  <v-icon size="14">mdi-account</v-icon>{{ r.student }}
+                  <v-chip
+                    v-if="r.priority === 'Khẩn cấp'"
+                    color="error"
+                    size="x-small"
+                    variant="flat"
+                    class="ml-2"
+                    >Khẩn cấp</v-chip
+                  >
+                </div>
+                <div class="d-flex ga-1">
+                  <v-btn
+                    v-if="r.status === 'Chờ xử lý'"
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    >Xử lý</v-btn
+                  >
+                  <v-btn
+                    v-if="r.status === 'Đang xử lý'"
+                    size="small"
+                    color="success"
+                    variant="tonal"
+                    >Hoàn thành</v-btn
+                  >
+                  <v-btn icon="mdi-eye-outline" size="small" variant="text" />
                 </div>
               </div>
-            </div>
-            <v-chip :color="stColor(r.status)" size="x-small" variant="tonal">{{
-              r.status
-            }}</v-chip>
-          </div>
-          <p class="text-body-2 text-medium-emphasis mb-2">{{ r.desc }}</p>
-          <p v-if="r.note" class="text-caption text-medium-emphasis mb-4">
-            Ghi chú: {{ r.note }}
-          </p>
-          <v-divider class="mb-3" />
-          <div class="d-flex align-center justify-space-between">
-            <div
-              class="d-flex align-center ga-2 text-caption text-medium-emphasis"
-            >
-              <v-icon size="14">mdi-account</v-icon>{{ r.student }}
-              <v-chip
-                v-if="r.priority === 'Khẩn cấp'"
-                color="error"
-                size="x-small"
-                variant="flat"
-                class="ml-2"
-                >Khẩn cấp</v-chip
-              >
-            </div>
-            <div class="d-flex ga-1">
-              <v-btn
-                v-if="r.status === 'Chờ xử lý'"
-                size="small"
-                color="primary"
-                variant="tonal"
-                >Xử lý</v-btn
-              >
-              <v-btn
-                v-if="r.status === 'Đang xử lý'"
-                size="small"
-                color="success"
-                variant="tonal"
-                >Hoàn thành</v-btn
-              >
-              <v-btn icon="mdi-eye-outline" size="small" variant="text" />
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
+            </v-card>
+          </v-col>
+        </v-row>
+      </template>
+    </DataStatus>
 
     <v-dialog v-model="dialog" max-width="520">
       <v-card class="pa-6">
@@ -125,6 +137,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import maintenanceRequestService from "@/services/maintenanceRequestService";
+import DataStatus from "@/components/common/DataStatus.vue";
 
 const tab = ref("all");
 const dialog = ref(false);
@@ -144,7 +157,12 @@ const roomMap = {
 const requestCode = (index) => `MT${String(index + 1).padStart(4, "0")}`;
 
 const requests = ref([]);
-onMounted(async () => {
+const loading = ref(false);
+const error = ref(null);
+
+async function loadData() {
+  loading.value = true;
+  error.value = null;
   try {
     const res = await maintenanceRequestService.getAll();
     requests.value = res.map((r, index) => ({
@@ -165,11 +183,19 @@ onMounted(async () => {
       desc: r.description,
       note: r.note || "",
     }));
-  } catch (error) {
-    console.error("Lỗi tải bảo trì:", error);
+    if (Array.isArray(requests.value) && requests.value.length === 0) {
+      error.value = "Lỗi kết nối máy chủ";
+    }
+  } catch (err) {
+    console.error("Lỗi tải bảo trì:", err);
     requests.value = [];
+    error.value = "Lỗi kết nối máy chủ";
+  } finally {
+    loading.value = false;
   }
-});
+}
+
+onMounted(loadData);
 
 const filtered = computed(() => {
   if (tab.value === "all") return requests.value;
