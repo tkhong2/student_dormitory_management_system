@@ -32,8 +32,68 @@
           <v-tab value="done">Hoàn thành</v-tab>
         </v-tabs>
 
+        <!-- Filter Section -->
+        <v-card
+          style="
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            margin-bottom: 20px;
+          "
+          class="pa-4"
+        >
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          >
+            <v-text-field
+              v-model="searchKeyword"
+              placeholder="Tìm tiêu đề, mô tả..."
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              variant="outlined"
+              density="compact"
+              style="max-width: 300px; flex: 1"
+            />
+            <v-select
+              v-model="roomFilter"
+              :items="roomOptions"
+              label="Phòng"
+              clearable
+              variant="outlined"
+              density="compact"
+              style="max-width: 180px"
+            />
+            <v-select
+              v-model="priorityFilter"
+              :items="['Tất cả', 'Bình thường', 'Khẩn cấp']"
+              label="Mức độ ưu tiên"
+              clearable
+              variant="outlined"
+              density="compact"
+              style="max-width: 200px"
+            />
+            <v-btn
+              v-if="searchKeyword || roomFilter || priorityFilter"
+              size="small"
+              variant="text"
+              color="primary"
+              prepend-icon="mdi-refresh"
+              @click="resetMaintFilters"
+            >
+              Đặt lại
+            </v-btn>
+            <div style="margin-left: auto; color: #6b7280; font-size: 13px">
+              Kết quả: {{ filteredRequests.length }} / {{ requests.length }}
+            </div>
+          </div>
+        </v-card>
+
         <v-row>
-          <v-col v-for="r in filtered" :key="r.id" cols="12" md="6">
+          <v-col v-for="r in filteredRequests" :key="r.id" cols="12" md="6">
             <v-card style="border: 1px solid #e5e7eb" class="pa-5">
               <div class="d-flex align-start justify-space-between mb-3">
                 <div class="d-flex ga-3 align-start">
@@ -142,6 +202,11 @@ import DataStatus from "@/components/common/DataStatus.vue";
 const tab = ref("all");
 const dialog = ref(false);
 
+// ─── Filter state ──────────────────────────────────────────────────────────
+const searchKeyword = ref("");
+const roomFilter = ref("");
+const priorityFilter = ref("");
+
 const studentMap = {
   "30000000-0000-0000-0000-000000000001": "Nguyễn Văn A",
   "30000000-0000-0000-0000-000000000002": "Trần Thị B",
@@ -159,6 +224,10 @@ const requestCode = (index) => `MT${String(index + 1).padStart(4, "0")}`;
 const requests = ref([]);
 const loading = ref(false);
 const error = ref(null);
+
+const roomOptions = computed(() =>
+  [...new Set(requests.value.map((r) => r.room))].filter(Boolean).sort(),
+);
 
 async function loadData() {
   loading.value = true;
@@ -197,7 +266,7 @@ async function loadData() {
 
 onMounted(loadData);
 
-const filtered = computed(() => {
+const statusFiltered = computed(() => {
   if (tab.value === "all") return requests.value;
   const m = {
     pending: "Chờ xử lý",
@@ -206,6 +275,30 @@ const filtered = computed(() => {
   };
   return requests.value.filter((r) => r.status === m[tab.value]);
 });
+
+const filteredRequests = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+  const priorityMap = { "Bình thường": "Bình thường", "Khẩn cấp": "Khẩn cấp" };
+  const selectedPriority = priorityMap[priorityFilter.value] || null;
+
+  return statusFiltered.value.filter((r) => {
+    const matchesKeyword =
+      !keyword ||
+      r.title.toLowerCase().includes(keyword) ||
+      r.desc.toLowerCase().includes(keyword) ||
+      r.code.toLowerCase().includes(keyword);
+    const matchesRoom = !roomFilter.value || r.room === roomFilter.value;
+    const matchesPriority =
+      !selectedPriority || r.priority === selectedPriority;
+    return matchesKeyword && matchesRoom && matchesPriority;
+  });
+});
+
+function resetMaintFilters() {
+  searchKeyword.value = "";
+  roomFilter.value = "";
+  priorityFilter.value = "";
+}
 
 const stColor = (s) =>
   ({ "Chờ xử lý": "warning", "Đang xử lý": "info", "Hoàn thành": "success" })[

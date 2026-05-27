@@ -1,7 +1,4 @@
-# version: '3.8'
-
 services:
-
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
@@ -11,6 +8,12 @@ services:
       - "1433:1433"
     volumes:
       - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Hongtran021005@", "-Q", "SELECT 1", "-No"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   roombuildingservice:
     build:
@@ -22,7 +25,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=RoomDB;User Id=sa;Password=Hongtran021005@;TrustServerCertificate=True;MultipleActiveResultSets=true
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
 
 volumes:
   sqldata:

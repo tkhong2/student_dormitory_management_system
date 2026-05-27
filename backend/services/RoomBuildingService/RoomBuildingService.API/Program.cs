@@ -37,7 +37,22 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    var retries = 10;
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            Console.WriteLine("✅ Migration thành công!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retries--;
+            Console.WriteLine($"⏳ SQL Server chưa sẵn sàng, thử lại... còn {retries} lần. Lỗi: {ex.Message}");
+            Thread.Sleep(5000);
+        }
+    }
 }
 
 // Configure the HTTP request pipeline

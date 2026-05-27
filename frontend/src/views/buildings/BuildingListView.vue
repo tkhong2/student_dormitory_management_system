@@ -6,7 +6,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
         gap: 12px;
       "
@@ -16,20 +16,58 @@
           Quản lý Tòa nhà
         </h1>
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">
-          Danh sách các dãy nhà trong khuôn viên KTX
+          Tổng <strong>{{ buildings.length }}</strong> tòa nhà —
+          <span style="color: #2563eb">{{ countByType("Male") }} Nam</span>
+          ·
+          <span style="color: #ec4899">{{ countByType("Female") }} Nữ</span>
+          ·
+          <span style="color: #8b5cf6">{{ countByType("Mixed") }} Hỗn hợp</span>
         </p>
       </div>
-      <v-btn
-        style="color: white"
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="flat"
-        class="rounded-lg font-weight-bold"
-        @click="openCreate"
-      >
+      <a-button type="primary" @click="openCreate">
+        <template #icon><i class="anticon anticon-plus"></i></template>
         Thêm tòa nhà
-      </v-btn>
+      </a-button>
     </div>
+
+    <!-- Filter Section -->
+    <a-card style="margin-bottom: 16px; background: #fafafa">
+      <a-row :gutter="16">
+        <a-col :span="6">
+          <a-select
+            v-model:value="typeFilter"
+            placeholder="Loại tòa"
+            style="width: 100%"
+          >
+            <a-select-option value="">Tất cả loại tòa</a-select-option>
+            <a-select-option value="Male">Nam</a-select-option>
+            <a-select-option value="Female">Nữ</a-select-option>
+            <a-select-option value="Mixed">Hỗn hợp</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :span="6">
+          <a-input-number
+            v-model:value="floorFilter"
+            placeholder="Số tầng"
+            style="width: 100%"
+            :min="0"
+            :max="50"
+            allow-clear
+          />
+        </a-col>
+        <a-col :span="12">
+          <a-input
+            v-model:value="search"
+            placeholder="Tìm tên tòa nhà..."
+            allow-clear
+          >
+            <template #prefix>
+              <i class="anticon anticon-search"></i>
+            </template>
+          </a-input>
+        </a-col>
+      </a-row>
+    </a-card>
 
     <DataStatus
       :loading="loading"
@@ -38,284 +76,267 @@
       :treatEmptyAsError="false"
       @retry="loadBuildings"
     >
-      <v-row>
-        <v-col v-for="b in buildings" :key="b.id" cols="12" sm="6" lg="3">
-          <v-card
-            rounded="xl"
-            class="pa-0"
-            style="
-              border: 1px solid #e5e7eb;
-              overflow: hidden;
-              transition: box-shadow 0.2s;
-            "
-            hover
+      <!-- Empty State -->
+      <div
+        v-if="filteredBuildings.length === 0"
+        style="text-align: center; padding: 60px 0; color: #9ca3af"
+      >
+        <i class="anticon anticon-home" style="font-size: 48px"></i>
+        <p style="margin-top: 12px; font-size: 15px">
+          {{
+            buildings.length === 0
+              ? "Chưa có tòa nhà nào"
+              : "Không tìm thấy kết quả phù hợp"
+          }}
+        </p>
+      </div>
+
+      <!-- Buildings Grid -->
+      <div v-else style="display: flex; flex-wrap: wrap; margin: -8px">
+        <div
+          v-for="b in filteredBuildings"
+          :key="b.id"
+          style="width: 25%; padding: 8px"
+        >
+          <a-card
+            hoverable
+            @click="selectBuilding(b)"
+            style="border-radius: 12px; overflow: hidden; cursor: pointer"
+            :body-style="{ padding: '12px' }"
           >
             <!-- Color Header by type -->
             <div
-              :style="{ background: getBuildingColor(b.type), height: '6px' }"
+              :style="{
+                height: '4px',
+                background: getBuildingColor(b.type),
+                marginBottom: '12px',
+                marginTop: '-12px',
+                marginLeft: '-12px',
+                marginRight: '-12px',
+              }"
             />
 
             <!-- Image -->
-            <div v-if="b.imageUrl" style="height: 140px; position: relative">
+            <div
+              v-if="b.imageUrl"
+              :style="{
+                width: '100%',
+                height: '120px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                marginBottom: '12px',
+                background: '#f5f5f5',
+              }"
+            >
               <img
                 :src="b.imageUrl"
                 style="width: 100%; height: 100%; object-fit: cover"
               />
             </div>
-            <!-- Header image placeholder with icon (Fallback) -->
+
+            <!-- Fallback icon -->
             <div
               v-else
               :style="{
+                width: '100%',
+                height: '120px',
+                borderRadius: '8px',
                 background: getTypeBg(b.type),
-                height: '140px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                marginBottom: '12px',
               }"
             >
-              <v-icon size="48" :color="getTypeIconColor(b.type)"
-                >mdi-office-building</v-icon
-              >
+              <i
+                class="anticon anticon-office-building"
+                :style="{
+                  fontSize: '48px',
+                  color: getTypeIconColor(b.type),
+                }"
+              ></i>
             </div>
 
-            <div class="pa-5">
-              <!-- Title row -->
+            <!-- Content -->
+            <div style="text-align: center">
               <div
-                style="
-                  display: flex;
-                  align-items: flex-start;
-                  justify-content: space-between;
-                  margin-bottom: 12px;
-                "
+                style="font-weight: 700; font-size: 16px; margin-bottom: 2px"
               >
-                <div>
-                  <div
-                    style="
-                      font-size: 17px;
-                      font-weight: 700;
-                      margin-bottom: 2px;
-                    "
-                  >
-                    {{ b.name }}
-                  </div>
-                  <v-chip
-                    :color="getTypeColor(b.type)"
-                    size="x-small"
-                    variant="tonal"
-                    label
-                  >
-                    {{ getTypeLabel(b.type) }}
-                  </v-chip>
-                </div>
-                <v-menu>
-                  <template #activator="{ props }">
-                    <v-btn
-                      icon="mdi-dots-vertical"
-                      size="small"
-                      variant="text"
-                      v-bind="props"
-                    />
-                  </template>
-                  <v-list density="compact" rounded="lg" min-width="140">
-                    <v-list-item
-                      prepend-icon="mdi-pencil-outline"
-                      title="Chỉnh sửa"
-                      @click="openEdit(b)"
-                    />
-                    <v-list-item
-                      prepend-icon="mdi-delete-outline"
-                      title="Xóa"
-                      class="text-error"
-                      @click="confirmDelete(b)"
-                    />
-                  </v-list>
-                </v-menu>
+                {{ b.name }}
+              </div>
+              <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px">
+                {{ getTypeLabel(b.type) }} · {{ b.numberOfFloors }} tầng
               </div>
 
-              <!-- Description -->
+              <a-tag
+                :color="getTypeColor(b.type)"
+                style="margin-bottom: 12px; font-size: 11px"
+              >
+                {{ getTypeLabel(b.type) }}
+              </a-tag>
+
               <p
                 style="
-                  font-size: 13px;
+                  font-size: 12px;
                   color: #6b7280;
-                  margin-bottom: 14px;
-                  min-height: 36px;
+                  margin-bottom: 8px;
+                  min-height: 24px;
                 "
               >
-                {{ b.description || "Chưa có mô tả" }}
+                {{
+                  b.description
+                    ? b.description.substring(0, 40) + "..."
+                    : "Chưa có mô tả"
+                }}
               </p>
 
-              <!-- Stats -->
-              <div style="display: flex; gap: 16px">
-                <div
-                  style="
-                    text-align: center;
-                    flex: 1;
-                    background: #f9fafb;
-                    border-radius: 8px;
-                    padding: 10px 0;
-                  "
+              <!-- Actions -->
+              <a-space style="width: 100%">
+                <a-button
+                  type="primary"
+                  size="small"
+                  ghost
+                  @click.stop="openEdit(b)"
+                  style="flex: 1"
                 >
-                  <div
-                    style="font-size: 20px; font-weight: 700; color: #1d4ed8"
-                  >
-                    {{ b.numberOfFloors }}
-                  </div>
-                  <div style="font-size: 11px; color: #9ca3af">Tầng</div>
-                </div>
-              </div>
+                  <i class="anticon anticon-edit"></i>
+                  Sửa
+                </a-button>
+                <a-button
+                  danger
+                  size="small"
+                  @click.stop="confirmDelete(b)"
+                  style="flex: 1"
+                >
+                  <i class="anticon anticon-delete"></i>
+                  Xóa
+                </a-button>
+              </a-space>
             </div>
-          </v-card>
-        </v-col>
-
-        <!-- Empty state -->
-        <v-col v-if="buildings.length === 0" cols="12">
-          <div style="text-align: center; padding: 60px 0; color: #9ca3af">
-            <v-icon size="64" color="grey-lighten-1"
-              >mdi-office-building-outline</v-icon
-            >
-            <p style="margin-top: 12px; font-size: 15px">Chưa có tòa nhà nào</p>
-            <v-btn
-              color="primary"
-              prepend-icon="mdi-plus"
-              variant="flat"
-              class="mt-2"
-              @click="openCreate"
-              >Thêm tòa nhà</v-btn
-            >
-          </div>
-        </v-col>
-      </v-row>
+          </a-card>
+        </div>
+      </div>
     </DataStatus>
 
-    <!-- Add/Edit Dialog -->
-    <v-dialog v-model="dialog" max-width="560" persistent>
-      <v-card class="rounded-xl pa-6">
-        <v-card-title class="text-h6 font-weight-black px-0 mb-4">
-          {{ editTarget ? "Chỉnh sửa tòa nhà" : "Thêm tòa nhà mới" }}
-        </v-card-title>
-        <v-card-text class="px-0 py-0">
-          <v-row>
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.name"
-                label="Tên tòa nhà *"
-                placeholder="Ví dụ: Tòa A - Nam"
-                variant="outlined"
-                color="primary"
-                rounded="lg"
-                :error-messages="formErrors.name"
+    <!-- Add/Edit Drawer -->
+    <a-drawer
+      v-model:open="dialog"
+      :title="editTarget ? 'Chỉnh sửa tòa nhà' : 'Thêm tòa nhà mới'"
+      placement="right"
+      :width="480"
+      :mask-closable="false"
+      @close="closeDialog"
+    >
+      <a-form
+        :model="form"
+        :label-col="{ span: 24 }"
+        :wrapper-col="{ span: 24 }"
+        layout="vertical"
+        @finish="saveBuilding"
+      >
+        <a-form-item label="Tên tòa nhà" required>
+          <a-input
+            v-model:value="form.name"
+            placeholder="Ví dụ: Tòa A - Nam"
+            size="large"
+            :status="formErrors.name ? 'error' : ''"
+          />
+          <div v-if="formErrors.name" class="form-error">
+            {{ formErrors.name }}
+          </div>
+        </a-form-item>
+
+        <a-form-item label="Mô tả">
+          <a-textarea
+            v-model:value="form.description"
+            placeholder="Mô tả về tòa nhà..."
+            :rows="3"
+          />
+        </a-form-item>
+
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Số tầng" required>
+              <a-input-number
+                v-model:value="form.numberOfFloors"
+                :min="1"
+                size="large"
+                style="width: 100%"
+                :status="formErrors.numberOfFloors ? 'error' : ''"
               />
-            </v-col>
-            <v-col cols="12">
-              <v-textarea
-                v-model="form.description"
-                label="Mô tả"
-                placeholder="Mô tả về tòa nhà..."
-                variant="outlined"
-                color="primary"
-                rounded="lg"
-                rows="2"
-                auto-grow
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model.number="form.numberOfFloors"
-                label="Số tầng *"
-                type="number"
-                variant="outlined"
-                color="primary"
-                rounded="lg"
-                min="1"
-                :error-messages="formErrors.numberOfFloors"
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-select
-                v-model="form.type"
-                label="Loại tòa nhà *"
-                :items="buildingTypes"
-                item-title="label"
-                item-value="value"
-                variant="outlined"
-                color="primary"
-                rounded="lg"
-                :error-messages="formErrors.type"
-              />
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.imageUrl"
-                label="Đường dẫn hình ảnh (URL)"
-                placeholder="https://..."
-                variant="outlined"
-                color="primary"
-                rounded="lg"
-              />
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions class="px-0 pt-4">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            class="rounded-lg font-weight-bold"
-            :disabled="saving"
-            @click="closeDialog"
-            >Hủy</v-btn
-          >
-          <v-btn
-            color="primary"
-            variant="flat"
-            class="rounded-lg font-weight-bold px-6"
+              <div v-if="formErrors.numberOfFloors" class="form-error">
+                {{ formErrors.numberOfFloors }}
+              </div>
+            </a-form-item>
+          </a-col>
+
+          <a-col :span="12">
+            <a-form-item label="Loại tòa nhà" required>
+              <a-select
+                v-model:value="form.type"
+                placeholder="Chọn loại"
+                size="large"
+                :status="formErrors.type ? 'error' : ''"
+              >
+                <a-select-option value="Male">Nam</a-select-option>
+                <a-select-option value="Female">Nữ</a-select-option>
+                <a-select-option value="Mixed">Hỗn hợp</a-select-option>
+              </a-select>
+              <div v-if="formErrors.type" class="form-error">
+                {{ formErrors.type }}
+              </div>
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <a-form-item label="Đường dẫn hình ảnh (URL)">
+          <a-input
+            v-model:value="form.imageUrl"
+            placeholder="https://..."
+            size="large"
+          />
+        </a-form-item>
+
+        <div class="drawer-footer">
+          <a-button @click="closeDialog" size="large">Hủy</a-button>
+          <a-button
+            type="primary"
+            html-type="submit"
             :loading="saving"
-            @click="saveBuilding"
+            size="large"
           >
             {{ editTarget ? "Lưu thay đổi" : "Thêm mới" }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </a-button>
+        </div>
+      </a-form>
+    </a-drawer>
 
-    <!-- Delete Confirm Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card class="rounded-xl pa-6">
-        <v-card-title class="text-h6 font-weight-bold px-0"
-          >Xác nhận xóa</v-card-title
-        >
-        <v-card-text class="px-0 py-2">
-          Bạn có chắc muốn xóa tòa nhà <strong>{{ deleteTarget?.name }}</strong
-          >? Hành động này không thể hoàn tác.
-        </v-card-text>
-        <v-card-actions class="px-0 pt-4">
-          <v-spacer />
-          <v-btn variant="text" @click="deleteDialog = false">Hủy</v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            class="rounded-lg"
-            :loading="saving"
-            @click="deleteBuilding"
-            >Xóa</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Snackbar -->
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      rounded="lg"
-      location="bottom right"
+    <!-- Delete Confirm Modal -->
+    <a-modal
+      v-model:open="deleteDialog"
+      title="Xác nhận xóa"
+      ok-text="Xóa"
+      cancel-text="Hủy"
+      ok-button-props="{ danger: true }"
+      @ok="deleteBuilding"
     >
-      {{ snackbar.message }}
-    </v-snackbar>
+      <p>
+        Bạn có chắc muốn xóa tòa nhà <strong>{{ deleteTarget?.name }}</strong
+        >? Hành động này không thể hoàn tác.
+      </p>
+    </a-modal>
+
+    <!-- Notification -->
+    <a-message
+      v-if="snackbar.show"
+      :type="snackbar.type"
+      :message="snackbar.message"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import DataStatus from "@/components/common/DataStatus.vue";
 import { buildingService } from "@/services/buildingService";
 
@@ -324,6 +345,11 @@ const buildings = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const saving = ref(false);
+
+// ─── Filter state ─────────────────────────────────────────────────────────────
+const search = ref("");
+const typeFilter = ref("");
+const floorFilter = ref(null);
 
 const dialog = ref(false);
 const deleteDialog = ref(false);
@@ -339,13 +365,25 @@ const form = ref({
 });
 const formErrors = ref({});
 
-const snackbar = ref({ show: false, message: "", color: "success" });
+const snackbar = ref({ show: false, message: "", type: "success" });
 
-const buildingTypes = [
-  { label: "Nam", value: "Male" },
-  { label: "Nữ", value: "Female" },
-  { label: "Hỗn hợp", value: "Mixed" },
-];
+// ─── Computed - filtered buildings ────────────────────────────────────────────
+const filteredBuildings = computed(() => {
+  const keyword = search.value.trim().toLowerCase();
+  const typeValue = typeFilter.value || null;
+  const floorValue = floorFilter.value || null;
+
+  return buildings.value.filter((b) => {
+    const matchesName = !keyword || b.name.toLowerCase().includes(keyword);
+    const matchesType = !typeValue || b.type === typeValue;
+    const matchesFloor = !floorValue || b.numberOfFloors === floorValue;
+    return matchesName && matchesType && matchesFloor;
+  });
+});
+
+function countByType(type) {
+  return buildings.value.filter((b) => b.type === type).length;
+}
 
 // ─── Load data ───────────────────────────────────────────────────────────────
 async function loadBuildings() {
@@ -392,6 +430,11 @@ function openEdit(b) {
 function closeDialog() {
   dialog.value = false;
   editTarget.value = null;
+}
+
+function selectBuilding(b) {
+  // Can be used to view building details
+  // Currently just placeholder for card click
 }
 
 function validate() {
@@ -443,8 +486,8 @@ async function deleteBuilding() {
   }
 }
 
-function showSnackbar(message, color = "success") {
-  snackbar.value = { show: true, message, color };
+function showSnackbar(message, type = "success") {
+  snackbar.value = { show: true, message, type };
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
@@ -470,4 +513,44 @@ function getTypeIconColor(type) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.form-error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.drawer-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+  margin-top: 24px;
+}
+
+:deep(.ant-input),
+:deep(.ant-input-number),
+:deep(.ant-select),
+:deep(.ant-picker) {
+  border-radius: 6px;
+}
+
+:deep(.ant-btn-primary) {
+  background-color: #1890ff;
+  border-color: #1890ff;
+  border-radius: 6px;
+}
+
+:deep(.ant-drawer-header) {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+:deep(.ant-drawer-body) {
+  padding: 24px;
+}
+
+:deep(.ant-drawer-close) {
+  color: #666;
+}
+</style>

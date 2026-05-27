@@ -52,6 +52,31 @@
             </a-select-option>
           </a-select>
           <a-select
+            v-model:value="classFilter"
+            placeholder="Lớp"
+            allowClear
+            style="max-width: 180px"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option
+              v-for="option in classOptions"
+              :key="option"
+              :value="option"
+            >
+              {{ option }}
+            </a-select-option>
+          </a-select>
+          <a-select
+            v-model:value="genderFilter"
+            placeholder="Giới tính"
+            allowClear
+            style="max-width: 150px"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option value="Nam">Nam</a-select-option>
+            <a-select-option value="Nữ">Nữ</a-select-option>
+          </a-select>
+          <a-select
             v-model:value="statusFilter"
             placeholder="Trạng thái"
             allowClear
@@ -65,6 +90,20 @@
               {{ option.label }}
             </a-select-option>
           </a-select>
+          <a-button
+            v-if="
+              search ||
+              classFilter !== 'all' ||
+              genderFilter ||
+              statusFilter !== 'all' ||
+              buildingFilter !== 'all'
+            "
+            type="text"
+            size="small"
+            @click="resetFilters"
+          >
+            Đặt lại
+          </a-button>
         </div>
 
         <a-table
@@ -248,6 +287,8 @@ const students = ref([]);
 const search = ref("");
 const buildingFilter = ref("all");
 const statusFilter = ref("all");
+const classFilter = ref("all");
+const genderFilter = ref("");
 const loading = ref(false);
 const saving = ref(false);
 const error = ref(null);
@@ -266,6 +307,12 @@ const buildingOptions = computed(() => [
     .map((name) => ({ label: `Tòa ${name}`, value: name })),
 ]);
 
+const classOptions = computed(() =>
+  [...new Set(students.value.map((item) => item.className))]
+    .filter(Boolean)
+    .sort(),
+);
+
 const filteredStudents = computed(() => {
   const keyword = search.value.trim().toLowerCase();
   return students.value.filter((item) => {
@@ -278,9 +325,27 @@ const filteredStudents = computed(() => {
       item.buildingName === buildingFilter.value;
     const matchesStatus =
       statusFilter.value === "all" || item.status === statusFilter.value;
-    return matchesText && matchesBuilding && matchesStatus;
+    const matchesClass =
+      classFilter.value === "all" || item.className === classFilter.value;
+    const matchesGender =
+      !genderFilter.value || item.gender === genderFilter.value;
+    return (
+      matchesText &&
+      matchesBuilding &&
+      matchesStatus &&
+      matchesClass &&
+      matchesGender
+    );
   });
 });
+
+function resetFilters() {
+  search.value = "";
+  buildingFilter.value = "all";
+  statusFilter.value = "all";
+  classFilter.value = "all";
+  genderFilter.value = "";
+}
 
 function defaultForm() {
   return {

@@ -21,7 +21,7 @@ namespace RoomBuildingService.Infrastructure.Persistence
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ImageUrl).HasMaxLength(255);
+                entity.Property(e => e.ImageUrl).HasColumnType("nvarchar(max)");
             });
 
             modelBuilder.Entity<RoomType>(entity =>
@@ -35,7 +35,7 @@ namespace RoomBuildingService.Infrastructure.Persistence
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.RoomNumber).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.ImageUrl).HasMaxLength(255);
+                entity.Property(e => e.ImageUrl).HasColumnType("nvarchar(max)");
                 
                 entity.HasOne(d => d.Building)
                     .WithMany(p => p.Rooms)

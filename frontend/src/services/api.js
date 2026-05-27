@@ -26,7 +26,7 @@ function createApi(baseURL) {
 }
 
 const api = createApi(
-  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5119/api'
+  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5001/api'
 )
 
 export const contractStudentApi = createApi(
