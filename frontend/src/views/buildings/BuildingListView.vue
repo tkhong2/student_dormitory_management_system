@@ -17,11 +17,11 @@
         </h1>
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">
           Tổng <strong>{{ buildings.length }}</strong> tòa nhà —
-          <span style="color: #2563eb">{{ countByType("Male") }} Nam</span>
+          <span style="color: #2563eb">{{ countByGender("Male") }} Nam</span>
           ·
-          <span style="color: #ec4899">{{ countByType("Female") }} Nữ</span>
+          <span style="color: #ec4899">{{ countByGender("Female") }} Nữ</span>
           ·
-          <span style="color: #8b5cf6">{{ countByType("Mixed") }} Hỗn hợp</span>
+          <span style="color: #8b5cf6">{{ countByGender("Mixed") }} Hỗn hợp</span>
         </p>
       </div>
       <a-button type="primary" @click="openCreate">
@@ -35,7 +35,7 @@
       <a-row :gutter="16">
         <a-col :span="6">
           <a-select
-            v-model:value="typeFilter"
+            v-model:value="genderFilter"
             placeholder="Loại tòa"
             style="width: 100%"
           >
@@ -92,126 +92,233 @@
       </div>
 
       <!-- Buildings Grid -->
-      <div v-else style="display: flex; flex-wrap: wrap; margin: -8px">
+      <div v-else style="display: flex; flex-wrap: wrap; margin: -12px">
         <div
           v-for="b in filteredBuildings"
           :key="b.id"
-          style="width: 25%; padding: 8px"
+          style="width: 25%; padding: 12px"
         >
           <a-card
             hoverable
             @click="selectBuilding(b)"
-            style="border-radius: 12px; overflow: hidden; cursor: pointer"
-            :body-style="{ padding: '12px' }"
+            :style="{
+              borderRadius: '16px',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              border: '1px solid #f0f0f0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'all 0.3s ease',
+            }"
+            :body-style="{ padding: '0' }"
           >
-            <!-- Color Header by type -->
-            <div
-              :style="{
-                height: '4px',
-                background: getBuildingColor(b.type),
-                marginBottom: '12px',
-                marginTop: '-12px',
-                marginLeft: '-12px',
-                marginRight: '-12px',
-              }"
-            />
-
-            <!-- Image -->
-            <div
-              v-if="b.imageUrl"
-              :style="{
-                width: '100%',
-                height: '120px',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                marginBottom: '12px',
-                background: '#f5f5f5',
-              }"
-            >
-              <img
-                :src="b.imageUrl"
-                style="width: 100%; height: 100%; object-fit: cover"
-              />
-            </div>
-
-            <!-- Fallback icon -->
-            <div
-              v-else
-              :style="{
-                width: '100%',
-                height: '120px',
-                borderRadius: '8px',
-                background: getTypeBg(b.type),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '12px',
-              }"
-            >
-              <i
-                class="anticon anticon-office-building"
+            <!-- Image with overlay badge -->
+            <div style="position: relative">
+              <div
+                v-if="b.thumbnailUrl"
                 :style="{
-                  fontSize: '48px',
-                  color: getTypeIconColor(b.type),
+                  width: '100%',
+                  height: '180px',
+                  overflow: 'hidden',
+                  background: '#f5f5f5',
                 }"
-              ></i>
+              >
+                <img
+                  :src="b.thumbnailUrl"
+                  style="width: 100%; height: 100%; object-fit: cover"
+                />
+              </div>
+
+              <!-- Fallback icon -->
+              <div
+                v-else
+                :style="{
+                  width: '100%',
+                  height: '180px',
+                  background: getGenderBg(b.gender),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }"
+              >
+                <i
+                  class="anticon anticon-office-building"
+                  :style="{
+                    fontSize: '64px',
+                    color: getGenderIconColor(b.gender),
+                    opacity: 0.3,
+                  }"
+                ></i>
+              </div>
+
+              <!-- Status Badge -->
+              <div
+                v-if="b.status !== 'Active'"
+                :style="{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: b.status === 'UnderMaintenance' ? '#faad14' : '#ff4d4f',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                }"
+              >
+                {{ b.status === 'UnderMaintenance' ? 'Bảo trì' : 'Đóng cửa' }}
+              </div>
+
+              <!-- Amenities Icons -->
+              <div
+                :style="{
+                  position: 'absolute',
+                  bottom: '12px',
+                  left: '12px',
+                  display: 'flex',
+                  gap: '6px',
+                }"
+              >
+                <div
+                  v-if="b.hasElevator"
+                  :style="{
+                    background: 'rgba(255,255,255,0.95)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: '#1f2937',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }"
+                  title="Thang máy"
+                >
+                  <i class="anticon anticon-vertical-align-top"></i>
+                  <span>Thang máy</span>
+                </div>
+                <div
+                  v-if="b.hasParking"
+                  :style="{
+                    background: 'rgba(255,255,255,0.95)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: '#1f2937',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }"
+                  title="Bãi đỗ xe"
+                >
+                  <i class="anticon anticon-car"></i>
+                  <span>Đỗ xe</span>
+                </div>
+                <div
+                  v-if="b.hasLaundry"
+                  :style="{
+                    background: 'rgba(255,255,255,0.95)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: '#1f2937',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }"
+                  title="Giặt ủi"
+                >
+                  <i class="anticon anticon-shopping"></i>
+                  <span>Giặt ủi</span>
+                </div>
+              </div>
             </div>
 
             <!-- Content -->
-            <div style="text-align: center">
+            <div style="padding: 16px">
               <div
-                style="font-weight: 700; font-size: 16px; margin-bottom: 2px"
+                style="
+                  font-weight: 700;
+                  font-size: 17px;
+                  margin-bottom: 6px;
+                  color: #1f2937;
+                "
               >
                 {{ b.name }}
               </div>
-              <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px">
-                {{ getTypeLabel(b.type) }} · {{ b.numberOfFloors }} tầng
+
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  margin-bottom: 10px;
+                  font-size: 13px;
+                  color: #6b7280;
+                "
+              >
+                <span style="display: flex; align-items: center; gap: 4px">
+                  <i class="anticon anticon-home"></i>
+                  {{ b.totalRooms }} phòng
+                </span>
+                <span style="color: #d1d5db">•</span>
+                <span style="display: flex; align-items: center; gap: 4px">
+                  <i class="anticon anticon-apartment"></i>
+                  {{ b.totalFloors }} tầng
+                </span>
               </div>
 
               <a-tag
-                :color="getTypeColor(b.type)"
-                style="margin-bottom: 12px; font-size: 11px"
+                :color="getGenderColor(b.gender)"
+                style="margin-bottom: 12px; font-size: 12px; padding: 2px 10px"
               >
-                {{ getTypeLabel(b.type) }}
+                {{ getGenderLabel(b.gender) }}
               </a-tag>
 
               <p
                 style="
-                  font-size: 12px;
+                  font-size: 13px;
                   color: #6b7280;
-                  margin-bottom: 8px;
-                  min-height: 24px;
+                  margin-bottom: 14px;
+                  min-height: 40px;
+                  line-height: 1.5;
                 "
               >
                 {{
                   b.description
-                    ? b.description.substring(0, 40) + "..."
+                    ? b.description.length > 60
+                      ? b.description.substring(0, 60) + "..."
+                      : b.description
                     : "Chưa có mô tả"
                 }}
               </p>
 
               <!-- Actions -->
-              <a-space style="width: 100%">
+              <div style="display: flex; gap: 8px">
                 <a-button
                   type="primary"
-                  size="small"
-                  ghost
+                  size="middle"
                   @click.stop="openEdit(b)"
-                  style="flex: 1"
+                  style="flex: 1; border-radius: 8px"
                 >
                   <i class="anticon anticon-edit"></i>
                   Sửa
                 </a-button>
                 <a-button
                   danger
-                  size="small"
+                  size="middle"
                   @click.stop="confirmDelete(b)"
-                  style="flex: 1"
+                  style="flex: 1; border-radius: 8px"
                 >
                   <i class="anticon anticon-delete"></i>
                   Xóa
                 </a-button>
-              </a-space>
+              </div>
             </div>
           </a-card>
         </div>
@@ -237,13 +344,21 @@
         <a-form-item label="Tên tòa nhà" required>
           <a-input
             v-model:value="form.name"
-            placeholder="Ví dụ: Tòa A - Nam"
+            placeholder="Ví dụ: Tòa A - Khu Nam"
             size="large"
             :status="formErrors.name ? 'error' : ''"
           />
           <div v-if="formErrors.name" class="form-error">
             {{ formErrors.name }}
           </div>
+        </a-form-item>
+
+        <a-form-item label="Địa chỉ">
+          <a-input
+            v-model:value="form.address"
+            placeholder="Địa chỉ tòa nhà..."
+            size="large"
+          />
         </a-form-item>
 
         <a-form-item label="Mô tả">
@@ -255,46 +370,120 @@
         </a-form-item>
 
         <a-row :gutter="16">
-          <a-col :span="12">
+          <a-col :span="8">
             <a-form-item label="Số tầng" required>
               <a-input-number
-                v-model:value="form.numberOfFloors"
+                v-model:value="form.totalFloors"
                 :min="1"
                 size="large"
                 style="width: 100%"
-                :status="formErrors.numberOfFloors ? 'error' : ''"
+                :status="formErrors.totalFloors ? 'error' : ''"
               />
-              <div v-if="formErrors.numberOfFloors" class="form-error">
-                {{ formErrors.numberOfFloors }}
+              <div v-if="formErrors.totalFloors" class="form-error">
+                {{ formErrors.totalFloors }}
               </div>
             </a-form-item>
           </a-col>
 
-          <a-col :span="12">
-            <a-form-item label="Loại tòa nhà" required>
+          <a-col :span="8">
+            <a-form-item label="Số phòng" required>
+              <a-input-number
+                v-model:value="form.totalRooms"
+                :min="1"
+                size="large"
+                style="width: 100%"
+                :status="formErrors.totalRooms ? 'error' : ''"
+              />
+              <div v-if="formErrors.totalRooms" class="form-error">
+                {{ formErrors.totalRooms }}
+              </div>
+            </a-form-item>
+          </a-col>
+
+          <a-col :span="8">
+            <a-form-item label="Giới tính" required>
               <a-select
-                v-model:value="form.type"
+                v-model:value="form.gender"
                 placeholder="Chọn loại"
                 size="large"
-                :status="formErrors.type ? 'error' : ''"
+                :status="formErrors.gender ? 'error' : ''"
               >
                 <a-select-option value="Male">Nam</a-select-option>
                 <a-select-option value="Female">Nữ</a-select-option>
                 <a-select-option value="Mixed">Hỗn hợp</a-select-option>
               </a-select>
-              <div v-if="formErrors.type" class="form-error">
-                {{ formErrors.type }}
+              <div v-if="formErrors.gender" class="form-error">
+                {{ formErrors.gender }}
               </div>
             </a-form-item>
           </a-col>
         </a-row>
 
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Tên quản lý">
+              <a-input
+                v-model:value="form.managerName"
+                placeholder="Họ tên quản lý"
+                size="large"
+              />
+            </a-form-item>
+          </a-col>
+
+          <a-col :span="12">
+            <a-form-item label="SĐT quản lý">
+              <a-input
+                v-model:value="form.managerPhone"
+                placeholder="Số điện thoại"
+                size="large"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Năm xây dựng">
+              <a-input
+                v-model:value="form.constructionYear"
+                placeholder="Ví dụ: 2020"
+                size="large"
+              />
+            </a-form-item>
+          </a-col>
+
+          <a-col :span="12">
+            <a-form-item label="Trạng thái">
+              <a-select
+                v-model:value="form.status"
+                size="large"
+              >
+                <a-select-option value="Active">Hoạt động</a-select-option>
+                <a-select-option value="UnderMaintenance">Bảo trì</a-select-option>
+                <a-select-option value="Closed">Đóng cửa</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <a-form-item label="Tiện ích">
+          <a-checkbox-group v-model:value="form.amenities">
+            <a-checkbox value="hasElevator">Thang máy</a-checkbox>
+            <a-checkbox value="hasParking">Bãi đỗ xe</a-checkbox>
+            <a-checkbox value="hasLaundry">Giặt ủi</a-checkbox>
+          </a-checkbox-group>
+        </a-form-item>
+
         <a-form-item label="Đường dẫn hình ảnh (URL)">
           <a-input
-            v-model:value="form.imageUrl"
+            v-model:value="form.thumbnailUrl"
             placeholder="https://..."
             size="large"
           />
+        </a-form-item>
+
+        <a-form-item>
+          <a-checkbox v-model:checked="form.isActive">Kích hoạt</a-checkbox>
         </a-form-item>
 
         <div class="drawer-footer">
@@ -348,7 +537,7 @@ const saving = ref(false);
 
 // ─── Filter state ─────────────────────────────────────────────────────────────
 const search = ref("");
-const typeFilter = ref("");
+const genderFilter = ref("");
 const floorFilter = ref(null);
 
 const dialog = ref(false);
@@ -358,10 +547,18 @@ const deleteTarget = ref(null);
 
 const form = ref({
   name: "",
+  address: "",
   description: "",
-  numberOfFloors: 5,
-  type: "Male",
-  imageUrl: "",
+  totalFloors: 5,
+  totalRooms: 50,
+  gender: "Male",
+  managerName: "",
+  managerPhone: "",
+  constructionYear: "",
+  status: "Active",
+  amenities: [],
+  thumbnailUrl: "",
+  isActive: true,
 });
 const formErrors = ref({});
 
@@ -370,19 +567,19 @@ const snackbar = ref({ show: false, message: "", type: "success" });
 // ─── Computed - filtered buildings ────────────────────────────────────────────
 const filteredBuildings = computed(() => {
   const keyword = search.value.trim().toLowerCase();
-  const typeValue = typeFilter.value || null;
+  const genderValue = genderFilter.value || null;
   const floorValue = floorFilter.value || null;
 
   return buildings.value.filter((b) => {
     const matchesName = !keyword || b.name.toLowerCase().includes(keyword);
-    const matchesType = !typeValue || b.type === typeValue;
-    const matchesFloor = !floorValue || b.numberOfFloors === floorValue;
-    return matchesName && matchesType && matchesFloor;
+    const matchesGender = !genderValue || b.gender === genderValue;
+    const matchesFloor = !floorValue || b.totalFloors === floorValue;
+    return matchesName && matchesGender && matchesFloor;
   });
 });
 
-function countByType(type) {
-  return buildings.value.filter((b) => b.type === type).length;
+function countByGender(gender) {
+  return buildings.value.filter((b) => b.gender === gender).length;
 }
 
 // ─── Load data ───────────────────────────────────────────────────────────────
@@ -405,10 +602,18 @@ function openCreate() {
   editTarget.value = null;
   form.value = {
     name: "",
+    address: "",
     description: "",
-    numberOfFloors: 5,
-    type: "Male",
-    imageUrl: "",
+    totalFloors: 5,
+    totalRooms: 50,
+    gender: "Male",
+    managerName: "",
+    managerPhone: "",
+    constructionYear: "",
+    status: "Active",
+    amenities: [],
+    thumbnailUrl: "",
+    isActive: true,
   };
   formErrors.value = {};
   dialog.value = true;
@@ -416,12 +621,25 @@ function openCreate() {
 
 function openEdit(b) {
   editTarget.value = b;
+  const amenities = [];
+  if (b.hasElevator) amenities.push("hasElevator");
+  if (b.hasParking) amenities.push("hasParking");
+  if (b.hasLaundry) amenities.push("hasLaundry");
+  
   form.value = {
     name: b.name,
-    description: b.description,
-    numberOfFloors: b.numberOfFloors,
-    type: b.type,
-    imageUrl: b.imageUrl || "",
+    address: b.address || "",
+    description: b.description || "",
+    totalFloors: b.totalFloors,
+    totalRooms: b.totalRooms,
+    gender: b.gender,
+    managerName: b.managerName || "",
+    managerPhone: b.managerPhone || "",
+    constructionYear: b.constructionYear || "",
+    status: b.status,
+    amenities: amenities,
+    thumbnailUrl: b.thumbnailUrl || "",
+    isActive: b.isActive !== false,
   };
   formErrors.value = {};
   dialog.value = true;
@@ -440,9 +658,11 @@ function selectBuilding(b) {
 function validate() {
   const errors = {};
   if (!form.value.name.trim()) errors.name = "Vui lòng nhập tên tòa nhà";
-  if (!form.value.numberOfFloors || form.value.numberOfFloors < 1)
-    errors.numberOfFloors = "Số tầng phải ≥ 1";
-  if (!form.value.type) errors.type = "Vui lòng chọn loại";
+  if (!form.value.totalFloors || form.value.totalFloors < 1)
+    errors.totalFloors = "Số tầng phải ≥ 1";
+  if (!form.value.totalRooms || form.value.totalRooms < 1)
+    errors.totalRooms = "Số phòng phải ≥ 1";
+  if (!form.value.gender) errors.gender = "Vui lòng chọn giới tính";
   formErrors.value = errors;
   return Object.keys(errors).length === 0;
 }
@@ -451,11 +671,29 @@ async function saveBuilding() {
   if (!validate()) return;
   saving.value = true;
   try {
+    const payload = {
+      name: form.value.name,
+      address: form.value.address,
+      description: form.value.description,
+      totalFloors: form.value.totalFloors,
+      totalRooms: form.value.totalRooms,
+      gender: form.value.gender,
+      managerName: form.value.managerName,
+      managerPhone: form.value.managerPhone,
+      constructionYear: form.value.constructionYear,
+      status: form.value.status,
+      hasElevator: form.value.amenities.includes("hasElevator"),
+      hasParking: form.value.amenities.includes("hasParking"),
+      hasLaundry: form.value.amenities.includes("hasLaundry"),
+      thumbnailUrl: form.value.thumbnailUrl,
+      isActive: form.value.isActive,
+    };
+    
     if (editTarget.value) {
-      await buildingService.update(editTarget.value.id, form.value);
+      await buildingService.update(editTarget.value.id, payload);
       showSnackbar("Cập nhật tòa nhà thành công!", "success");
     } else {
-      await buildingService.create(form.value);
+      await buildingService.create(payload);
       showSnackbar("Thêm tòa nhà thành công!", "success");
     }
     closeDialog();
@@ -491,25 +729,25 @@ function showSnackbar(message, type = "success") {
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
-function getTypeLabel(type) {
+function getGenderLabel(gender) {
   const map = { Male: "Khu Nam", Female: "Khu Nữ", Mixed: "Hỗn hợp" };
-  return map[type] || type;
+  return map[gender] || gender;
 }
-function getTypeColor(type) {
+function getGenderColor(gender) {
   const map = { Male: "blue", Female: "pink", Mixed: "purple" };
-  return map[type] || "grey";
+  return map[gender] || "grey";
 }
-function getBuildingColor(type) {
+function getBuildingColor(gender) {
   const map = { Male: "#3b82f6", Female: "#ec4899", Mixed: "#8b5cf6" };
-  return map[type] || "#e5e7eb";
+  return map[gender] || "#e5e7eb";
 }
-function getTypeBg(type) {
+function getGenderBg(gender) {
   const map = { Male: "#eff6ff", Female: "#fdf2f8", Mixed: "#f5f3ff" };
-  return map[type] || "#f9fafb";
+  return map[gender] || "#f9fafb";
 }
-function getTypeIconColor(type) {
+function getGenderIconColor(gender) {
   const map = { Male: "#3b82f6", Female: "#ec4899", Mixed: "#8b5cf6" };
-  return map[type] || "#9ca3af";
+  return map[gender] || "#9ca3af";
 }
 </script>
 
@@ -550,7 +788,12 @@ function getTypeIconColor(type) {
   padding: 24px;
 }
 
-:deep(.ant-drawer-close) {
-  color: #666;
+:deep(.ant-card-hoverable:hover) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+:deep(.ant-btn) {
+  font-weight: 500;
 }
 </style>

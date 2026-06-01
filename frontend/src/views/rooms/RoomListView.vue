@@ -192,7 +192,7 @@
               {{ r.roomNumber }}
             </div>
             <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px">
-              {{ getBuildingName(r.buildingId) }} · Tầng {{ r.floor }}
+              {{ getBuildingName(r.buildingId) }} · Tầng {{ r.floorNumber }}
             </div>
             <a-tag
               :color="getStatusTagColor(r.status)"
@@ -339,27 +339,58 @@
         </a-form-item>
 
         <a-form-item
-          label="Tầng"
-          :validate-status="formErrors.floor ? 'error' : ''"
-          :help="formErrors.floor"
-        >
-          <a-input-number
-            v-model:value="form.floor"
-            :min="1"
-            style="width: 100%"
-          />
-        </a-form-item>
-
-        <a-form-item
           label="Tòa nhà"
           :validate-status="formErrors.buildingId ? 'error' : ''"
           :help="formErrors.buildingId"
         >
-          <a-select v-model:value="form.buildingId" placeholder="Chọn tòa nhà">
+          <a-select
+            v-model:value="form.buildingId"
+            placeholder="Chọn tòa nhà"
+            :loading="loadingBuildings"
+            @change="onBuildingChange"
+          >
             <a-select-option v-for="b in buildings" :key="b.id" :value="b.id">
               {{ b.name }}
             </a-select-option>
           </a-select>
+          <div
+            v-if="buildings.length === 0"
+            style="font-size: 12px; color: #ff4d4f; margin-top: 4px"
+          >
+            Chưa có tòa nhà nào. Vui lòng tạo tòa nhà trước.
+          </div>
+        </a-form-item>
+
+        <a-form-item
+          label="Tầng"
+          :validate-status="formErrors.floorId ? 'error' : ''"
+          :help="formErrors.floorId"
+        >
+          <a-select
+            v-model:value="form.floorId"
+            placeholder="Chọn tầng"
+            :disabled="!form.buildingId"
+          >
+            <a-select-option
+              v-for="floor in buildingFloorOptions"
+              :key="floor.id"
+              :value="floor.id"
+            >
+              {{ floor.label }}
+            </a-select-option>
+          </a-select>
+          <div
+            v-if="!form.buildingId"
+            style="font-size: 12px; color: #8c8c8c; margin-top: 4px"
+          >
+            Vui lòng chọn tòa nhà trước
+          </div>
+          <div
+            v-else-if="buildingFloorOptions.length === 0"
+            style="font-size: 12px; color: #ff4d4f; margin-top: 4px"
+          >
+            Tòa nhà này chưa có tầng. Vui lòng tạo tầng trước.
+          </div>
         </a-form-item>
 
         <a-form-item
@@ -370,15 +401,28 @@
           <a-select
             v-model:value="form.roomTypeId"
             placeholder="Chọn loại phòng"
+            :disabled="!form.buildingId"
           >
             <a-select-option
-              v-for="rt in roomTypes"
+              v-for="rt in filteredRoomTypes"
               :key="rt.id"
               :value="rt.id"
             >
               {{ rt.name }} ({{ rt.capacity }} người)
             </a-select-option>
           </a-select>
+          <div
+            v-if="!form.buildingId"
+            style="font-size: 12px; color: #8c8c8c; margin-top: 4px"
+          >
+            Vui lòng chọn tòa nhà trước
+          </div>
+          <div
+            v-else-if="filteredRoomTypes.length === 0"
+            style="font-size: 12px; color: #ff4d4f; margin-top: 4px"
+          >
+            Tòa nhà này chưa có loại phòng. Vui lòng tạo loại phòng trước.
+          </div>
         </a-form-item>
 
         <a-form-item
@@ -439,7 +483,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { message } from "ant-design-vue";
 import {
   HomeOutlined,
@@ -451,11 +495,13 @@ import {
 import { roomService } from "@/services/roomService";
 import { buildingService } from "@/services/buildingService";
 import { roomTypeService } from "@/services/roomTypeService";
+import { floorService } from "@/services/floorService";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const rooms = ref([]);
 const buildings = ref([]);
 const roomTypes = ref([]);
+const buildingFloors = ref([]);
 const loading = ref(false);
 const loadingBuildings = ref(false);
 const error = ref(null);
@@ -486,10 +532,34 @@ const roomStatusOptions = [
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 const floorOptions = computed(() => {
-  const floors = [...new Set(rooms.value.map((r) => r.floor))].sort(
+  const floors = [...new Set(rooms.value.map((r) => r.floorNumber))].sort(
     (a, b) => a - b,
   );
   return floors;
+});
+
+const buildingFloorOptions = computed(() => {
+  console.log(
+    "🔢 buildingFloorOptions computed called, buildingFloors:",
+    buildingFloors.value,
+  );
+  const result = buildingFloors.value.map((floor) => ({
+    id: floor.id,
+    number: floor.floorNumber,
+    label: floor.label,
+  }));
+  if (result.length > 0) {
+    console.log("🏗️ First option structure:", result[0]);
+    console.log("🔢 All options:", result);
+  }
+  return result;
+});
+
+const filteredRoomTypes = computed(() => {
+  if (!form.value.buildingId) return [];
+  return roomTypes.value.filter(
+    (rt) => rt.buildingId === form.value.buildingId,
+  );
 });
 
 const filteredRooms = computed(() => {
@@ -499,7 +569,7 @@ const filteredRooms = computed(() => {
     const statusMatch =
       filterStatus.value === "all" || r.status === filterStatus.value;
     const floorMatch =
-      filterFloor.value === "all" || r.floor === filterFloor.value;
+      filterFloor.value === "all" || r.floorNumber === filterFloor.value;
     const searchMatch =
       !searchText.value ||
       r.roomNumber.toLowerCase().includes(searchText.value.toLowerCase());
@@ -508,11 +578,19 @@ const filteredRooms = computed(() => {
 });
 
 // ─── Load data ────────────────────────────────────────────────────────────────
+function normalizeRoom(room) {
+  return {
+    ...room,
+    currentOccupancy: room.currentOccupants ?? room.currentOccupancy ?? 0,
+    imageUrl: room.imageUrl ?? room.imageUrl ?? null,
+  };
+}
+
 async function loadRooms() {
   loading.value = true;
   error.value = null;
   try {
-    rooms.value = await roomService.getAll();
+    rooms.value = (await roomService.getAll()).map(normalizeRoom);
   } catch (err) {
     error.value = err.message || "Không thể tải danh sách phòng";
   } finally {
@@ -539,6 +617,37 @@ async function loadRoomTypes() {
   }
 }
 
+async function loadFloors(buildingId) {
+  if (!buildingId) {
+    buildingFloors.value = [];
+    return;
+  }
+
+  try {
+    console.log("🔄 loadFloors called with buildingId:", buildingId);
+    const floors = await floorService.getByBuildingId(buildingId);
+    console.log("✅ Floors fetched:", floors);
+    if (floors && floors.length > 0) {
+      console.log("🏗️ First floor structure:", {
+        id: floors[0].id,
+        floorNumber: floors[0].floorNumber,
+        label: floors[0].label,
+        fullObject: floors[0],
+      });
+    }
+    buildingFloors.value = floors;
+  } catch (err) {
+    console.error("❌ Error loading floors:", err);
+    buildingFloors.value = [];
+  }
+}
+
+function onBuildingChange(newBuildingId) {
+  form.value.floorId = undefined;
+  form.value.roomTypeId = undefined;
+  return loadFloors(newBuildingId || form.value.buildingId);
+}
+
 onMounted(() => {
   loadRooms();
   loadBuildings();
@@ -549,7 +658,7 @@ onMounted(() => {
 function getDefaultForm() {
   return {
     roomNumber: "",
-    floor: 1,
+    floorId: undefined,
     buildingId: undefined,
     roomTypeId: undefined,
     status: "Available",
@@ -592,22 +701,36 @@ function openCreate() {
   editTarget.value = null;
   form.value = getDefaultForm();
   formErrors.value = {};
+  buildingFloors.value = [];
   formModalOpen.value = true;
 }
 
-function openEdit(room) {
+async function openEdit(room) {
   if (!room) return;
+  console.log("📝 openEdit called with room:", room);
   editTarget.value = room;
+  buildingFloors.value = [];
   form.value = {
     roomNumber: room.roomNumber,
-    floor: room.floor,
+    floorId: room.floorId,
     buildingId: room.buildingId,
     roomTypeId: room.roomTypeId,
     status: room.status,
     currentOccupancy: room.currentOccupancy,
     imageUrl: room.imageUrl || "",
   };
+  console.log("✏️ Form after init, floorId set to:", form.value.floorId);
   formErrors.value = {};
+  console.log("🏢 About to load floors for buildingId:", room.buildingId);
+  await loadFloors(room.buildingId);
+  console.log("📊 buildingFloors after load:", buildingFloors.value);
+  console.log("📊 buildingFloorOptions computed:", buildingFloorOptions.value);
+  console.log(
+    "🔍 Looking for floor with id:",
+    form.value.floorId,
+    "in options:",
+    buildingFloorOptions.value.map((o) => ({ id: o.id, label: o.label })),
+  );
   formModalOpen.value = true;
 }
 
@@ -636,9 +759,8 @@ function validateForm() {
 
   if (!form.value.roomNumber?.trim())
     errors.roomNumber = "Vui lòng nhập số phòng";
-  if (!form.value.floor || form.value.floor < 1)
-    errors.floor = "Tầng phải lớn hơn hoặc bằng 1";
   if (!form.value.buildingId) errors.buildingId = "Vui lòng chọn tòa nhà";
+  if (!form.value.floorId) errors.floorId = "Vui lòng chọn tầng";
   if (!form.value.roomTypeId) errors.roomTypeId = "Vui lòng chọn loại phòng";
   if (!form.value.status) errors.status = "Vui lòng chọn trạng thái";
   if (form.value.currentOccupancy == null || form.value.currentOccupancy < 0) {
@@ -661,11 +783,11 @@ async function saveRoom() {
   try {
     const payload = {
       roomNumber: form.value.roomNumber.trim(),
-      floor: form.value.floor,
+      floorId: form.value.floorId,
       buildingId: form.value.buildingId,
       roomTypeId: form.value.roomTypeId,
       status: form.value.status,
-      currentOccupancy: form.value.currentOccupancy,
+      currentOccupants: form.value.currentOccupancy,
       imageUrl: form.value.imageUrl?.trim() || null,
     };
 

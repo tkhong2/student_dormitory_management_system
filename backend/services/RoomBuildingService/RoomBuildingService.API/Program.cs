@@ -29,6 +29,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
 builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IFloorRepository, FloorRepository>();
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+builder.Services.AddScoped<IBuildingAnnouncementRepository, BuildingAnnouncementRepository>();
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomInspectionRepository, RoomInspectionRepository>();
+builder.Services.AddScoped<IRoomReservationRepository, RoomReservationRepository>();
+builder.Services.AddScoped<IRoomStatusLogRepository, RoomStatusLogRepository>();
+builder.Services.AddScoped<IRoomTypeAmenityRepository, RoomTypeAmenityRepository>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

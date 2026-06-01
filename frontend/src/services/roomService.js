@@ -1,4 +1,4 @@
-import api from './api'
+import api from "./api";
 
 export const roomService = {
   /**
@@ -6,7 +6,7 @@ export const roomService = {
    * @returns {Promise<RoomDto[]>}
    */
   getAll() {
-    return api.get('/rooms')
+    return api.get("/rooms");
   },
 
   /**
@@ -14,7 +14,7 @@ export const roomService = {
    * @param {string} id
    */
   getById(id) {
-    return api.get(`/rooms/${id}`)
+    return api.get(`/rooms/${id}`);
   },
 
   /**
@@ -22,7 +22,7 @@ export const roomService = {
    * @param {string} buildingId
    */
   getByBuildingId(buildingId) {
-    return api.get(`/rooms/building/${buildingId}`)
+    return api.get(`/rooms/building/${buildingId}`);
   },
 
   /**
@@ -30,7 +30,7 @@ export const roomService = {
    * @param {CreateRoomDto} data
    */
   create(data) {
-    return api.post('/rooms', data)
+    return api.post("/rooms", data);
   },
 
   /**
@@ -39,7 +39,7 @@ export const roomService = {
    * @param {CreateRoomDto} data
    */
   update(id, data) {
-    return api.put(`/rooms/${id}`, data)
+    return api.put(`/rooms/${id}`, data);
   },
 
   /**
@@ -47,27 +47,45 @@ export const roomService = {
    * @param {string} id
    */
   delete(id) {
-    return api.delete(`/rooms/${id}`)
+    return api.delete(`/rooms/${id}`);
   },
-}
+};
 
 /**
  * @typedef {Object} RoomDto
- * @property {string} id
+ * @property {number} id
  * @property {string} roomNumber
- * @property {number} floor
- * @property {string} buildingId
- * @property {string} roomTypeId
- * @property {string} status - 'Available' | 'Occupied' | 'Full' | 'Maintenance'
- * @property {number} currentOccupancy
+ * @property {number} floorId
+ * @property {number} roomTypeId
+ * @property {number} buildingId
+ * @property {number} floorNumber
+ * @property {string} buildingName
+ * @property {string} roomTypeName
+ * @property {string} status - 'Available' | 'Full' | 'Maintenance' | 'Reserved' | 'Closed'
+ * @property {number} currentOccupants
+ * @property {number} maxOccupants
+ * @property {string} orientation
+ * @property {string} notes
+ * @property {boolean} isLocked
+ * @property {string} lockReason
+ * @property {string} qrCode
+ * @property {string} lastInspectedAt
+ * @property {string} availableFrom
  */
 
 /**
  * @typedef {Object} CreateRoomDto
  * @property {string} roomNumber
- * @property {number} floor
- * @property {string} buildingId
- * @property {string} roomTypeId
+ * @property {number} floorId
+ * @property {number} roomTypeId
  * @property {string} status
- * @property {number} currentOccupancy
+ * @property {number} currentOccupants
+ * @property {number} maxOccupants
+ * @property {string} orientation
+ * @property {string} notes
+ * @property {boolean} isLocked
+ * @property {string} lockReason
+ * @property {string} qrCode
+ * @property {string} lastInspectedAt
+ * @property {string} availableFrom
  */

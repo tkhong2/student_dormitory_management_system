@@ -11,13 +11,16 @@ namespace RoomBuildingService.API.Controllers
     {
         private readonly IRoomTypeRepository _roomTypeRepository;
         private readonly IRoomRepository _roomRepository;
+        private readonly IBuildingRepository _buildingRepository;
 
         public RoomTypesController(
             IRoomTypeRepository roomTypeRepository,
-            IRoomRepository roomRepository)
+            IRoomRepository roomRepository,
+            IBuildingRepository buildingRepository)
         {
             _roomTypeRepository = roomTypeRepository;
             _roomRepository = roomRepository;
+            _buildingRepository = buildingRepository;
         }
 
         [HttpGet]
@@ -27,17 +30,30 @@ namespace RoomBuildingService.API.Controllers
             var roomTypeDtos = roomTypes.Select(rt => new RoomTypeDto
             {
                 Id = rt.Id,
+                BuildingId = rt.BuildingId,
+                Code = rt.Code,
                 Name = rt.Name,
-                Price = rt.Price,
                 Capacity = rt.Capacity,
-                Description = rt.Description
+                PricePerMonth = rt.PricePerMonth,
+                DepositAmount = rt.DepositAmount,
+                ElectricityRate = rt.ElectricityRate,
+                WaterRate = rt.WaterRate,
+                Area = rt.Area,
+                BedType = rt.BedType,
+                HasAirConditioner = rt.HasAirConditioner,
+                HasWaterHeater = rt.HasWaterHeater,
+                HasPrivateBathroom = rt.HasPrivateBathroom,
+                HasWindowView = rt.HasWindowView,
+                Description = rt.Description,
+                ThumbnailUrl = rt.ThumbnailUrl,
+                IsActive = rt.IsActive
             });
 
             return Ok(roomTypeDtos);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RoomTypeDto>> GetById(Guid id)
+        public async Task<ActionResult<RoomTypeDto>> GetById(int id)
         {
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
@@ -46,10 +62,23 @@ namespace RoomBuildingService.API.Controllers
             var roomTypeDto = new RoomTypeDto
             {
                 Id = roomType.Id,
+                BuildingId = roomType.BuildingId,
+                Code = roomType.Code,
                 Name = roomType.Name,
-                Price = roomType.Price,
                 Capacity = roomType.Capacity,
-                Description = roomType.Description
+                PricePerMonth = roomType.PricePerMonth,
+                DepositAmount = roomType.DepositAmount,
+                ElectricityRate = roomType.ElectricityRate,
+                WaterRate = roomType.WaterRate,
+                Area = roomType.Area,
+                BedType = roomType.BedType,
+                HasAirConditioner = roomType.HasAirConditioner,
+                HasWaterHeater = roomType.HasWaterHeater,
+                HasPrivateBathroom = roomType.HasPrivateBathroom,
+                HasWindowView = roomType.HasWindowView,
+                Description = roomType.Description,
+                ThumbnailUrl = roomType.ThumbnailUrl,
+                IsActive = roomType.IsActive
             };
 
             return Ok(roomTypeDto);
@@ -58,12 +87,29 @@ namespace RoomBuildingService.API.Controllers
         [HttpPost]
         public async Task<ActionResult<RoomTypeDto>> Create([FromBody] CreateRoomTypeDto dto)
         {
+            var building = await _buildingRepository.GetByIdAsync(dto.BuildingId);
+            if (building == null)
+                return BadRequest(new { message = "Tòa nhà không tồn tại" });
+
             var roomType = new RoomType
             {
+                BuildingId = dto.BuildingId,
+                Code = dto.Code,
                 Name = dto.Name,
-                Price = dto.Price,
                 Capacity = dto.Capacity,
-                Description = dto.Description
+                PricePerMonth = dto.PricePerMonth,
+                DepositAmount = dto.DepositAmount,
+                ElectricityRate = dto.ElectricityRate,
+                WaterRate = dto.WaterRate,
+                Area = dto.Area,
+                BedType = dto.BedType,
+                HasAirConditioner = dto.HasAirConditioner,
+                HasWaterHeater = dto.HasWaterHeater,
+                HasPrivateBathroom = dto.HasPrivateBathroom,
+                HasWindowView = dto.HasWindowView,
+                Description = dto.Description,
+                ThumbnailUrl = dto.ThumbnailUrl,
+                IsActive = dto.IsActive
             };
 
             await _roomTypeRepository.AddAsync(roomType);
@@ -71,26 +117,56 @@ namespace RoomBuildingService.API.Controllers
             var roomTypeDto = new RoomTypeDto
             {
                 Id = roomType.Id,
+                BuildingId = roomType.BuildingId,
+                Code = roomType.Code,
                 Name = roomType.Name,
-                Price = roomType.Price,
                 Capacity = roomType.Capacity,
-                Description = roomType.Description
+                PricePerMonth = roomType.PricePerMonth,
+                DepositAmount = roomType.DepositAmount,
+                ElectricityRate = roomType.ElectricityRate,
+                WaterRate = roomType.WaterRate,
+                Area = roomType.Area,
+                BedType = roomType.BedType,
+                HasAirConditioner = roomType.HasAirConditioner,
+                HasWaterHeater = roomType.HasWaterHeater,
+                HasPrivateBathroom = roomType.HasPrivateBathroom,
+                HasWindowView = roomType.HasWindowView,
+                Description = roomType.Description,
+                ThumbnailUrl = roomType.ThumbnailUrl,
+                IsActive = roomType.IsActive
             };
 
             return CreatedAtAction(nameof(GetById), new { id = roomType.Id }, roomTypeDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(Guid id, [FromBody] CreateRoomTypeDto dto)
+        public async Task<ActionResult> Update(int id, [FromBody] CreateRoomTypeDto dto)
         {
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
                 return NotFound(new { message = "Không tìm thấy loại phòng" });
 
+            var building = await _buildingRepository.GetByIdAsync(dto.BuildingId);
+            if (building == null)
+                return BadRequest(new { message = "Tòa nhà không tồn tại" });
+
+            roomType.BuildingId = dto.BuildingId;
+            roomType.Code = dto.Code;
             roomType.Name = dto.Name;
-            roomType.Price = dto.Price;
             roomType.Capacity = dto.Capacity;
+            roomType.PricePerMonth = dto.PricePerMonth;
+            roomType.DepositAmount = dto.DepositAmount;
+            roomType.ElectricityRate = dto.ElectricityRate;
+            roomType.WaterRate = dto.WaterRate;
+            roomType.Area = dto.Area;
+            roomType.BedType = dto.BedType;
+            roomType.HasAirConditioner = dto.HasAirConditioner;
+            roomType.HasWaterHeater = dto.HasWaterHeater;
+            roomType.HasPrivateBathroom = dto.HasPrivateBathroom;
+            roomType.HasWindowView = dto.HasWindowView;
             roomType.Description = dto.Description;
+            roomType.ThumbnailUrl = dto.ThumbnailUrl;
+            roomType.IsActive = dto.IsActive;
 
             await _roomTypeRepository.UpdateAsync(roomType);
 
@@ -98,7 +174,7 @@ namespace RoomBuildingService.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(Guid id)
+        public async Task<ActionResult> Delete(int id)
         {
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
@@ -116,9 +192,22 @@ namespace RoomBuildingService.API.Controllers
 
     public class CreateRoomTypeDto
     {
+        public int BuildingId { get; set; }
+        public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public decimal Price { get; set; }
         public int Capacity { get; set; }
-        public string Description { get; set; } = string.Empty;
+        public decimal PricePerMonth { get; set; }
+        public decimal DepositAmount { get; set; }
+        public decimal ElectricityRate { get; set; }
+        public decimal WaterRate { get; set; }
+        public decimal Area { get; set; }
+        public string BedType { get; set; } = "Single";
+        public bool HasAirConditioner { get; set; } = false;
+        public bool HasWaterHeater { get; set; } = false;
+        public bool HasPrivateBathroom { get; set; } = false;
+        public bool HasWindowView { get; set; } = false;
+        public string? Description { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

@@ -47,17 +47,38 @@ export const buildingService = {
 
 /**
  * @typedef {Object} BuildingDto
- * @property {string} id
+ * @property {number} id
  * @property {string} name
+ * @property {string} gender - 'Male' | 'Female' | 'Mixed'
+ * @property {number} totalFloors
+ * @property {number} totalRooms
+ * @property {string} address
  * @property {string} description
- * @property {number} numberOfFloors
- * @property {string} type - 'Male' | 'Female' | 'Mixed'
+ * @property {string} managerName
+ * @property {string} managerPhone
+ * @property {string} constructionYear
+ * @property {string} status - 'Active' | 'UnderMaintenance' | 'Closed'
+ * @property {boolean} hasElevator
+ * @property {boolean} hasParking
+ * @property {boolean} hasLaundry
+ * @property {string} thumbnailUrl
  */
 
 /**
  * @typedef {Object} CreateBuildingDto
  * @property {string} name
+ * @property {string} gender
+ * @property {number} totalFloors
+ * @property {number} totalRooms
+ * @property {string} address
  * @property {string} description
- * @property {number} numberOfFloors
- * @property {string} type
+ * @property {string} managerName
+ * @property {string} managerPhone
+ * @property {string} constructionYear
+ * @property {string} status
+ * @property {boolean} hasElevator
+ * @property {boolean} hasParking
+ * @property {boolean} hasLaundry
+ * @property {boolean} isActive
+ * @property {string} thumbnailUrl
  */

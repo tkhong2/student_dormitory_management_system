@@ -1,26 +1,31 @@
 using MediatR;
 using RoomBuildingService.Application.Interfaces;
 using RoomBuildingService.Domain.Entities;
-using RoomBuildingService.Domain.Enums;
 
 namespace RoomBuildingService.Application.Buildings.Commands
 {
-    public record CreateBuildingCommand(string Name, string Description, int NumberOfFloors, BuildingType Type) : IRequest<Guid>;
+    public record CreateBuildingCommand(
+        string Name,
+        string Gender,
+        int TotalFloors,
+        int TotalRooms,
+        string? Description
+    ) : IRequest<int>;
 
-    public class CreateBuildingHandler : IRequestHandler<CreateBuildingCommand, Guid>
+    public class CreateBuildingHandler : IRequestHandler<CreateBuildingCommand, int>
     {
         private readonly IBuildingRepository _repository;
         public CreateBuildingHandler(IBuildingRepository repository) => _repository = repository;
 
-        public async Task<Guid> Handle(CreateBuildingCommand request, CancellationToken cancellationToken)
+        public async Task<int> Handle(CreateBuildingCommand request, CancellationToken cancellationToken)
         {
             var building = new Building
             {
-                Id = Guid.NewGuid(),
                 Name = request.Name,
-                Description = request.Description,
-                NumberOfFloors = request.NumberOfFloors,
-                Type = request.Type
+                Gender = request.Gender,
+                TotalFloors = request.TotalFloors,
+                TotalRooms = request.TotalRooms,
+                Description = request.Description
             };
 
             await _repository.AddAsync(building);

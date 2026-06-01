@@ -45,17 +45,43 @@ export const roomTypeService = {
 
 /**
  * @typedef {Object} RoomTypeDto
- * @property {string} id
+ * @property {number} id
+ * @property {number} buildingId
+ * @property {string} code
  * @property {string} name
  * @property {number} capacity
  * @property {number} pricePerMonth
+ * @property {number} depositAmount
+ * @property {number} electricityRate
+ * @property {number} waterRate
+ * @property {number} area
+ * @property {string} bedType
+ * @property {boolean} hasAirConditioner
+ * @property {boolean} hasWaterHeater
+ * @property {boolean} hasPrivateBathroom
+ * @property {boolean} hasWindowView
  * @property {string} description
+ * @property {string} thumbnailUrl
+ * @property {boolean} isActive
  */
 
 /**
  * @typedef {Object} CreateRoomTypeDto
+ * @property {number} buildingId
+ * @property {string} code
  * @property {string} name
  * @property {number} capacity
  * @property {number} pricePerMonth
+ * @property {number} depositAmount
+ * @property {number} electricityRate
+ * @property {number} waterRate
+ * @property {number} area
+ * @property {string} bedType
+ * @property {boolean} hasAirConditioner
+ * @property {boolean} hasWaterHeater
+ * @property {boolean} hasPrivateBathroom
+ * @property {boolean} hasWindowView
  * @property {string} description
+ * @property {string} thumbnailUrl
+ * @property {boolean} isActive
  */
