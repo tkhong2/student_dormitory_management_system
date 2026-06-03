@@ -79,6 +79,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Enable static files serving (for uploaded images)
+app.UseStaticFiles();
+
 // app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");

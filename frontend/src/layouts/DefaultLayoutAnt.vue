@@ -7,53 +7,64 @@
         :trigger="null"
         collapsible
         width="260"
+        :collapsedWidth="80"
         style="
           background: #fff;
           box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-          position: relative;
+          position: fixed;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          overflow: hidden;
+          z-index: 100;
         "
       >
-        <div class="logo-container">
-          <AppLogo :collapsed="collapsed" subtitle="Quản trị viên" />
-        </div>
+        <div style="height: 100%; display: flex; flex-direction: column;">
+          <div class="logo-container">
+            <AppLogo :collapsed="collapsed" subtitle="Quản trị viên" />
+          </div>
 
-        <a-menu
-          v-model:selectedKeys="selectedKeys"
-          mode="inline"
-          :items="menuItems"
-          @click="handleMenuClick"
-          style="border-right: 0; margin-top: 8px; padding-bottom: 80px"
-        />
+          <div style="flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;">
+            <a-menu
+              v-model:selectedKeys="selectedKeys"
+              mode="inline"
+              :items="menuItems"
+              @click="handleMenuClick"
+              style="border-right: 0;"
+            />
+          </div>
 
-        <div class="user-info-fixed" v-if="!collapsed">
-          <a-card
-            size="small"
-            style="background: #1f1f1f; border: none; margin: 0"
-          >
-            <div style="display: flex; align-items: center; gap: 12px">
-              <a-avatar src="https://i.pravatar.cc/150?u=admin" :size="40" />
-              <div style="flex: 1; min-width: 0">
-                <div style="color: white; font-weight: 600; font-size: 13px">
-                  Administrator
+          <div class="user-info-fixed" v-if="!collapsed">
+            <a-card
+              size="small"
+              style="background: #1f1f1f; border: none; margin: 0"
+              :bodyStyle="{ padding: '8px 10px' }"
+            >
+              <div style="display: flex; align-items: center; gap: 8px">
+                <a-avatar src="https://i.pravatar.cc/150?u=admin" :size="32" />
+                <div style="flex: 1; min-width: 0">
+                  <div style="color: white; font-weight: 600; font-size: 11px; line-height: 1.3">
+                    Administrator
+                  </div>
+                  <div style="color: rgba(255, 255, 255, 0.5); font-size: 10px; line-height: 1.2">
+                    Hệ thống
+                  </div>
                 </div>
-                <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px">
-                  Hệ thống
-                </div>
+                <a-button
+                  type="text"
+                  size="small"
+                  @click="logout"
+                  style="color: white; padding: 2px; min-width: 28px; height: 28px"
+                >
+                  <template #icon><LogoutOutlined style="font-size: 12px" /></template>
+                </a-button>
               </div>
-              <a-button
-                type="text"
-                size="small"
-                @click="logout"
-                style="color: white"
-              >
-                <template #icon><LogoutOutlined /></template>
-              </a-button>
-            </div>
-          </a-card>
+            </a-card>
+          </div>
         </div>
       </a-layout-sider>
 
-      <a-layout>
+      <a-layout :style="{ marginLeft: collapsed ? '80px' : '260px' }">
         <!-- Header -->
         <a-layout-header
           style="
@@ -63,7 +74,15 @@
             align-items: center;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
             height: 56px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 99;
           "
+          :style="{ 
+            left: collapsed ? '80px' : '260px',
+            width: collapsed ? 'calc(100% - 80px)' : 'calc(100% - 260px)'
+          }"
         >
           <a-button
             type="text"
@@ -126,7 +145,12 @@
 
         <!-- Content -->
         <a-layout-content
-          style="padding: 20px 25px; background: #f5f5f5; min-height: 280px"
+          style="
+            padding: 20px 25px; 
+            background: #f5f5f5; 
+            min-height: calc(100vh - 56px);
+            margin-top: 56px;
+          "
         >
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
@@ -155,6 +179,9 @@ import {
   LogoutOutlined,
   UserOutlined,
   SettingOutlined,
+  SafetyOutlined,
+  NotificationOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons-vue";
 import AppLogo from "@/components/common/AppLogo.vue";
 
@@ -203,6 +230,16 @@ const menuItems = [
         icon: () => h(HomeOutlined),
         label: "Phòng ở",
       },
+      {
+        key: "/admin/amenities",
+        icon: () => h(AppstoreOutlined),
+        label: "Tiện nghi",
+      },
+      {
+        key: "/admin/room-inspections",
+        icon: () => h(SafetyOutlined),
+        label: "Kiểm tra phòng",
+      },
     ],
   },
   {
@@ -216,9 +253,29 @@ const menuItems = [
         label: "Quản lý Sinh viên",
       },
       {
+        key: "/admin/student-documents",
+        icon: () => h(FileTextOutlined),
+        label: "Tài liệu sinh viên",
+      },
+      {
+        key: "/admin/room-applications",
+        icon: () => h(FileTextOutlined),
+        label: "Đơn đăng ký phòng",
+      },
+      {
         key: "/admin/contracts",
         icon: () => h(FileTextOutlined),
-        label: "Hợp đồng",
+        label: "Hợp đồng thuê",
+      },
+      {
+        key: "/admin/contract-extensions",
+        icon: () => h(FileTextOutlined),
+        label: "Gia hạn hợp đồng",
+      },
+      {
+        key: "/admin/room-transfers",
+        icon: () => h(FileTextOutlined),
+        label: "Chuyển phòng",
       },
     ],
   },
@@ -228,14 +285,58 @@ const menuItems = [
     type: "group",
     children: [
       {
+        key: "/admin/invoices",
+        icon: () => h(FileTextOutlined),
+        label: "Phiếu thu",
+      },
+      {
+        key: "/admin/payments",
+        icon: () => h(DollarOutlined),
+        label: "Thanh toán",
+      },
+      {
         key: "/admin/billing",
         icon: () => h(DollarOutlined),
-        label: "Hóa đơn",
+        label: "Hóa đơn (cũ)",
+      },
+      {
+        key: "/admin/debt",
+        icon: () => h(DollarOutlined),
+        label: "Công nợ",
+      },
+    ],
+  },
+  {
+    key: "maintenance",
+    label: "BẢO TRÌ & SỬA CHỮA",
+    type: "group",
+    children: [
+      {
+        key: "/admin/maintenance-requests",
+        icon: () => h(ToolOutlined),
+        label: "Yêu cầu sửa chữa",
       },
       {
         key: "/admin/maintenance",
         icon: () => h(ToolOutlined),
-        label: "Bảo trì",
+        label: "Bảo trì (cũ)",
+      },
+    ],
+  },
+  {
+    key: "system",
+    label: "HỆ THỐNG",
+    type: "group",
+    children: [
+      {
+        key: "/admin/announcements",
+        icon: () => h(NotificationOutlined),
+        label: "Thông báo",
+      },
+      {
+        key: "/admin/users",
+        icon: () => h(TeamOutlined),
+        label: "Người dùng",
       },
     ],
   },
@@ -254,23 +355,41 @@ const logout = () => {
 
 <style scoped>
 .logo-container {
-  height: 80px;
+  height: 56px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 20px;
+  gap: 10px;
+  padding: 0 16px;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .user-info-fixed {
-  position: fixed;
-  bottom: 0;
-  left: 0;
   width: 260px;
-  padding: 16px;
+  padding: 8px 12px;
   background: #fff;
   border-top: 1px solid #f0f0f0;
-  z-index: 10;
+}
+
+:deep(.ant-menu) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+:deep(.ant-menu::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(.ant-menu::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.ant-menu::-webkit-scrollbar-thumb) {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+:deep(.ant-menu::-webkit-scrollbar-thumb:hover) {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 :deep(.ant-menu-item-group-title) {

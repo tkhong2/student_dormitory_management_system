@@ -68,16 +68,20 @@ namespace RoomBuildingService.API.Controllers
                 return NotFound(new { message = "Không tìm thấy tòa nhà" });
 
             var floors = await _floorRepository.GetByBuildingIdAsync(buildingId);
-            var dtos = floors.Select(f => new FloorDto
-            {
-                Id = f.Id,
-                BuildingId = f.BuildingId,
-                FloorNumber = f.FloorNumber,
-                Label = f.Label,
-                TotalRooms = f.TotalRooms,
-                FloorPlanImageUrl = f.FloorPlanImageUrl,
-                IsActive = f.IsActive
-            });
+            
+            // Chỉ lấy các tầng có FloorNumber <= TotalFloors của tòa nhà
+            var dtos = floors
+                .Where(f => f.FloorNumber <= building.TotalFloors)
+                .Select(f => new FloorDto
+                {
+                    Id = f.Id,
+                    BuildingId = f.BuildingId,
+                    FloorNumber = f.FloorNumber,
+                    Label = f.Label,
+                    TotalRooms = f.TotalRooms,
+                    FloorPlanImageUrl = f.FloorPlanImageUrl,
+                    IsActive = f.IsActive
+                });
 
             return Ok(dtos);
         }

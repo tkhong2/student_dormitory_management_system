@@ -1,0 +1,225 @@
+@baseUrl = http://localhost:5002
+@baseUrlHttps = https://localhost:7002
+
+### Health Check
+GET {{baseUrl}}/swagger/index.html
+
+###############################################
+# Users API
+###############################################
+
+### Get all users
+GET {{baseUrl}}/api/users
+
+### Get user by ID
+GET {{baseUrl}}/api/users/1
+
+### Create new user
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123",
+  "fullName": "Administrator",
+  "email": "admin@example.com",
+  "phone": "0123456789",
+  "role": "Admin"
+}
+
+### Create student user
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "username": "SV001",
+  "password": "Student@123",
+  "fullName": "Nguyen Van A",
+  "email": "student@example.com",
+  "phone": "0987654321",
+  "role": "Student",
+  "studentId": 1,
+  "studentCode": "SV001"
+}
+
+###############################################
+# Invoices API
+###############################################
+
+### Get all invoices
+GET {{baseUrl}}/api/invoices
+
+### Get invoice by ID
+GET {{baseUrl}}/api/invoices/1
+
+### Get invoices by student ID
+GET {{baseUrl}}/api/invoices/student/1
+
+### Get invoices by contract ID
+GET {{baseUrl}}/api/invoices/contract/1
+
+### Create new invoice
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+
+{
+  "invoiceCode": "INV202501001",
+  "invoiceType": "Monthly",
+  "contractId": 1,
+  "studentId": 1,
+  "studentName": "Nguyen Van A",
+  "studentCode": "SV001",
+  "roomId": 1,
+  "roomNumber": "101",
+  "buildingName": "Tòa A",
+  "billingMonth": 1,
+  "billingYear": 2025,
+  "rentAmount": 1500000,
+  "electricityAmount": 250000,
+  "waterAmount": 80000,
+  "serviceAmount": 150000,
+  "previousDebt": 0,
+  "discount": 0,
+  "dueDate": "2025-01-15",
+  "createdByUserId": 1,
+  "notes": "Phiếu thu tháng 1/2025",
+  "items": [
+    {
+      "itemName": "Tiền phòng",
+      "itemDescription": "Phòng 101 - Tòa A",
+      "quantity": 1,
+      "unit": "tháng",
+      "unitPrice": 1500000,
+      "sortOrder": 1
+    },
+    {
+      "itemName": "Tiền điện",
+      "itemDescription": "120 kWh × 2,083đ",
+      "quantity": 120,
+      "unit": "kWh",
+      "unitPrice": 2083,
+      "sortOrder": 2
+    },
+    {
+      "itemName": "Tiền nước",
+      "itemDescription": "8 m3 × 10,000đ",
+      "quantity": 8,
+      "unit": "m3",
+      "unitPrice": 10000,
+      "sortOrder": 3
+    },
+    {
+      "itemName": "Phí dịch vụ",
+      "itemDescription": "Vệ sinh, wifi",
+      "quantity": 1,
+      "unit": "tháng",
+      "unitPrice": 150000,
+      "sortOrder": 4
+    }
+  ]
+}
+
+###############################################
+# Payments API
+###############################################
+
+### Get all payments
+GET {{baseUrl}}/api/payments
+
+### Get payment by ID
+GET {{baseUrl}}/api/payments/1
+
+### Get payments by invoice ID
+GET {{baseUrl}}/api/payments/invoice/1
+
+### Create new payment
+POST {{baseUrl}}/api/payments
+Content-Type: application/json
+
+{
+  "invoiceId": 1,
+  "amount": 1980000,
+  "method": "BankTransfer",
+  "transactionCode": "TXN20250103123456",
+  "bankName": "Vietcombank",
+  "bankAccountNumber": "1234567890",
+  "paymentDate": "2025-01-03",
+  "receivedByUserId": 1,
+  "receivedByName": "Administrator",
+  "note": "Thanh toán đầy đủ"
+}
+
+###############################################
+# Maintenance Requests API
+###############################################
+
+### Get all maintenance requests
+GET {{baseUrl}}/api/maintenancerequests
+
+### Get maintenance request by ID
+GET {{baseUrl}}/api/maintenancerequests/1
+
+### Get maintenance requests by room ID
+GET {{baseUrl}}/api/maintenancerequests/room/1
+
+### Get maintenance requests by student ID
+GET {{baseUrl}}/api/maintenancerequests/student/1
+
+### Create new maintenance request
+POST {{baseUrl}}/api/maintenancerequests
+Content-Type: application/json
+
+{
+  "roomId": 1,
+  "roomNumber": "101",
+  "buildingName": "Tòa A",
+  "requestedByStudentId": 1,
+  "requestedByStudentName": "Nguyen Van A",
+  "title": "Điều hòa không hoạt động",
+  "description": "Điều hòa phòng 101 không chạy, có thể do hết gas hoặc lỗi máy nén",
+  "category": "Electric",
+  "priority": "High",
+  "imageUrls": null
+}
+
+### Assign maintenance request to technician
+POST {{baseUrl}}/api/maintenancerequests/1/assign
+Content-Type: application/json
+
+{
+  "assignedToUserId": 2,
+  "assignedToName": "Nguyen Van B",
+  "expectedCompletionDate": "2025-01-10",
+  "estimatedCost": 500000
+}
+
+### Start working on maintenance request
+POST {{baseUrl}}/api/maintenancerequests/1/start
+
+### Resolve maintenance request
+POST {{baseUrl}}/api/maintenancerequests/1/resolve
+Content-Type: application/json
+
+{
+  "resolutionNote": "Đã thay gas điều hòa, kiểm tra máy nén hoạt động bình thường",
+  "actualCost": 450000,
+  "afterImageUrls": null
+}
+
+### Rate maintenance request
+POST {{baseUrl}}/api/maintenancerequests/1/rate
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "feedback": "Xử lý nhanh chóng, chuyên nghiệp"
+}
+
+### Reject maintenance request
+POST {{baseUrl}}/api/maintenancerequests/1/reject
+Content-Type: application/json
+
+{
+  "rejectedReason": "Không phải lỗi của KTX, sinh viên tự tắt máy",
+  "rejectedByUserId": 1
+}

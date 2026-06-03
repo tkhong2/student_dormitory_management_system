@@ -39,6 +39,7 @@ namespace RoomBuildingService.Application.DTOs
         public string? Description { get; set; }
         public string? ThumbnailUrl { get; set; }
         public bool IsActive { get; set; }
+        public List<int> AmenityIds { get; set; } = new List<int>();
     }
 
     public class RoomDto

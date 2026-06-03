@@ -1,308 +1,279 @@
 <template>
   <div>
-    <div style="margin-bottom: 16px">
-      <h1 style="font-size: 20px; font-weight: 700; margin: 0">
-        Yêu cầu Bảo trì
+    <!-- Page Header -->
+    <div style="background: #fff; margin-bottom: 16px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 16px 24px">
+      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 4px 0; color: #000">
+        Yêu Cầu Bảo Trì
       </h1>
-      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">
-        {{ requests.length }} yêu cầu —
-        {{ requests.filter((r) => r.status === "Chờ xử lý").length }} đang chờ
+      <p style="font-size: 14px; color: #8c8c8c; margin: 0">
+        {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
       </p>
     </div>
 
-    <!-- Status tabs -->
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="requests"
-      @retry="loadData"
-    >
-      <template #default>
-        <v-tabs v-model="tab" color="primary" style="margin-bottom: 16px">
-          <v-tab value="all">Tất cả</v-tab>
-          <v-tab value="pending"
-            >Chờ xử lý
-            <v-badge
-              :content="requests.filter((r) => r.status === 'Chờ xử lý').length"
-              color="warning"
-              inline
-              class="ml-1"
-          /></v-tab>
-          <v-tab value="progress">Đang xử lý</v-tab>
-          <v-tab value="done">Hoàn thành</v-tab>
-        </v-tabs>
+    <!-- Status Tabs -->
+    <a-tabs v-model:activeKey="tab" style="margin-bottom: 16px" size="large">
+      <a-tab-pane key="all" tab="Tất cả" />
+      <a-tab-pane key="pending">
+        <template #tab>
+          Chờ xử lý
+          <a-badge :count="pendingCount" :number-style="{ backgroundColor: '#faad14', marginLeft: '8px' }" />
+        </template>
+      </a-tab-pane>
+      <a-tab-pane key="progress" tab="Đang xử lý" />
+      <a-tab-pane key="done" tab="Hoàn thành" />
+    </a-tabs>
 
-        <!-- Filter Section -->
-        <v-card
-          style="
-            border: 1px solid #e5e7eb;
-            background: #fafafa;
-            margin-bottom: 20px;
-          "
-          class="pa-4"
-        >
-          <div
-            style="
-              display: flex;
-              gap: 12px;
-              flex-wrap: wrap;
-              align-items: center;
-            "
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-input-search
+            v-model:value="searchKeyword"
+            placeholder="Tìm tiêu đề, mô tả..."
+            allow-clear
           >
-            <v-text-field
-              v-model="searchKeyword"
-              placeholder="Tìm tiêu đề, mô tả..."
-              prepend-inner-icon="mdi-magnify"
-              clearable
-              variant="outlined"
-              density="compact"
-              style="max-width: 300px; flex: 1"
-            />
-            <v-select
-              v-model="roomFilter"
-              :items="roomOptions"
-              label="Phòng"
-              clearable
-              variant="outlined"
-              density="compact"
-              style="max-width: 180px"
-            />
-            <v-select
-              v-model="priorityFilter"
-              :items="['Tất cả', 'Bình thường', 'Khẩn cấp']"
-              label="Mức độ ưu tiên"
-              clearable
-              variant="outlined"
-              density="compact"
-              style="max-width: 200px"
-            />
-            <v-btn
-              v-if="searchKeyword || roomFilter || priorityFilter"
-              size="small"
-              variant="text"
-              color="primary"
-              prepend-icon="mdi-refresh"
-              @click="resetMaintFilters"
-            >
-              Đặt lại
-            </v-btn>
-            <div style="margin-left: auto; color: #6b7280; font-size: 13px">
-              Kết quả: {{ filteredRequests.length }} / {{ requests.length }}
+            <template #prefix><SearchOutlined /></template>
+          </a-input-search>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="roomFilter"
+            placeholder="Phòng"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option v-for="room in roomOptions" :key="room" :value="room">
+              {{ room }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="priorityFilter"
+            placeholder="Mức độ ưu tiên"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="Bình thường">Bình thường</a-select-option>
+            <a-select-option value="Khẩn cấp">Khẩn cấp</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="4" style="text-align: right">
+          <a-button v-if="hasFilters" @click="resetFilters" block>
+            <template #icon><ReloadOutlined /></template>
+            Đặt lại
+          </a-button>
+          <a-typography-text v-else type="secondary" style="line-height: 32px">
+            Kết quả: {{ filteredRequests.length }}/{{ requests.length }}
+          </a-typography-text>
+        </a-col>
+      </a-row>
+    </a-card>
+
+    <!-- Request Cards Grid -->
+    <a-row :gutter="[16, 16]" v-if="!loading && filteredRequests.length > 0">
+      <a-col :xs="24" :md="12" v-for="r in filteredRequests" :key="r.id">
+        <a-card :bordered="false" hoverable>
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px">
+            <div style="display: flex; gap: 12px; align-items: flex-start">
+              <a-avatar
+                :size="48"
+                :style="{ backgroundColor: priColor(r.priority) }"
+              >
+                <template #icon>
+                  <WarningOutlined v-if="r.priority === 'Khẩn cấp'" />
+                  <ToolOutlined v-else />
+                </template>
+              </a-avatar>
+              <div>
+                <a-typography-title :level="5" style="margin: 0">
+                  {{ r.title }}
+                </a-typography-title>
+                <a-typography-text type="secondary" style="font-size: 12px">
+                  #{{ r.code }} · Phòng {{ r.room }} · {{ r.date }}
+                </a-typography-text>
+              </div>
             </div>
+            <a-tag :color="stColor(r.status)">{{ r.status }}</a-tag>
           </div>
-        </v-card>
 
-        <v-row>
-          <v-col v-for="r in filteredRequests" :key="r.id" cols="12" md="6">
-            <v-card style="border: 1px solid #e5e7eb" class="pa-5">
-              <div class="d-flex align-start justify-space-between mb-3">
-                <div class="d-flex ga-3 align-start">
-                  <v-avatar
-                    :color="priColor(r.priority)"
-                    size="40"
-                    rounded="lg"
-                    variant="tonal"
-                  >
-                    <v-icon size="20">{{
-                      r.priority === "Khẩn cấp" ? "mdi-alert" : "mdi-wrench"
-                    }}</v-icon>
-                  </v-avatar>
-                  <div>
-                    <div class="text-subtitle-1 font-weight-bold">
-                      {{ r.title }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                      #{{ r.code }} · Phòng {{ r.room }} · {{ r.date }}
-                    </div>
-                  </div>
-                </div>
-                <v-chip
-                  :color="stColor(r.status)"
-                  size="x-small"
-                  variant="tonal"
-                  >{{ r.status }}</v-chip
-                >
-              </div>
-              <p class="text-body-2 text-medium-emphasis mb-2">{{ r.desc }}</p>
-              <p v-if="r.note" class="text-caption text-medium-emphasis mb-4">
-                Ghi chú: {{ r.note }}
-              </p>
-              <v-divider class="mb-3" />
-              <div class="d-flex align-center justify-space-between">
-                <div
-                  class="d-flex align-center ga-2 text-caption text-medium-emphasis"
-                >
-                  <v-icon size="14">mdi-account</v-icon>{{ r.student }}
-                  <v-chip
-                    v-if="r.priority === 'Khẩn cấp'"
-                    color="error"
-                    size="x-small"
-                    variant="flat"
-                    class="ml-2"
-                    >Khẩn cấp</v-chip
-                  >
-                </div>
-                <div class="d-flex ga-1">
-                  <v-btn
-                    v-if="r.status === 'Chờ xử lý'"
-                    size="small"
-                    color="primary"
-                    variant="tonal"
-                    >Xử lý</v-btn
-                  >
-                  <v-btn
-                    v-if="r.status === 'Đang xử lý'"
-                    size="small"
-                    color="success"
-                    variant="tonal"
-                    >Hoàn thành</v-btn
-                  >
-                  <v-btn icon="mdi-eye-outline" size="small" variant="text" />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </template>
-    </DataStatus>
+          <a-typography-paragraph
+            :ellipsis="{ rows: 2 }"
+            type="secondary"
+            style="margin-bottom: 8px"
+          >
+            {{ r.desc }}
+          </a-typography-paragraph>
 
-    <v-dialog v-model="dialog" max-width="520">
-      <v-card class="pa-6">
-        <h2 class="text-h5 font-weight-bold mb-6">Tạo yêu cầu bảo trì</h2>
-        <v-select
-          label="Phòng"
-          :items="['101-A1', '102-A1', '201-B1', '301-C1']"
-          class="mb-3"
-        />
-        <v-text-field
-          label="Tiêu đề"
-          placeholder="VD: Hỏng vòi nước"
-          class="mb-3"
-        />
-        <v-select
-          label="Mức độ ưu tiên"
-          :items="['Bình thường', 'Khẩn cấp']"
-          class="mb-3"
-        />
-        <v-textarea label="Mô tả chi tiết" rows="3" />
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="dialog = false">Hủy</v-btn>
-          <v-btn color="primary" @click="dialog = false">Gửi yêu cầu</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+          <a-typography-text v-if="r.note" type="secondary" style="font-size: 12px">
+            Ghi chú: {{ r.note }}
+          </a-typography-text>
+
+          <a-divider style="margin: 12px 0" />
+
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <UserOutlined style="color: #8c8c8c" />
+              <a-typography-text type="secondary" style="font-size: 13px">
+                {{ r.student }}
+              </a-typography-text>
+              <a-tag v-if="r.priority === 'Khẩn cấp'" color="red" size="small">
+                Khẩn cấp
+              </a-tag>
+            </div>
+            <a-space>
+              <a-button
+                v-if="r.status === 'Chờ xử lý'"
+                type="primary"
+                size="small"
+              >
+                Xử lý
+              </a-button>
+              <a-button
+                v-if="r.status === 'Đang xử lý'"
+                type="primary"
+                size="small"
+                style="background: #52c41a; border-color: #52c41a"
+              >
+                Hoàn thành
+              </a-button>
+              <a-button type="text" size="small">
+                <template #icon><EyeOutlined /></template>
+              </a-button>
+            </a-space>
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
+
+    <!-- Loading State -->
+    <a-card v-if="loading" :bordered="false">
+      <a-skeleton active :paragraph="{ rows: 4 }" />
+    </a-card>
+
+    <!-- Empty State -->
+    <a-empty
+      v-if="!loading && filteredRequests.length === 0"
+      description="Chưa có yêu cầu bảo trì nào"
+      style="padding: 60px 0"
+    >
+      <a-button type="primary">Tạo yêu cầu mới</a-button>
+    </a-empty>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import maintenanceRequestService from "@/services/maintenanceRequestService";
-import DataStatus from "@/components/common/DataStatus.vue";
+import { ref, computed, onMounted } from 'vue'
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  WarningOutlined,
+  ToolOutlined,
+  UserOutlined,
+  EyeOutlined
+} from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import maintenanceRequestService from '@/services/maintenanceRequestService'
 
-const tab = ref("all");
-const dialog = ref(false);
-
-// ─── Filter state ──────────────────────────────────────────────────────────
-const searchKeyword = ref("");
-const roomFilter = ref("");
-const priorityFilter = ref("");
+const loading = ref(false)
+const requests = ref([])
+const tab = ref('all')
+const searchKeyword = ref('')
+const roomFilter = ref(undefined)
+const priorityFilter = ref(undefined)
 
 const studentMap = {
-  "30000000-0000-0000-0000-000000000001": "Nguyễn Văn A",
-  "30000000-0000-0000-0000-000000000002": "Trần Thị B",
-  "30000000-0000-0000-0000-000000000003": "Lê Văn C",
-};
-
-const roomMap = {
-  "40000000-0000-0000-0000-000000000101": "A101",
-  "40000000-0000-0000-0000-000000000102": "A102",
-  "40000000-0000-0000-0000-000000000103": "A103",
-};
-
-const requestCode = (index) => `MT${String(index + 1).padStart(4, "0")}`;
-
-const requests = ref([]);
-const loading = ref(false);
-const error = ref(null);
-
-const roomOptions = computed(() =>
-  [...new Set(requests.value.map((r) => r.room))].filter(Boolean).sort(),
-);
-
-async function loadData() {
-  loading.value = true;
-  error.value = null;
-  try {
-    const res = await maintenanceRequestService.getAll();
-    requests.value = res.map((r, index) => ({
-      id: r.id,
-      code: requestCode(index),
-      title: r.description?.slice(0, 30) || "Yêu cầu bảo trì",
-      room: roomMap[r.roomId] || r.roomId?.slice(0, 8) || "Không xác định",
-      student:
-        studentMap[r.studentId] || r.studentId?.slice(0, 8) || "Không xác định",
-      date: new Date(r.createdAt).toLocaleDateString("vi-VN"),
-      status:
-        r.status === "Completed"
-          ? "Hoàn thành"
-          : r.status === "InProgress"
-            ? "Đang xử lý"
-            : "Chờ xử lý",
-      priority: r.status === "Pending" ? "Khẩn cấp" : "Bình thường",
-      desc: r.description,
-      note: r.note || "",
-    }));
-    if (Array.isArray(requests.value) && requests.value.length === 0) {
-      error.value = "Lỗi kết nối máy chủ";
-    }
-  } catch (err) {
-    console.error("Lỗi tải bảo trì:", err);
-    requests.value = [];
-    error.value = "Lỗi kết nối máy chủ";
-  } finally {
-    loading.value = false;
-  }
+  '30000000-0000-0000-0000-000000000001': 'Nguyễn Văn A',
+  '30000000-0000-0000-0000-000000000002': 'Trần Thị B',
+  '30000000-0000-0000-0000-000000000003': 'Lê Văn C'
 }
 
-onMounted(loadData);
+const roomMap = {
+  '40000000-0000-0000-0000-000000000101': 'A101',
+  '40000000-0000-0000-0000-000000000102': 'A102',
+  '40000000-0000-0000-0000-000000000103': 'A103'
+}
+
+const requestCode = (index) => `MT${String(index + 1).padStart(4, '0')}`
+
+const roomOptions = computed(() =>
+  [...new Set(requests.value.map((r) => r.room))].filter(Boolean).sort()
+)
+
+const hasFilters = computed(() => searchKeyword.value || roomFilter.value || priorityFilter.value)
+
+const pendingCount = computed(() => requests.value.filter((r) => r.status === 'Chờ xử lý').length)
 
 const statusFiltered = computed(() => {
-  if (tab.value === "all") return requests.value;
+  if (tab.value === 'all') return requests.value
   const m = {
-    pending: "Chờ xử lý",
-    progress: "Đang xử lý",
-    done: "Hoàn thành",
-  };
-  return requests.value.filter((r) => r.status === m[tab.value]);
-});
+    pending: 'Chờ xử lý',
+    progress: 'Đang xử lý',
+    done: 'Hoàn thành'
+  }
+  return requests.value.filter((r) => r.status === m[tab.value])
+})
 
 const filteredRequests = computed(() => {
-  const keyword = searchKeyword.value.trim().toLowerCase();
-  const priorityMap = { "Bình thường": "Bình thường", "Khẩn cấp": "Khẩn cấp" };
-  const selectedPriority = priorityMap[priorityFilter.value] || null;
+  const keyword = searchKeyword.value.trim().toLowerCase()
 
   return statusFiltered.value.filter((r) => {
     const matchesKeyword =
       !keyword ||
       r.title.toLowerCase().includes(keyword) ||
       r.desc.toLowerCase().includes(keyword) ||
-      r.code.toLowerCase().includes(keyword);
-    const matchesRoom = !roomFilter.value || r.room === roomFilter.value;
-    const matchesPriority =
-      !selectedPriority || r.priority === selectedPriority;
-    return matchesKeyword && matchesRoom && matchesPriority;
-  });
-});
+      r.code.toLowerCase().includes(keyword)
+    const matchesRoom = !roomFilter.value || r.room === roomFilter.value
+    const matchesPriority = !priorityFilter.value || r.priority === priorityFilter.value
+    return matchesKeyword && matchesRoom && matchesPriority
+  })
+})
 
-function resetMaintFilters() {
-  searchKeyword.value = "";
-  roomFilter.value = "";
-  priorityFilter.value = "";
+async function loadData() {
+  loading.value = true
+  try {
+    const res = await maintenanceRequestService.getAll()
+    requests.value = res.map((r, index) => ({
+      id: r.id,
+      code: requestCode(index),
+      title: r.description?.slice(0, 50) || 'Yêu cầu bảo trì',
+      room: roomMap[r.roomId] || 'N/A',
+      student: studentMap[r.studentId] || 'Không xác định',
+      date: new Date(r.createdAt).toLocaleDateString('vi-VN'),
+      status:
+        r.status === 'Completed'
+          ? 'Hoàn thành'
+          : r.status === 'InProgress'
+            ? 'Đang xử lý'
+            : 'Chờ xử lý',
+      priority: r.status === 'Pending' ? 'Khẩn cấp' : 'Bình thường',
+      desc: r.description || '',
+      note: r.note || ''
+    }))
+  } catch (err) {
+    console.error('Lỗi tải bảo trì:', err)
+    message.error(err.message || 'Lỗi tải dữ liệu')
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetFilters() {
+  searchKeyword.value = ''
+  roomFilter.value = undefined
+  priorityFilter.value = undefined
 }
 
 const stColor = (s) =>
-  ({ "Chờ xử lý": "warning", "Đang xử lý": "info", "Hoàn thành": "success" })[
-    s
-  ] || "grey";
-const priColor = (p) => (p === "Khẩn cấp" ? "error" : "info");
+  ({ 'Chờ xử lý': 'orange', 'Đang xử lý': 'blue', 'Hoàn thành': 'green' })[s] || 'default'
+
+const priColor = (p) => (p === 'Khẩn cấp' ? '#ff4d4f' : '#1890ff')
+
+onMounted(loadData)
 </script>
+
+<style scoped>
+:deep(.ant-card-body) {
+  padding: 20px;
+}
+</style>

@@ -1,8 +1,7 @@
+using Microsoft.AspNetCore.Mvc;
 using ContractStudentService.Application.DTOs;
 using ContractStudentService.Application.Interfaces;
 using ContractStudentService.Domain.Entities;
-using ContractStudentService.Domain.Enums;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ContractStudentService.API.Controllers
 {
@@ -11,136 +10,253 @@ namespace ContractStudentService.API.Controllers
     public class ContractsController : ControllerBase
     {
         private readonly IContractRepository _contractRepository;
+        private readonly IStudentRepository _studentRepository;
+        private readonly IRoomApplicationRepository _applicationRepository;
 
-        public ContractsController(IContractRepository contractRepository)
+        public ContractsController(
+            IContractRepository contractRepository,
+            IStudentRepository studentRepository,
+            IRoomApplicationRepository applicationRepository)
         {
             _contractRepository = contractRepository;
+            _studentRepository = studentRepository;
+            _applicationRepository = applicationRepository;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ContractDto>>> GetAll()
         {
             var contracts = await _contractRepository.GetAllAsync();
-            return Ok(contracts.Select(ToDto));
+            var dtos = contracts.Select(MapToDto);
+            return Ok(dtos);
         }
 
-        [HttpGet("{id:guid}")]
-        public async Task<ActionResult<ContractDto>> GetById(Guid id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ContractDto>> GetById(int id)
         {
             var contract = await _contractRepository.GetByIdAsync(id);
             if (contract == null)
-                return NotFound(new { message = "Contract not found." });
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
 
-            return Ok(ToDto(contract));
+            return Ok(MapToDto(contract));
+        }
+
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<ContractDto>>> GetByStudentId(int studentId)
+        {
+            var contracts = await _contractRepository.GetByStudentIdAsync(studentId);
+            var dtos = contracts.Select(MapToDto);
+            return Ok(dtos);
+        }
+
+        [HttpGet("code/{contractCode}")]
+        public async Task<ActionResult<ContractDto>> GetByContractCode(string contractCode)
+        {
+            var contract = await _contractRepository.GetByContractCodeAsync(contractCode);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            return Ok(MapToDto(contract));
+        }
+
+        [HttpGet("status/{status}")]
+        public async Task<ActionResult<IEnumerable<ContractDto>>> GetByStatus(string status)
+        {
+            var contracts = await _contractRepository.GetByStatusAsync(status);
+            var dtos = contracts.Select(MapToDto);
+            return Ok(dtos);
         }
 
         [HttpPost]
         public async Task<ActionResult<ContractDto>> Create([FromBody] CreateContractDto dto)
         {
-            var validationResult = Validate(dto, out var status);
-            if (validationResult != null)
-                return validationResult;
+            var student = await _studentRepository.GetByIdAsync(dto.StudentId);
+            if (student == null)
+                return BadRequest(new { message = "Sinh viên không tồn tại" });
 
-            var contract = ToEntity(dto, status);
-            await _contractRepository.AddAsync(contract);
+            var application = await _applicationRepository.GetByIdAsync(dto.ApplicationId);
+            if (application == null)
+                return BadRequest(new { message = "Đơn đăng ký không tồn tại" });
 
-            return CreatedAtAction(nameof(GetById), new { id = contract.Id }, ToDto(contract));
-        }
+            if (application.Status != "Approved")
+                return BadRequest(new { message = "Đơn đăng ký chưa được duyệt" });
 
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] CreateContractDto dto)
-        {
-            var contract = await _contractRepository.GetByIdAsync(id);
-            if (contract == null)
-                return NotFound(new { message = "Contract not found." });
+            var existing = await _contractRepository.GetByContractCodeAsync(dto.ContractCode);
+            if (existing != null)
+                return BadRequest(new { message = "Mã hợp đồng đã tồn tại" });
 
-            var validationResult = Validate(dto, out var status);
-            if (validationResult != null)
-                return validationResult;
-
-            var updated = ToEntity(dto, status);
-            updated.Id = id;
-            updated.CreatedAt = contract.CreatedAt;
-
-            await _contractRepository.UpdateAsync(updated);
-            return NoContent();
-        }
-
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var contract = await _contractRepository.GetByIdAsync(id);
-            if (contract == null)
-                return NotFound(new { message = "Contract not found." });
-
-            await _contractRepository.DeleteAsync(contract);
-            return NoContent();
-        }
-
-        private BadRequestObjectResult? Validate(CreateContractDto dto, out ContractStatus status)
-        {
-            status = default;
-            if (string.IsNullOrWhiteSpace(dto.Code) ||
-                string.IsNullOrWhiteSpace(dto.StudentCode) ||
-                string.IsNullOrWhiteSpace(dto.StudentName) ||
-                string.IsNullOrWhiteSpace(dto.RoomNumber))
+            var contract = new Contract
             {
-                return BadRequest(new { message = "Code, student and room information are required." });
-            }
-
-            if (dto.StudentId == Guid.Empty || dto.RoomId == Guid.Empty)
-                return BadRequest(new { message = "StudentId and roomId are required." });
-
-            if (dto.EndDate.Date < dto.StartDate.Date)
-                return BadRequest(new { message = "End date must not be earlier than start date." });
-
-            if (dto.Price < 0)
-                return BadRequest(new { message = "Price must not be negative." });
-
-            if (!Enum.TryParse(dto.Status, true, out status))
-                return BadRequest(new { message = "Contract status is invalid." });
-
-            return null;
-        }
-
-        private static Contract ToEntity(CreateContractDto dto, ContractStatus status)
-        {
-            return new Contract
-            {
-                Code = dto.Code.Trim(),
                 StudentId = dto.StudentId,
-                Student = new Student
-                {
-                    Id = dto.StudentId,
-                    StudentCode = dto.StudentCode.Trim(),
-                    FullName = dto.StudentName.Trim()
-                },
+                ApplicationId = dto.ApplicationId,
                 RoomId = dto.RoomId,
-                RoomNumber = dto.RoomNumber.Trim(),
+                RoomNumber = dto.RoomNumber,
+                BuildingId = dto.BuildingId,
+                BuildingName = dto.BuildingName,
+                RoomTypeId = dto.RoomTypeId,
+                RoomTypeName = dto.RoomTypeName,
+                ContractCode = dto.ContractCode,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-                Price = dto.Price,
-                Status = status
+                MonthlyRent = dto.MonthlyRent,
+                DepositAmount = dto.DepositAmount,
+                ElectricityRate = dto.ElectricityRate,
+                WaterRate = dto.WaterRate,
+                PaymentDueDay = dto.PaymentDueDay,
+                WitnessName = dto.WitnessName,
+                WitnessTitle = dto.WitnessTitle,
+                CreatedByUserId = dto.CreatedByUserId,
+                Notes = dto.Notes,
+                Status = "Pending"
             };
+
+            await _contractRepository.AddAsync(contract);
+
+            return CreatedAtAction(nameof(GetById), new { id = contract.Id }, MapToDto(contract));
         }
 
-        private static ContractDto ToDto(Contract contract)
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Update(int id, [FromBody] UpdateContractDto dto)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            contract.StartDate = dto.StartDate;
+            contract.EndDate = dto.EndDate;
+            contract.MonthlyRent = dto.MonthlyRent;
+            contract.DepositAmount = dto.DepositAmount;
+            contract.ElectricityRate = dto.ElectricityRate;
+            contract.WaterRate = dto.WaterRate;
+            contract.PaymentDueDay = dto.PaymentDueDay;
+            contract.WitnessName = dto.WitnessName;
+            contract.WitnessTitle = dto.WitnessTitle;
+            contract.SignedAt = dto.SignedAt;
+            contract.SignedImageUrl = dto.SignedImageUrl;
+            contract.Notes = dto.Notes;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}/activate")]
+        public async Task<ActionResult> Activate(int id)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            contract.Status = "Active";
+            contract.SignedAt = DateTime.UtcNow;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}/terminate")]
+        public async Task<ActionResult> Terminate(int id, [FromBody] TerminateContractRequest request)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            if (contract.Status == "Terminated")
+                return BadRequest(new { message = "Hợp đồng đã kết thúc" });
+
+            contract.Status = "Terminated";
+            contract.TerminatedAt = DateTime.UtcNow;
+            contract.TerminatedReason = request.TerminatedReason;
+            contract.TerminatedByUserId = request.TerminatedByUserId;
+            contract.DepositReturnedAmount = request.DepositReturnedAmount;
+            contract.DepositReturnedAt = request.DepositReturnedAmount > 0 ? DateTime.UtcNow : null;
+            contract.DepositDeductionReason = request.DepositDeductionReason;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            if (contract.Status == "Active")
+                return Conflict(new { message = "Không thể xóa hợp đồng đang hoạt động" });
+
+            await _contractRepository.DeleteAsync(contract);
+
+            return NoContent();
+        }
+
+        private static ContractDto MapToDto(Contract contract)
         {
             return new ContractDto
             {
                 Id = contract.Id,
-                Code = contract.Code,
                 StudentId = contract.StudentId,
-                StudentCode = contract.Student?.StudentCode ?? string.Empty,
-                StudentName = contract.Student?.FullName ?? string.Empty,
+                StudentName = contract.Student?.FullName,
+                StudentCode = contract.Student?.StudentCode,
+                ApplicationId = contract.ApplicationId,
                 RoomId = contract.RoomId,
                 RoomNumber = contract.RoomNumber,
+                BuildingId = contract.BuildingId,
+                BuildingName = contract.BuildingName,
+                RoomTypeId = contract.RoomTypeId,
+                RoomTypeName = contract.RoomTypeName,
+                ContractCode = contract.ContractCode,
                 StartDate = contract.StartDate,
                 EndDate = contract.EndDate,
-                Price = contract.Price,
-                Status = contract.Status.ToString(),
+                MonthlyRent = contract.MonthlyRent,
+                DepositAmount = contract.DepositAmount,
+                IsDepositPaid = contract.IsDepositPaid,
+                DepositPaidAt = contract.DepositPaidAt,
+                ElectricityRate = contract.ElectricityRate,
+                WaterRate = contract.WaterRate,
+                PaymentDueDay = contract.PaymentDueDay,
+                WitnessName = contract.WitnessName,
+                WitnessTitle = contract.WitnessTitle,
+                SignedAt = contract.SignedAt,
+                SignedImageUrl = contract.SignedImageUrl,
+                Status = contract.Status,
+                TerminatedAt = contract.TerminatedAt,
+                TerminatedReason = contract.TerminatedReason,
+                TerminatedByUserId = contract.TerminatedByUserId,
+                DepositReturnedAmount = contract.DepositReturnedAmount,
+                DepositReturnedAt = contract.DepositReturnedAt,
+                DepositDeductionReason = contract.DepositDeductionReason,
+                CreatedByUserId = contract.CreatedByUserId,
+                Notes = contract.Notes,
                 CreatedAt = contract.CreatedAt
             };
         }
+    }
+
+    public class UpdateContractDto
+    {
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public decimal DepositAmount { get; set; }
+        public decimal ElectricityRate { get; set; }
+        public decimal WaterRate { get; set; }
+        public int PaymentDueDay { get; set; }
+        public string? WitnessName { get; set; }
+        public string? WitnessTitle { get; set; }
+        public DateTime? SignedAt { get; set; }
+        public string? SignedImageUrl { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class TerminateContractRequest
+    {
+        public string TerminatedReason { get; set; } = string.Empty;
+        public int TerminatedByUserId { get; set; }
+        public decimal DepositReturnedAmount { get; set; }
+        public string? DepositDeductionReason { get; set; }
     }
 }

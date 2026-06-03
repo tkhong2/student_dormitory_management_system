@@ -12,42 +12,54 @@ namespace RoomBuildingService.API.Controllers
         private readonly IRoomTypeRepository _roomTypeRepository;
         private readonly IRoomRepository _roomRepository;
         private readonly IBuildingRepository _buildingRepository;
+        private readonly IRoomTypeAmenityRepository _roomTypeAmenityRepository;
 
         public RoomTypesController(
             IRoomTypeRepository roomTypeRepository,
             IRoomRepository roomRepository,
-            IBuildingRepository buildingRepository)
+            IBuildingRepository buildingRepository,
+            IRoomTypeAmenityRepository roomTypeAmenityRepository)
         {
             _roomTypeRepository = roomTypeRepository;
             _roomRepository = roomRepository;
             _buildingRepository = buildingRepository;
+            _roomTypeAmenityRepository = roomTypeAmenityRepository;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomTypeDto>>> GetAll()
         {
             var roomTypes = await _roomTypeRepository.GetAllAsync();
-            var roomTypeDtos = roomTypes.Select(rt => new RoomTypeDto
+            var roomTypeDtos = new List<RoomTypeDto>();
+
+            foreach (var rt in roomTypes)
             {
-                Id = rt.Id,
-                BuildingId = rt.BuildingId,
-                Code = rt.Code,
-                Name = rt.Name,
-                Capacity = rt.Capacity,
-                PricePerMonth = rt.PricePerMonth,
-                DepositAmount = rt.DepositAmount,
-                ElectricityRate = rt.ElectricityRate,
-                WaterRate = rt.WaterRate,
-                Area = rt.Area,
-                BedType = rt.BedType,
-                HasAirConditioner = rt.HasAirConditioner,
-                HasWaterHeater = rt.HasWaterHeater,
-                HasPrivateBathroom = rt.HasPrivateBathroom,
-                HasWindowView = rt.HasWindowView,
-                Description = rt.Description,
-                ThumbnailUrl = rt.ThumbnailUrl,
-                IsActive = rt.IsActive
-            });
+                var amenities = await _roomTypeAmenityRepository.GetByRoomTypeIdAsync(rt.Id);
+                var amenityIds = amenities.Select(a => a.AmenityId).ToList();
+
+                roomTypeDtos.Add(new RoomTypeDto
+                {
+                    Id = rt.Id,
+                    BuildingId = rt.BuildingId,
+                    Code = rt.Code,
+                    Name = rt.Name,
+                    Capacity = rt.Capacity,
+                    PricePerMonth = rt.PricePerMonth,
+                    DepositAmount = rt.DepositAmount,
+                    ElectricityRate = rt.ElectricityRate,
+                    WaterRate = rt.WaterRate,
+                    Area = rt.Area,
+                    BedType = rt.BedType,
+                    HasAirConditioner = rt.HasAirConditioner,
+                    HasWaterHeater = rt.HasWaterHeater,
+                    HasPrivateBathroom = rt.HasPrivateBathroom,
+                    HasWindowView = rt.HasWindowView,
+                    Description = rt.Description,
+                    ThumbnailUrl = rt.ThumbnailUrl,
+                    IsActive = rt.IsActive,
+                    AmenityIds = amenityIds
+                });
+            }
 
             return Ok(roomTypeDtos);
         }
@@ -58,6 +70,9 @@ namespace RoomBuildingService.API.Controllers
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
                 return NotFound(new { message = "Không tìm thấy loại phòng" });
+
+            var amenities = await _roomTypeAmenityRepository.GetByRoomTypeIdAsync(id);
+            var amenityIds = amenities.Select(a => a.AmenityId).ToList();
 
             var roomTypeDto = new RoomTypeDto
             {
@@ -78,7 +93,8 @@ namespace RoomBuildingService.API.Controllers
                 HasWindowView = roomType.HasWindowView,
                 Description = roomType.Description,
                 ThumbnailUrl = roomType.ThumbnailUrl,
-                IsActive = roomType.IsActive
+                IsActive = roomType.IsActive,
+                AmenityIds = amenityIds
             };
 
             return Ok(roomTypeDto);
@@ -114,6 +130,21 @@ namespace RoomBuildingService.API.Controllers
 
             await _roomTypeRepository.AddAsync(roomType);
 
+            // Lưu amenities vào RoomTypeAmenity table
+            if (dto.AmenityIds != null && dto.AmenityIds.Any())
+            {
+                foreach (var amenityId in dto.AmenityIds)
+                {
+                    var roomTypeAmenity = new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType.Id,
+                        AmenityId = amenityId,
+                        Quantity = 1
+                    };
+                    await _roomTypeAmenityRepository.AddAsync(roomTypeAmenity);
+                }
+            }
+
             var roomTypeDto = new RoomTypeDto
             {
                 Id = roomType.Id,
@@ -133,7 +164,8 @@ namespace RoomBuildingService.API.Controllers
                 HasWindowView = roomType.HasWindowView,
                 Description = roomType.Description,
                 ThumbnailUrl = roomType.ThumbnailUrl,
-                IsActive = roomType.IsActive
+                IsActive = roomType.IsActive,
+                AmenityIds = dto.AmenityIds
             };
 
             return CreatedAtAction(nameof(GetById), new { id = roomType.Id }, roomTypeDto);
@@ -169,6 +201,28 @@ namespace RoomBuildingService.API.Controllers
             roomType.IsActive = dto.IsActive;
 
             await _roomTypeRepository.UpdateAsync(roomType);
+
+            // Xóa tất cả amenities cũ
+            var existingAmenities = await _roomTypeAmenityRepository.GetByRoomTypeIdAsync(id);
+            foreach (var amenity in existingAmenities)
+            {
+                await _roomTypeAmenityRepository.DeleteAsync(amenity);
+            }
+
+            // Thêm amenities mới
+            if (dto.AmenityIds != null && dto.AmenityIds.Any())
+            {
+                foreach (var amenityId in dto.AmenityIds)
+                {
+                    var roomTypeAmenity = new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType.Id,
+                        AmenityId = amenityId,
+                        Quantity = 1
+                    };
+                    await _roomTypeAmenityRepository.AddAsync(roomTypeAmenity);
+                }
+            }
 
             return NoContent();
         }
@@ -209,5 +263,6 @@ namespace RoomBuildingService.API.Controllers
         public string? Description { get; set; }
         public string? ThumbnailUrl { get; set; }
         public bool IsActive { get; set; } = true;
+        public List<int> AmenityIds { get; set; } = new List<int>();
     }
 }

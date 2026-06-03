@@ -1,19 +1,39 @@
 using BillingMaintenanceService.Application.Interfaces;
+using BillingMaintenanceService.Infrastructure.Persistence;
 using BillingMaintenanceService.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add DbContext with SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(
+            connectionString,
+            sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 10,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorNumbersToAdd: null);
+            })
+           .ConfigureWarnings(warnings =>
+               warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
+}
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register fake repositories for Billing/Maintenance
-builder.Services.AddSingleton<IBillRepository, MockBillRepository>();
-builder.Services.AddSingleton<IPaymentRepository, MockPaymentRepository>();
-builder.Services.AddSingleton<IMaintenanceRequestRepository, MockMaintenanceRequestRepository>();
+// Register repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
 
-// Enable CORS for local frontend development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -26,7 +46,28 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Apply EF migrations at startup (with retry loop)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var retries = 10;
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            Console.WriteLine("✅ BillingMaintenanceDb migration applied successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retries--;
+            Console.WriteLine($"⏳ SQL Server not ready, retrying... {retries} attempts left. Error: {ex.Message}");
+            Thread.Sleep(5000);
+        }
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -37,4 +78,5 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();

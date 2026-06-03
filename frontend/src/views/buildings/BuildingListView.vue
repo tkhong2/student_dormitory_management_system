@@ -475,10 +475,12 @@
         </a-form-item>
 
         <a-form-item label="Đường dẫn hình ảnh (URL)">
-          <a-input
-            v-model:value="form.thumbnailUrl"
-            placeholder="https://..."
-            size="large"
+          <ImageUpload 
+            v-model="form.thumbnailUrl"
+            button-text="Chọn ảnh tòa nhà"
+            preview-width="100%"
+            preview-height="200px"
+            placeholder="Hoặc nhập URL hình ảnh"
           />
         </a-form-item>
 
@@ -527,6 +529,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import DataStatus from "@/components/common/DataStatus.vue";
+import ImageUpload from "@/components/common/ImageUpload.vue";
 import { buildingService } from "@/services/buildingService";
 
 // ─── State ───────────────────────────────────────────────────────────────────

@@ -25,14 +25,24 @@ function createApi(baseURL) {
   return api
 }
 
+// Hardcoded API URLs for development (fallback if env vars not loaded)
+const ROOM_BUILDING_API = 'http://localhost:5001/api'
+const CONTRACT_STUDENT_API = 'http://localhost:5003/api'
+const BILLING_MAINTENANCE_API = 'http://localhost:5002/api'
+
 const api = createApi(
-  import.meta.env.VITE_ROOM_BUILDING_API_URL || 'http://localhost:5001/api'
+  import.meta.env.VITE_ROOM_BUILDING_API_URL || ROOM_BUILDING_API
 )
 
 export const contractStudentApi = createApi(
   import.meta.env.VITE_CONTRACT_STUDENT_API_URL ||
     import.meta.env.VITE_CONTRACT_API_URL ||
-    'http://localhost:5059/api'
+    CONTRACT_STUDENT_API
+)
+
+export const billingMaintenanceApi = createApi(
+  import.meta.env.VITE_BILLING_MAINTENANCE_API_URL ||
+    BILLING_MAINTENANCE_API
 )
 
 export default api
