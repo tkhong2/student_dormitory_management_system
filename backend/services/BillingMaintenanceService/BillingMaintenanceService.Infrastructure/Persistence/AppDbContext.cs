@@ -1,222 +1,178 @@
 using Microsoft.EntityFrameworkCore;
 using BillingMaintenanceService.Domain.Entities;
 
-namespace BillingMaintenanceService.Infrastructure.Persistence;
-
-public class AppDbContext : DbContext
+namespace BillingMaintenanceService.Infrastructure.Persistence
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<User> Users => Set<User>();
-    public DbSet<Invoice> Invoices => Set<Invoice>();
-    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
-    public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();
-    public DbSet<MaintenanceStatusLog> MaintenanceStatusLogs => Set<MaintenanceStatusLog>();
-    public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
-    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<ContactInquiry> ContactInquiries => Set<ContactInquiry>();
-
-    protected override void OnModelCreating(ModelBuilder mb)
+    public class AppDbContext : DbContext
     {
-        // Soft delete filters
-        mb.Entity<User>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<Invoice>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<Payment>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<MaintenanceRequest>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<Notification>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<SystemSetting>().HasQueryFilter(x => !x.IsDeleted);
-        mb.Entity<ContactInquiry>().HasQueryFilter(x => !x.IsDeleted);
-
-        // User
-        mb.Entity<User>(e =>
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Username).HasMaxLength(50).IsRequired();
-            e.HasIndex(x => x.Username).IsUnique();
-            e.Property(x => x.PasswordHash).IsRequired();
-            e.Property(x => x.FullName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Email).HasMaxLength(100).IsRequired();
-            e.HasIndex(x => x.Email).IsUnique();
-            e.Property(x => x.Phone).HasMaxLength(15);
-            e.Property(x => x.Role).HasMaxLength(10).IsRequired();
-            e.Property(x => x.StudentCode).HasMaxLength(20);
-            e.Property(x => x.LastLoginIp).HasMaxLength(50);
-            e.Property(x => x.PasswordResetToken).HasMaxLength(100);
-        });
-
-        // Invoice
-        mb.Entity<Invoice>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.InvoiceCode).HasMaxLength(20).IsRequired();
-            e.HasIndex(x => x.InvoiceCode).IsUnique();
-            e.HasIndex(x => new { x.ContractId, x.BillingMonth, x.BillingYear, x.InvoiceType }).IsUnique();
-            e.Property(x => x.InvoiceType).HasMaxLength(20).HasDefaultValue("Monthly");
-            e.Property(x => x.StudentName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.StudentCode).HasMaxLength(20).IsRequired();
-            e.Property(x => x.RoomNumber).HasMaxLength(20).IsRequired();
-            e.Property(x => x.BuildingName).HasMaxLength(150).IsRequired();
-            e.Property(x => x.Status).HasMaxLength(15).HasDefaultValue("Unpaid");
-            e.Property(x => x.RentAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.ElectricityAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.WaterAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.ServiceAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.PreviousDebt).HasColumnType("decimal(18,2)");
-            e.Property(x => x.Discount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.PenaltyAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.TotalAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.PaidAmount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.DebtAmount).HasColumnType("decimal(18,2)");
-            e.HasOne(x => x.CreatedByUser)
-             .WithMany(x => x.CreatedInvoices)
-             .HasForeignKey(x => x.CreatedByUserId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // InvoiceItem
-        mb.Entity<InvoiceItem>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.ItemName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.ItemDescription).HasMaxLength(200);
-            e.Property(x => x.Unit).HasMaxLength(10);
-            e.Property(x => x.Quantity).HasColumnType("decimal(10,3)");
-            e.Property(x => x.UnitPrice).HasColumnType("decimal(18,2)");
-            e.Property(x => x.Amount).HasColumnType("decimal(18,2)");
-            e.HasOne(x => x.Invoice)
-             .WithMany(x => x.Items)
-             .HasForeignKey(x => x.InvoiceId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Payment
-        mb.Entity<Payment>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Amount).HasColumnType("decimal(18,2)");
-            e.Property(x => x.Method).HasMaxLength(20).IsRequired();
-            e.Property(x => x.TransactionCode).HasMaxLength(100);
-            e.Property(x => x.BankName).HasMaxLength(100);
-            e.Property(x => x.BankAccountNumber).HasMaxLength(30);
-            e.Property(x => x.ReceivedByName).HasMaxLength(100).IsRequired();
-            e.HasOne(x => x.Invoice)
-             .WithMany(x => x.Payments)
-             .HasForeignKey(x => x.InvoiceId)
-             .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(x => x.ReceivedByUser)
-             .WithMany(x => x.ReceivedPayments)
-             .HasForeignKey(x => x.ReceivedByUserId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // MaintenanceRequest
-        mb.Entity<MaintenanceRequest>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Title).HasMaxLength(200).IsRequired();
-            e.Property(x => x.RoomNumber).HasMaxLength(20).IsRequired();
-            e.Property(x => x.BuildingName).HasMaxLength(150).IsRequired();
-            e.Property(x => x.RequestedByStudentName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Category).HasMaxLength(30).IsRequired();
-            e.Property(x => x.Priority).HasMaxLength(10).HasDefaultValue("Medium");
-            e.Property(x => x.Status).HasMaxLength(15).HasDefaultValue("New");
-            e.Property(x => x.AssignedToName).HasMaxLength(100);
-            e.Property(x => x.EstimatedCost).HasColumnType("decimal(18,2)");
-            e.Property(x => x.ActualCost).HasColumnType("decimal(18,2)");
-            e.Property(x => x.RejectedReason).HasMaxLength(300);
-            e.HasOne(x => x.AssignedToUser)
-             .WithMany(x => x.AssignedRequests)
-             .HasForeignKey(x => x.AssignedToUserId)
-             .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        // MaintenanceStatusLog
-        mb.Entity<MaintenanceStatusLog>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.OldStatus).HasMaxLength(15).IsRequired();
-            e.Property(x => x.NewStatus).HasMaxLength(15).IsRequired();
-            e.Property(x => x.ChangedByName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Note).HasMaxLength(300);
-            e.HasOne(x => x.MaintenanceRequest)
-             .WithMany(x => x.StatusLogs)
-             .HasForeignKey(x => x.MaintenanceRequestId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Notification
-        mb.Entity<Notification>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Title).HasMaxLength(200).IsRequired();
-            e.Property(x => x.Body).IsRequired();
-            e.Property(x => x.Type).HasMaxLength(50).IsRequired();
-            e.Property(x => x.ActionUrl).HasMaxLength(200);
-            e.Property(x => x.IconType).HasMaxLength(10);
-            e.Property(x => x.RelatedEntityType).HasMaxLength(50);
-            e.HasOne(x => x.User)
-             .WithMany(x => x.Notifications)
-             .HasForeignKey(x => x.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // SystemSetting
-        mb.Entity<SystemSetting>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Key).HasMaxLength(100).IsRequired();
-            e.HasIndex(x => x.Key).IsUnique();
-            e.Property(x => x.DataType).HasMaxLength(10).HasDefaultValue("string");
-            e.Property(x => x.Group).HasMaxLength(30);
-            e.Property(x => x.Description).HasMaxLength(300);
-            e.Property(x => x.UpdatedByName).HasMaxLength(100).IsRequired();
-        });
-
-        // AuditLog
-        mb.Entity<AuditLog>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.UserName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.UserRole).HasMaxLength(10).IsRequired();
-            e.Property(x => x.Action).HasMaxLength(20).IsRequired();
-            e.Property(x => x.EntityType).HasMaxLength(50).IsRequired();
-            e.Property(x => x.Description).HasMaxLength(300);
-            e.Property(x => x.IpAddress).HasMaxLength(50);
-            e.HasOne(x => x.User)
-             .WithMany(x => x.AuditLogs)
-             .HasForeignKey(x => x.UserId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // ContactInquiry
-        mb.Entity<ContactInquiry>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.FullName).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Email).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Phone).HasMaxLength(15);
-            e.Property(x => x.Subject).HasMaxLength(200).IsRequired();
-            e.Property(x => x.Status).HasMaxLength(15).HasDefaultValue("New");
-            e.Property(x => x.RepliedByName).HasMaxLength(100);
-            e.Property(x => x.IpAddress).HasMaxLength(50);
-        });
-    }
-
-    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
-        {
-            if (entry.State == EntityState.Modified)
-                entry.Entity.UpdatedAt = DateTime.UtcNow;
-            if (entry.State == EntityState.Deleted)
-            {
-                entry.State = EntityState.Modified;
-                entry.Entity.IsDeleted = true;
-                entry.Entity.DeletedAt = DateTime.UtcNow;
-            }
         }
-        return base.SaveChangesAsync(ct);
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Bill> Bills { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
+        public DbSet<Debt> Debts { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<MaintenanceAssignment> MaintenanceAssignments { get; set; }
+        public DbSet<MaintenanceLog> MaintenanceLogs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("Accounts");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Username).IsUnique();
+                entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.FullName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+                entity.Property(e => e.ReferenceId);
+
+                entity.Property(e => e.Role)
+                    .HasColumnName("RoleId")
+                    .HasConversion<int>();
+
+                entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.UpdatedAt);
+                entity.HasIndex(e => e.Email);
+                entity.HasIndex(e => e.ReferenceId);
+            });
+
+            modelBuilder.Entity<Bill>(entity =>
+            {
+                entity.ToTable("Bills");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.BillCode).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.BillCode).IsUnique();
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => new { e.StudentId, e.BillingYear, e.BillingMonth });
+                entity.HasIndex(e => e.ContractId);
+            });
+
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.ToTable("Payments");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.Property(e => e.PaymentMethod).HasConversion<int>();
+                entity.Property(e => e.TransactionCode).HasMaxLength(100);
+                entity.Property(e => e.Note).HasMaxLength(500);
+                entity.Property(e => e.PaidAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.BillId);
+                entity.HasIndex(e => e.StudentId);
+                entity.HasIndex(e => e.TransactionCode);
+                entity.HasOne(e => e.Bill)
+                    .WithMany(p => p.Payments)
+                    .HasForeignKey(e => e.BillId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MaintenanceRequest>(entity =>
+            {
+                entity.ToTable("MaintenanceRequests");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.RequestCode).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.RequestCode).IsUnique();
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.StudentId);
+                entity.HasIndex(e => e.RoomId);
+                entity.HasIndex(e => e.Status);
+            });
+
+            modelBuilder.Entity<Debt>(entity =>
+            {
+                entity.ToTable("Debts");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.BillId);
+                entity.HasIndex(e => e.StudentId);
+                entity.HasIndex(e => e.Status);
+                entity.HasOne(e => e.Bill)
+                    .WithMany(e => e.Debts)
+                    .HasForeignKey(e => e.BillId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.ToTable("RefreshTokens");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.Token).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.RefreshTokens)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MaintenanceAssignment>(entity =>
+            {
+                entity.ToTable("MaintenanceAssignments");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.AssignedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.MaintenanceRequestId);
+                entity.HasIndex(e => e.StaffUserId);
+                entity.HasOne(e => e.MaintenanceRequest)
+                    .WithMany(e => e.Assignments)
+                    .HasForeignKey(e => e.MaintenanceRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.StaffUser)
+                    .WithMany(e => e.MaintenanceAssignments)
+                    .HasForeignKey(e => e.StaffUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<MaintenanceLog>(entity =>
+            {
+                entity.ToTable("MaintenanceLogs");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.Note).IsRequired().HasMaxLength(2000);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.MaintenanceRequestId);
+                entity.HasIndex(e => e.MaintenanceAssignmentId);
+                entity.HasIndex(e => e.CreatedByUserId);
+                entity.HasOne(e => e.MaintenanceRequest)
+                    .WithMany(e => e.Logs)
+                    .HasForeignKey(e => e.MaintenanceRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.MaintenanceAssignment)
+                    .WithMany(e => e.Logs)
+                    .HasForeignKey(e => e.MaintenanceAssignmentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.CreatedByUser)
+                    .WithMany(e => e.MaintenanceLogs)
+                    .HasForeignKey(e => e.CreatedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+        }
     }
 }

@@ -101,23 +101,19 @@ const loading = ref(false)
 const rememberMe = ref(false)
 const form = reactive({ username: '', password: '' })
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!form.username || !form.password) {
     return
   }
 
   loading.value = true
-  setTimeout(() => {
-    let role = 'student'
-    const userLower = form.username.toLowerCase()
-    if (userLower.includes('admin')) role = 'admin'
-    else if (userLower.includes('staff') || userLower.includes('nv')) role = 'staff'
 
-    const userNames = { admin: 'Administrator', staff: 'Nhân viên KTX', student: 'Nguyễn Văn An' }
-    authStore.login({ name: userNames[role] || 'User', role: role })
-    router.push(role === 'student' ? '/student' : '/admin')
+  try {
+    const userData = await authStore.login({ username: form.username, password: form.password })
+    router.push(userData.role === 'student' ? '/student' : '/admin')
+  } finally {
     loading.value = false
-  }, 600)
+  }
 }
 </script>
 

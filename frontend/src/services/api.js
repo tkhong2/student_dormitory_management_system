@@ -10,13 +10,28 @@ function createApi(baseURL) {
   })
 
   api.interceptors.request.use(
-    (config) => config,
+    (config) => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers = config.headers || {}
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      return config
+    },
     (error) => Promise.reject(error)
   )
 
   api.interceptors.response.use(
     (response) => response.data,
     (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        localStorage.removeItem('role')
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+      }
       const message = error.response?.data?.message || 'Lỗi kết nối máy chủ'
       return Promise.reject({ message, status: error.response?.status })
     }
@@ -32,6 +47,10 @@ const BILLING_MAINTENANCE_API = 'http://localhost:5002/api'
 
 const api = createApi(
   import.meta.env.VITE_ROOM_BUILDING_API_URL || ROOM_BUILDING_API
+)
+
+export const billingApi = createApi(
+  import.meta.env.VITE_BILLING_API_URL || 'http://localhost:5141/api'
 )
 
 export const contractStudentApi = createApi(

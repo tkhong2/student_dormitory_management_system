@@ -1,23 +1,19 @@
-import { billingMaintenanceApi } from './api';
+import { billingApi } from './api';
 
 export default {
-  // Payment CRUD
   getAll() {
-    return billingMaintenanceApi.get('/payments');
+    return billingApi.get('/payments');
   },
   getById(id) {
-    return billingMaintenanceApi.get(`/payments/${id}`);
-  },
-  getByInvoiceId(invoiceId) {
-    return billingMaintenanceApi.get(`/payments/invoice/${invoiceId}`);
+    return billingApi.get(`/payments/${id}`);
   },
   create(data) {
-    return billingMaintenanceApi.post('/payments', data);
+    return billingApi.post('/payments', data);
   },
   update(id, data) {
-    return billingMaintenanceApi.put(`/payments/${id}`, data);
+    return billingApi.put(`/payments/${id}`, data);
   },
   delete(id) {
-    return billingMaintenanceApi.delete(`/payments/${id}`);
+    return billingApi.delete(`/payments/${id}`);
   }
 };

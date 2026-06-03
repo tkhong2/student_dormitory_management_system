@@ -45,4 +45,14 @@ namespace BillingMaintenanceService.Application.Interfaces
         Task UpdateAsync(MaintenanceRequest request);
         Task DeleteAsync(MaintenanceRequest request);
     }
+
+    public interface IUserRepository
+    {
+        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByUsernameAsync(string username);
+        Task<IEnumerable<User>> GetAllAsync();
+        Task AddAsync(User user);
+        Task UpdateAsync(User user);
+        Task DeleteAsync(User user);
+    }
 }

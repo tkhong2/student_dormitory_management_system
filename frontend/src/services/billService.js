@@ -1,29 +1,19 @@
-import { billingMaintenanceApi } from './api';
+import { billingApi } from './api';
 
 export default {
-  // Invoice CRUD
   getAll() {
-    return billingMaintenanceApi.get('/invoices');
+    return billingApi.get('/bills');
   },
   getById(id) {
-    return billingMaintenanceApi.get(`/invoices/${id}`);
-  },
-  getByStudentId(studentId) {
-    return billingMaintenanceApi.get(`/invoices/student/${studentId}`);
-  },
-  getByContractId(contractId) {
-    return billingMaintenanceApi.get(`/invoices/contract/${contractId}`);
-  },
-  getByInvoiceCode(invoiceCode) {
-    return billingMaintenanceApi.get(`/invoices/code/${invoiceCode}`);
+    return billingApi.get(`/bills/${id}`);
   },
   create(data) {
-    return billingMaintenanceApi.post('/invoices', data);
+    return billingApi.post('/bills', data);
   },
   update(id, data) {
-    return billingMaintenanceApi.put(`/invoices/${id}`, data);
+    return billingApi.put(`/bills/${id}`, data);
   },
   delete(id) {
-    return billingMaintenanceApi.delete(`/invoices/${id}`);
+    return billingApi.delete(`/bills/${id}`);
   }
 };

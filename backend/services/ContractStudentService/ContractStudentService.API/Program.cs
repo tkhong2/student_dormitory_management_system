@@ -1,37 +1,21 @@
 using ContractStudentService.Application.Interfaces;
+using ContractStudentService.Infrastructure.Repositories;
 using ContractStudentService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (!string.IsNullOrEmpty(connectionString))
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(
-            connectionString,
-            sqlOptions =>
-            {
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 10,
-                    maxRetryDelay: TimeSpan.FromSeconds(5),
-                    errorNumbersToAdd: null);
-            })
-           .ConfigureWarnings(warnings =>
-               warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
-}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register repositories
-builder.Services.AddScoped<IStudentRepository, ContractStudentService.Infrastructure.Repositories.StudentRepository>();
-builder.Services.AddScoped<IStudentDocumentRepository, ContractStudentService.Infrastructure.Repositories.StudentDocumentRepository>();
-builder.Services.AddScoped<IRoomApplicationRepository, ContractStudentService.Infrastructure.Repositories.RoomApplicationRepository>();
-builder.Services.AddScoped<IContractRepository, ContractStudentService.Infrastructure.Repositories.ContractRepository>();
-builder.Services.AddScoped<IContractExtensionRepository, ContractStudentService.Infrastructure.Repositories.ContractExtensionRepository>();
-builder.Services.AddScoped<IRoomTransferRepository, ContractStudentService.Infrastructure.Repositories.RoomTransferRepository>();
+// Register AppDbContext and EF repositories
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ContractStudentDatabase"));
+});
+builder.Services.AddScoped<IContractRepository, EfContractRepository>();
+builder.Services.AddScoped<IStudentRepository, EfStudentRepository>();
 
 builder.Services.AddCors(options =>
 {
@@ -45,36 +29,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply EF migrations at startup (with retry loop)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var retries = 10;
-    while (retries > 0)
-    {
-        try
-        {
-            db.Database.Migrate();
-            Console.WriteLine("✅ ContractStudentDb migration applied successfully.");
-            break;
-        }
-        catch (Exception ex)
-        {
-            retries--;
-            Console.WriteLine($"⏳ SQL Server not ready, retrying... {retries} attempts left. Error: {ex.Message}");
-            Thread.Sleep(5000);
-        }
-    }
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-// Enable static files for uploaded documents
-app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");

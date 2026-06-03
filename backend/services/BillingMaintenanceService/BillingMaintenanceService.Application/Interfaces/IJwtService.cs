@@ -1,9 +1,10 @@
 using BillingMaintenanceService.Domain.Entities;
+using BillingMaintenanceService.Application.DTOs;
 
 namespace BillingMaintenanceService.Application.Interfaces
 {
     public interface IJwtService
     {
-        string GenerateToken(User user);
+        JwtTokenResultDto GenerateToken(User user);
     }
 }
