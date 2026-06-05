@@ -15,58 +15,51 @@
       </a-button>
     </div>
 
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="documents"
-      :treatEmptyAsError="false"
-      @retry="loadDocuments"
-    >
-      <!-- Filters Card -->
-      <a-card style="margin-bottom: 16px" :bordered="false">
-        <a-row :gutter="[16, 16]">
-          <a-col :xs="24" :sm="12" :md="8">
-            <a-input-search
-              v-model:value="search"
-              placeholder="Tìm theo tên sinh viên, loại tài liệu..."
-              allow-clear
-            />
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="8">
-            <a-select
-              v-model:value="typeFilter"
-              placeholder="Loại tài liệu"
-              allow-clear
-              style="width: 100%"
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm theo tên sinh viên, loại tài liệu..."
+            allow-clear
+          />
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-select
+            v-model:value="typeFilter"
+            placeholder="Loại tài liệu"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="all">Tất cả loại</a-select-option>
+            <a-select-option
+              v-for="type in documentTypes"
+              :key="type"
+              :value="type"
             >
-              <a-select-option value="all">Tất cả loại</a-select-option>
-              <a-select-option
-                v-for="type in documentTypes"
-                :key="type"
-                :value="type"
-              >
-                {{ type }}
-              </a-select-option>
-            </a-select>
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="8">
-            <a-select
-              v-model:value="verifiedFilter"
-              placeholder="Trạng thái xác minh"
-              allow-clear
-              style="width: 100%"
-            >
-              <a-select-option value="all">Tất cả</a-select-option>
-              <a-select-option value="verified">Đã xác minh</a-select-option>
-              <a-select-option value="unverified">Chưa xác minh</a-select-option>
-            </a-select>
-          </a-col>
-        </a-row>
-      </a-card>
+              {{ type }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-select
+            v-model:value="verifiedFilter"
+            placeholder="Trạng thái xác minh"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option value="verified">Đã xác minh</a-select-option>
+            <a-select-option value="unverified">Chưa xác minh</a-select-option>
+          </a-select>
+        </a-col>
+      </a-row>
+    </a-card>
 
-      <!-- Table Card -->
-      <a-card :bordered="false">
-        <a-table
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
+      <a-table
           :columns="columns"
           :data-source="filteredDocuments"
           row-key="id"
@@ -125,7 +118,6 @@
           </template>
         </a-table>
       </a-card>
-    </DataStatus>
 
     <!-- Upload Modal -->
     <a-modal
@@ -204,7 +196,6 @@ import {
   FileOutlined 
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import DataStatus from '@/components/common/DataStatus.vue'
 import { studentDocumentService } from '@/services/studentDocumentService'
 import { studentService } from '@/services/studentService'
 
@@ -234,7 +225,6 @@ const typeFilter = ref('all')
 const verifiedFilter = ref('all')
 const loading = ref(false)
 const saving = ref(false)
-const error = ref(null)
 const uploadDialog = ref(false)
 const deleteDialog = ref(false)
 const deleteTarget = ref(null)
@@ -272,11 +262,10 @@ function resetFilters() {
 
 async function loadDocuments() {
   loading.value = true
-  error.value = null
   try {
     documents.value = await studentDocumentService.getAll()
   } catch (err) {
-    error.value = err.message || 'Không thể tải danh sách tài liệu'
+    message.error(err.message || 'Không thể tải danh sách tài liệu')
   } finally {
     loading.value = false
   }

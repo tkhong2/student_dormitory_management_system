@@ -14,94 +14,84 @@
       </a-button>
     </div>
 
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="students"
-      empty-message="Chưa có sinh viên nội trú nào"
-      :show-create-button="true"
-      create-button-text="Thêm sinh viên"
-      @retry="loadStudents"
-      @create="openCreate"
-    >
-      <!-- Filters Card -->
-      <a-card style="margin-bottom: 16px" :bordered="false">
-        <a-row :gutter="[16, 16]">
-          <a-col :xs="24" :sm="12" :md="6">
-            <a-input-search
-              v-model:value="search"
-              placeholder="Tìm theo tên, mã SV..."
-              allow-clear
-            />
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="6">
-            <a-select
-              v-model:value="buildingFilter"
-              placeholder="Tòa nhà"
-              allow-clear
-              style="width: 100%"
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm theo tên, mã SV..."
+            allow-clear
+          />
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="buildingFilter"
+            placeholder="Tòa nhà"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option
+              v-for="option in buildingOptions"
+              :key="option.value"
+              :value="option.value"
             >
-              <a-select-option value="all">Tất cả</a-select-option>
-              <a-select-option
-                v-for="option in buildingOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </a-select-option>
-            </a-select>
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="4">
-            <a-select
-              v-model:value="classFilter"
-              placeholder="Lớp"
-              allow-clear
-              style="width: 100%"
+              {{ option.label }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="4">
+          <a-select
+            v-model:value="classFilter"
+            placeholder="Lớp"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option
+              v-for="option in classOptions"
+              :key="option"
+              :value="option"
             >
-              <a-select-option value="all">Tất cả</a-select-option>
-              <a-select-option
-                v-for="option in classOptions"
-                :key="option"
-                :value="option"
-              >
-                {{ option }}
-              </a-select-option>
-            </a-select>
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="4">
-            <a-select
-              v-model:value="genderFilter"
-              placeholder="Giới tính"
-              allow-clear
-              style="width: 100%"
+              {{ option }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="4">
+          <a-select
+            v-model:value="genderFilter"
+            placeholder="Giới tính"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option value="Nam">Nam</a-select-option>
+            <a-select-option value="Nữ">Nữ</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="4">
+          <a-select
+            v-model:value="statusFilter"
+            placeholder="Trạng thái"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option
+              v-for="option in filterStatusOptions"
+              :key="option.value"
+              :value="option.value"
             >
-              <a-select-option value="all">Tất cả</a-select-option>
-              <a-select-option value="Nam">Nam</a-select-option>
-              <a-select-option value="Nữ">Nữ</a-select-option>
-            </a-select>
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="4">
-            <a-select
-              v-model:value="statusFilter"
-              placeholder="Trạng thái"
-              allow-clear
-              style="width: 100%"
-            >
-              <a-select-option
-                v-for="option in filterStatusOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </a-select-option>
-            </a-select>
-          </a-col>
-        </a-row>
-      </a-card>
+              {{ option.label }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+      </a-row>
+    </a-card>
 
-      <!-- Table Card -->
-      <a-card :bordered="false">
-        <a-table
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
+      <a-table
           :columns="studentColumns"
           :data-source="filteredStudents"
           row-key="id"
@@ -137,7 +127,6 @@
           </template>
         </a-table>
       </a-card>
-    </DataStatus>
 
     <!-- Create/Edit Modal -->
     <a-modal
@@ -232,9 +221,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { PlusOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
-import DataStatus from "@/components/common/DataStatus.vue";
 import { studentService } from "@/services/studentService";
 
 const studentColumns = [
@@ -285,7 +272,6 @@ const classFilter = ref("all");
 const genderFilter = ref("");
 const loading = ref(false);
 const saving = ref(false);
-const error = ref(null);
 const dialog = ref(false);
 const deleteDialog = ref(false);
 const editTarget = ref(null);
@@ -359,11 +345,10 @@ function defaultForm() {
 
 async function loadStudents() {
   loading.value = true;
-  error.value = null;
   try {
     students.value = await studentService.getAll();
   } catch (err) {
-    error.value = err.message || "Không thể tải danh sách sinh viên";
+    message.error(err.message || "Không thể tải danh sách sinh viên");
   } finally {
     loading.value = false;
   }

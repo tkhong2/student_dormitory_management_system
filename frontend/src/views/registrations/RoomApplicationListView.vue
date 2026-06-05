@@ -11,44 +11,37 @@
       </div>
     </div>
 
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="applications"
-      :treatEmptyAsError="false"
-      @retry="loadApplications"
-    >
-      <a-card
-        style="border: 1px solid #e5e7eb; background: #fafafa"
-        :body-style="{ padding: '0' }"
-      >
-        <div class="pa-4 d-flex flex-wrap align-center" style="gap: 12px">
-          <a-input-search
-            v-model:value="search"
-            placeholder="Tìm theo tên, mã SV..."
-            allowClear
-            style="max-width: 300px; flex: 1"
-          />
-          <a-select
-            v-model:value="statusFilter"
-            placeholder="Trạng thái"
-            allowClear
-            style="max-width: 220px"
+    <!-- Filters and Table Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap">
+        <a-input-search
+          v-model:value="search"
+          placeholder="Tìm theo tên, mã SV..."
+          allowClear
+          style="max-width: 300px; flex: 1"
+        />
+        <a-select
+          v-model:value="statusFilter"
+          placeholder="Trạng thái"
+          allowClear
+          style="max-width: 220px"
+        >
+          <a-select-option
+            v-for="option in filterStatusOptions"
+            :key="option.value"
+            :value="option.value"
           >
-            <a-select-option
-              v-for="option in filterStatusOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </a-select-option>
-          </a-select>
-          <a-button v-if="search || statusFilter !== 'all'" type="text" size="small" @click="resetFilters">
-            Đặt lại
-          </a-button>
-        </div>
+            {{ option.label }}
+          </a-select-option>
+        </a-select>
+        <a-button v-if="search || statusFilter !== 'all'" @click="resetFilters">
+          Đặt lại
+        </a-button>
+      </div>
+    </a-card>
 
-        <a-table
+    <a-card :bordered="false" :loading="loading">
+      <a-table
           :columns="columns"
           :data-source="filteredApplications"
           row-key="id"
@@ -57,19 +50,19 @@
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'studentName'">
-              <div class="d-flex align-center" style="gap: 12px; padding: 12px 0">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
                 <a-avatar size="32" style="background: #e6f7ff; color: #1890ff">
                   {{ record.studentName?.charAt(0) || 'S' }}
                 </a-avatar>
                 <div>
-                  <div class="font-weight-bold">{{ record.studentName }}</div>
+                  <div style="font-weight: 600">{{ record.studentName }}</div>
                   <div style="font-size: 12px; color: #8c8c8c">{{ record.studentCode }}</div>
                 </div>
               </div>
             </template>
             <template v-else-if="column.key === 'preferredBuilding'">
               <div>
-                <div class="font-weight-medium">{{ record.preferredBuildingName }}</div>
+                <div style="font-weight: 500">{{ record.preferredBuildingName }}</div>
                 <div style="font-size: 12px; color: #8c8c8c">{{ record.preferredRoomTypeName }}</div>
               </div>
             </template>
@@ -99,71 +92,82 @@
           </template>
         </a-table>
       </a-card>
-    </DataStatus>
 
     <!-- Approve Dialog -->
-    <v-dialog v-model="approveDialog" max-width="560" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Duyệt đơn đăng ký</h2>
-        <p class="mb-4">Sinh viên: <strong>{{ approveTarget?.studentName }}</strong></p>
-        <v-row>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.assignedRoomNumber"
-              label="Số phòng được phân *"
-              :error-messages="approveErrors.assignedRoomNumber"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.assignedBuildingName"
-              label="Tên tòa nhà *"
-              :error-messages="approveErrors.assignedBuildingName"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.assignedRoomId"
-              label="ID Phòng *"
-              type="number"
-              :error-messages="approveErrors.assignedRoomId"
-            />
-          </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="approveDialog = false">Hủy</v-btn>
-          <v-btn color="primary" :loading="saving" @click="handleApprove">Duyệt đơn</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <a-modal
+      v-model:open="approveDialog"
+      title="Duyệt đơn đăng ký"
+      :confirm-loading="saving"
+      :maskClosable="false"
+      @ok="handleApprove"
+      @cancel="approveDialog = false"
+      okText="Duyệt đơn"
+      cancelText="Hủy"
+    >
+      <div style="margin-bottom: 16px">Sinh viên: <strong>{{ approveTarget?.studentName }}</strong></div>
+      <a-form layout="vertical">
+        <a-form-item
+          label="Số phòng được phân"
+          :validate-status="approveErrors.assignedRoomNumber ? 'error' : ''"
+          :help="approveErrors.assignedRoomNumber"
+        >
+          <a-input v-model:value="approveForm.assignedRoomNumber" placeholder="Nhập số phòng" />
+        </a-form-item>
+        <a-form-item
+          label="Tên tòa nhà"
+          :validate-status="approveErrors.assignedBuildingName ? 'error' : ''"
+          :help="approveErrors.assignedBuildingName"
+        >
+          <a-input v-model:value="approveForm.assignedBuildingName" placeholder="Nhập tên tòa" />
+        </a-form-item>
+        <a-form-item
+          label="ID Phòng"
+          :validate-status="approveErrors.assignedRoomId ? 'error' : ''"
+          :help="approveErrors.assignedRoomId"
+        >
+          <a-input-number
+            v-model:value="approveForm.assignedRoomId"
+            :min="1"
+            style="width: 100%"
+            placeholder="Nhập ID phòng"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <!-- Reject Dialog -->
-    <v-dialog v-model="rejectDialog" max-width="560" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Từ chối đơn đăng ký</h2>
-        <p class="mb-4">Sinh viên: <strong>{{ rejectTarget?.studentName }}</strong></p>
-        <v-textarea
-          v-model="rejectForm.rejectReason"
-          label="Lý do từ chối *"
-          rows="3"
-          :error-messages="rejectErrors.rejectReason"
-        />
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="rejectDialog = false">Hủy</v-btn>
-          <v-btn color="error" :loading="saving" @click="handleReject">Từ chối</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" location="bottom right">
-      {{ snackbar.message }}
-    </v-snackbar>
+    <a-modal
+      v-model:open="rejectDialog"
+      title="Từ chối đơn đăng ký"
+      :confirm-loading="saving"
+      :maskClosable="false"
+      @ok="handleReject"
+      @cancel="rejectDialog = false"
+      okText="Từ chối"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <div style="margin-bottom: 16px">Sinh viên: <strong>{{ rejectTarget?.studentName }}</strong></div>
+      <a-form layout="vertical">
+        <a-form-item
+          label="Lý do từ chối"
+          :validate-status="rejectErrors.rejectReason ? 'error' : ''"
+          :help="rejectErrors.rejectReason"
+        >
+          <a-textarea
+            v-model:value="rejectForm.rejectReason"
+            :rows="3"
+            placeholder="Nhập lý do từ chối"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import DataStatus from '@/components/common/DataStatus.vue'
+import { message } from 'ant-design-vue'
 import { roomApplicationService } from '@/services/roomApplicationService'
 import { useRouter } from 'vue-router'
 
@@ -192,16 +196,14 @@ const search = ref('')
 const statusFilter = ref('all')
 const loading = ref(false)
 const saving = ref(false)
-const error = ref(null)
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
 const approveTarget = ref(null)
 const rejectTarget = ref(null)
-const approveForm = ref({ assignedRoomId: '', assignedRoomNumber: '', assignedBuildingName: '' })
+const approveForm = ref({ assignedRoomId: null, assignedRoomNumber: '', assignedBuildingName: '' })
 const rejectForm = ref({ rejectReason: '' })
 const approveErrors = ref({})
 const rejectErrors = ref({})
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 const filteredApplications = computed(() => {
   const keyword = search.value.trim().toLowerCase()
@@ -222,11 +224,10 @@ function resetFilters() {
 
 async function loadApplications() {
   loading.value = true
-  error.value = null
   try {
     applications.value = await roomApplicationService.getAll()
   } catch (err) {
-    error.value = err.message || 'Không thể tải danh sách đơn đăng ký'
+    message.error(err.message || 'Không thể tải danh sách đơn đăng ký')
   } finally {
     loading.value = false
   }
@@ -235,7 +236,7 @@ async function loadApplications() {
 function openApprove(item) {
   approveTarget.value = item
   approveForm.value = {
-    assignedRoomId: '',
+    assignedRoomId: null,
     assignedRoomNumber: '',
     assignedBuildingName: item.preferredBuildingName,
   }
@@ -269,11 +270,11 @@ async function handleApprove() {
       assignedRoomNumber: approveForm.value.assignedRoomNumber.trim(),
       assignedBuildingName: approveForm.value.assignedBuildingName.trim(),
     })
-    notify('Đã duyệt đơn đăng ký thành công')
+    message.success('Đã duyệt đơn đăng ký thành công')
     approveDialog.value = false
     await loadApplications()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -293,11 +294,11 @@ async function handleReject() {
       reviewedByName: 'Admin', // TODO: Get from auth
       rejectReason: rejectForm.value.rejectReason.trim(),
     })
-    notify('Đã từ chối đơn đăng ký')
+    message.success('Đã từ chối đơn đăng ký')
     rejectDialog.value = false
     await loadApplications()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -328,11 +329,6 @@ function formatDate(value) {
 
 function formatCurrency(value) {
   return value ? value.toLocaleString('vi-VN') + 'đ' : ''
-}
-
-function notify(message, color = 'success') {
-  snackbar.value = { show: false, message, color }
-  snackbar.value.show = true
 }
 
 onMounted(loadApplications)

@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- Page Header -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
         <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">Quản lý Người dùng</h1>
@@ -9,178 +10,273 @@
         + Thêm người dùng
       </a-button>
     </div>
-
-    <!-- Role stats -->
-    <v-row style="margin-bottom: 16px;">
-      <v-col v-for="r in roleStats" :key="r.role" cols="12" sm="4">
-        <v-card class="pa-5 d-flex align-center ga-4" style="border:1px solid #e5e7eb">
-          <v-avatar :color="r.bg" size="48" rounded="lg">
-            <v-icon :color="r.color" size="24">{{ r.icon }}</v-icon>
-          </v-avatar>
-          <div>
-            <div class="text-h5 font-weight-bold">{{ r.count }}</div>
-            <div class="text-body-2 text-medium-emphasis">{{ r.role }}</div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <v-card style="border:1px solid #e5e7eb">
-      <div class="pa-4 d-flex flex-wrap ga-3 align-center">
-        <v-text-field v-model="search" placeholder="Tìm người dùng..." prepend-inner-icon="mdi-magnify" density="compact" hide-details style="max-width:300px" />
-        <v-chip-group v-model="filterRole" class="ml-auto">
-          <v-chip filter value="all">Tất cả</v-chip>
-          <v-chip filter value="Admin" color="error">Admin</v-chip>
-          <v-chip filter value="Staff" color="info">Nhân viên</v-chip>
-          <v-chip filter value="Student" color="success">Sinh viên</v-chip>
-        </v-chip-group>
-      </div>
-
-      <v-data-table :headers="headers" :items="filteredUsers" :search="search" items-per-page="10" :loading="loading">
-        <template #item.fullName="{ item }">
-          <div class="d-flex align-center ga-3 py-2">
-            <v-avatar size="36" :color="roleColor(item.role)" variant="tonal">
-              <v-icon size="18">{{ roleIcon(item.role) }}</v-icon>
-            </v-avatar>
+     <!-- Role stats -->
+    <a-row :gutter="[16, 16]" style="margin-bottom: 16px;">
+      <a-col v-for="r in roleStats" :key="r.role" :xs="24" :sm="8">
+        <a-card :bordered="false" style="border: 1px solid #e5e7eb;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <a-avatar :size="48" :style="{ backgroundColor: r.bg }">
+              <template #icon>
+                <component :is="r.iconComponent" :style="{ fontSize: '24px', color: r.color }" />
+              </template>
+            </a-avatar>
             <div>
-              <div class="text-body-2 font-weight-bold">{{ item.fullName }}</div>
-              <div class="text-caption text-medium-emphasis">{{ item.email }}</div>
+              <div style="font-size: 24px; font-weight: 700;">{{ r.count }}</div>
+              <div style="font-size: 14px; color: #8c8c8c;">{{ r.role }}</div>
             </div>
           </div>
-        </template>
-        <template #item.role="{ item }">
-          <v-chip :color="roleColor(item.role)" size="x-small" variant="tonal">{{ roleDisplay(item.role) }}</v-chip>
-        </template>
-        <template #item.status="{ item }">
-          <div class="d-flex align-center ga-1">
-            <span class="dot-pulse" :style="{background:item.active?'#16a34a':'#94a3b8'}" />
-            <span class="text-body-2">{{ item.active ? 'Hoạt động' : 'Vô hiệu' }}</span>
-          </div>
-        </template>
-        <template #item.actions="{ item }">
-          <v-btn icon="mdi-pencil-outline" size="small" variant="text" @click="openEditDialog(item)" />
-          <v-btn icon="mdi-lock-reset" size="small" variant="text" color="warning" title="Reset mật khẩu" @click="resetPassword(item)" />
-          <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error" @click="confirmDelete(item)" />
-        </template>
-      </v-data-table>
-    </v-card>
+        </a-card>
+      </a-col>
+    </a-row>
 
-    <v-dialog v-model="dialog" max-width="560" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h5 font-weight-bold mb-6">{{ editMode ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}</h2>
-        <v-row>
-          <v-col cols="6">
-            <v-text-field 
-              v-model="form.username" 
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px;" :bordered="false">
+      <a-row :gutter="[16, 16]" align="middle">
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm người dùng..."
+            allow-clear
+          >
+            <template #prefix><SearchOutlined /></template>
+          </a-input-search>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="16" style="text-align: right;">
+          <a-radio-group v-model:value="filterRole" button-style="solid">
+            <a-radio-button value="all">Tất cả</a-radio-button>
+            <a-radio-button value="Admin">Admin</a-radio-button>
+            <a-radio-button value="Staff">Nhân viên</a-radio-button>
+            <a-radio-button value="Student">Sinh viên</a-radio-button>
+          </a-radio-group>
+        </a-col>
+      </a-row>
+    </a-card>
+
+    <!-- Table Card -->
+    <a-card :bordered="false">
+      <a-table
+        :columns="antColumns"
+        :data-source="filteredUsers"
+        :loading="loading"
+        :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Tổng ${total} người dùng` }"
+        :scroll="{ x: 1000 }"
+        row-key="id"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'fullName'">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0;">
+              <a-avatar :size="36" :style="{ backgroundColor: getAvatarBg(record.role) }">
+                <template #icon>
+                  <component :is="getRoleIconComponent(record.role)" />
+                </template>
+              </a-avatar>
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">{{ record.fullName }}</div>
+                <div style="font-size: 12px; color: #8c8c8c;">{{ record.email }}</div>
+              </div>
+            </div>
+          </template>
+          
+          <template v-else-if="column.key === 'role'">
+            <a-tag :color="getAntRoleColor(record.role)">{{ roleDisplay(record.role) }}</a-tag>
+          </template>
+          
+          <template v-else-if="column.key === 'status'">
+            <a-badge :status="record.active ? 'success' : 'default'" :text="record.active ? 'Hoạt động' : 'Vô hiệu'" />
+          </template>
+          
+          <template v-else-if="column.key === 'actions'">
+            <a-space>
+              <a-tooltip title="Sửa">
+                <a-button type="text" size="small" @click="openEditDialog(record)">
+                  <template #icon><EditOutlined /></template>
+                </a-button>
+              </a-tooltip>
+              <a-tooltip title="Reset mật khẩu">
+                <a-button type="text" size="small" @click="resetPassword(record)">
+                  <template #icon><KeyOutlined /></template>
+                </a-button>
+              </a-tooltip>
+              <a-tooltip title="Xóa">
+                <a-button type="text" danger size="small" @click="confirmDelete(record)">
+                  <template #icon><DeleteOutlined /></template>
+                </a-button>
+              </a-tooltip>
+            </a-space>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
+
+    <!-- Create/Edit Modal -->
+    <a-modal
+      v-model:open="dialog"
+      :title="editMode ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'"
+      width="600px"
+      @cancel="closeDialog"
+    >
+      <a-form layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item 
               label="Tên đăng nhập" 
-              :disabled="editMode"
-              :error-messages="formErrors.username"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-text-field 
-              v-model="form.fullName" 
+              :validate-status="formErrors.username ? 'error' : ''"
+              :help="formErrors.username"
+            >
+              <a-input 
+                v-model:value="form.username" 
+                placeholder="Nhập tên đăng nhập"
+                :disabled="editMode"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item 
               label="Họ và tên"
-              :error-messages="formErrors.fullName"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-text-field 
-              v-model="form.email" 
-              label="Email" 
-              type="email"
-              :error-messages="formErrors.email"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-text-field 
-              v-model="form.phone" 
+              :validate-status="formErrors.fullName ? 'error' : ''"
+              :help="formErrors.fullName"
+            >
+              <a-input 
+                v-model:value="form.fullName" 
+                placeholder="Nhập họ và tên"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item 
+              label="Email"
+              :validate-status="formErrors.email ? 'error' : ''"
+              :help="formErrors.email"
+            >
+              <a-input 
+                v-model:value="form.email" 
+                placeholder="Nhập email"
+                type="email"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item 
               label="Số điện thoại"
-              :error-messages="formErrors.phone"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-select 
-              v-model="form.role" 
-              label="Vai trò" 
-              :items="roleOptions"
-              item-title="label"
-              item-value="value"
-              :error-messages="formErrors.role"
-            />
-          </v-col>
-          <v-col cols="6" v-if="form.role === 'Student'">
-            <v-text-field 
-              v-model="form.studentCode" 
-              label="Mã sinh viên"
-            />
-          </v-col>
-          <v-col cols="6" v-if="!editMode">
-            <v-text-field 
-              v-model="form.password" 
-              label="Mật khẩu" 
-              type="password"
-              :error-messages="formErrors.password"
-            />
-          </v-col>
-          <v-col cols="6" v-if="!editMode">
-            <v-text-field 
-              v-model="form.confirmPassword" 
-              label="Xác nhận mật khẩu" 
-              type="password"
-              :error-messages="formErrors.confirmPassword"
-            />
-          </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="closeDialog" :disabled="saving">Hủy</v-btn>
-          <v-btn color="primary" @click="saveUser" :loading="saving">
-            {{ editMode ? 'Cập nhật' : 'Tạo tài khoản' }}
-          </v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+              :validate-status="formErrors.phone ? 'error' : ''"
+              :help="formErrors.phone"
+            >
+              <a-input 
+                v-model:value="form.phone" 
+                placeholder="Nhập số điện thoại"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item 
+              label="Vai trò"
+              :validate-status="formErrors.role ? 'error' : ''"
+              :help="formErrors.role"
+            >
+              <a-select 
+                v-model:value="form.role" 
+                placeholder="Chọn vai trò"
+              >
+                <a-select-option v-for="opt in roleOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="form.role === 'Student'">
+            <a-form-item label="Mã sinh viên">
+              <a-input 
+                v-model:value="form.studentCode" 
+                placeholder="Nhập mã sinh viên"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="!editMode">
+            <a-form-item 
+              label="Mật khẩu"
+              :validate-status="formErrors.password ? 'error' : ''"
+              :help="formErrors.password"
+            >
+              <a-input-password 
+                v-model:value="form.password" 
+                placeholder="Nhập mật khẩu"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="!editMode">
+            <a-form-item 
+              label="Xác nhận mật khẩu"
+              :validate-status="formErrors.confirmPassword ? 'error' : ''"
+              :help="formErrors.confirmPassword"
+            >
+              <a-input-password 
+                v-model:value="form.confirmPassword" 
+                placeholder="Nhập lại mật khẩu"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
+      <template #footer>
+        <a-button @click="closeDialog" :disabled="saving">Hủy</a-button>
+        <a-button type="primary" @click="saveUser" :loading="saving">
+          {{ editMode ? 'Cập nhật' : 'Tạo tài khoản' }}
+        </a-button>
+      </template>
+    </a-modal>
 
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="420">
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-3">Xác nhận xóa</h2>
-        <p>Bạn có chắc muốn xóa người dùng <strong>{{ deleteTarget?.fullName }}</strong>?</p>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="deleteDialog = false">Hủy</v-btn>
-          <v-btn color="error" @click="deleteUser" :loading="saving">Xóa</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <!-- Delete Confirmation Modal -->
+    <a-modal
+      v-model:open="deleteDialog"
+      title="Xác nhận xóa"
+      @ok="deleteUser"
+      @cancel="deleteDialog = false"
+      okText="Xóa"
+      okType="danger"
+      cancelText="Hủy"
+      :confirmLoading="saving"
+    >
+      <p>Bạn có chắc muốn xóa người dùng <strong>{{ deleteTarget?.fullName }}</strong>?</p>
+    </a-modal>
 
-    <!-- Reset Password Dialog -->
-    <v-dialog v-model="resetPasswordDialog" max-width="420">
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Reset mật khẩu</h2>
-        <p class="mb-4">Reset mật khẩu cho người dùng <strong>{{ resetTarget?.fullName }}</strong>?</p>
-        <v-text-field 
-          v-model="newPassword" 
-          label="Mật khẩu mới" 
-          type="password"
-          :error-messages="passwordError"
+    <!-- Reset Password Modal -->
+    <a-modal
+      v-model:open="resetPasswordDialog"
+      title="Reset mật khẩu"
+      @ok="doResetPassword"
+      @cancel="closeResetPasswordDialog"
+      okText="Reset"
+      cancelText="Hủy"
+      :confirmLoading="saving"
+    >
+      <p style="margin-bottom: 16px;">Reset mật khẩu cho người dùng <strong>{{ resetTarget?.fullName }}</strong>?</p>
+      <a-form-item 
+        label="Mật khẩu mới"
+        :validate-status="passwordError ? 'error' : ''"
+        :help="passwordError"
+      >
+        <a-input-password 
+          v-model:value="newPassword" 
+          placeholder="Nhập mật khẩu mới"
         />
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="closeResetPasswordDialog">Hủy</v-btn>
-          <v-btn color="warning" @click="doResetPassword" :loading="saving" style="color: white;">Reset</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <!-- Snackbar for notifications -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" location="bottom right">
-      {{ snackbar.message }}
-    </v-snackbar>
+      </a-form-item>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { 
+  PlusOutlined, 
+  SearchOutlined, 
+  EditOutlined, 
+  DeleteOutlined,
+  KeyOutlined,
+  CrownOutlined,
+  SafetyOutlined,
+  UserOutlined
+} from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import axios from 'axios'
 
 const search = ref('')
@@ -209,12 +305,6 @@ const form = ref({
 
 const formErrors = ref({})
 
-const snackbar = ref({
-  show: false,
-  message: '',
-  color: 'success'
-})
-
 const roleOptions = [
   { label: 'Admin', value: 'Admin' },
   { label: 'Nhân viên', value: 'Staff' },
@@ -227,66 +317,80 @@ const roleStats = computed(() => {
   const studentCount = users.value.filter(u => u.role === 'Student').length
   
   return [
-    { role:'Quản trị viên', count: adminCount, icon:'mdi-shield-crown', color:'error', bg:'#fef2f2' },
-    { role:'Nhân viên', count: staffCount, icon:'mdi-account-hard-hat', color:'info', bg:'#e0f2fe' },
-    { role:'Sinh viên', count: studentCount, icon:'mdi-school', color:'success', bg:'#dcfce7' },
+    { role:'Quản trị viên', count: adminCount, iconComponent: CrownOutlined, color:'#ef4444', bg:'#fef2f2' },
+    { role:'Nhân viên', count: staffCount, iconComponent: SafetyOutlined, color:'#3b82f6', bg:'#e0f2fe' },
+    { role:'Sinh viên', count: studentCount, iconComponent: UserOutlined, color:'#16a34a', bg:'#dcfce7' },
   ]
 })
 
-const headers = [
-  { title:'Người dùng', key:'fullName' },
-  { title:'Username', key:'username', align:'center' },
-  { title:'Vai trò', key:'role', align:'center' },
-  { title:'Trạng thái', key:'status', align:'center' },
-  { title:'Ngày tạo', key:'created', align:'center' },
-  { title:'', key:'actions', align:'end', sortable:false },
+const antColumns = [
+  { title: 'Người dùng', key: 'fullName', width: 280 },
+  { title: 'Username', dataIndex: 'username', key: 'username', width: 150, align: 'center' },
+  { title: 'Vai trò', key: 'role', width: 120, align: 'center' },
+  { title: 'Trạng thái', key: 'status', width: 130, align: 'center' },
+  { title: 'Ngày tạo', dataIndex: 'created', key: 'created', width: 130, align: 'center' },
+  { title: 'Thao tác', key: 'actions', width: 150, align: 'center', fixed: 'right' }
 ]
 
 const users = ref([])
 
-// Load users from API
+const getAntRoleColor = (role) => {
+  return { 'Admin': 'red', 'Staff': 'blue', 'Student': 'green' }[role] || 'default'
+}
+
+const getAvatarBg = (role) => {
+  return { 'Admin': '#fef2f2', 'Staff': '#e0f2fe', 'Student': '#dcfce7' }[role] || '#f5f5f5'
+}
+
+const getRoleIconComponent = (role) => {
+  return { 'Admin': CrownOutlined, 'Staff': SafetyOutlined, 'Student': UserOutlined }[role] || UserOutlined
+}
+
 async function loadUsers() {
   loading.value = true
   try {
-    // Call directly to BillingMaintenanceService since Gateway might not be running
     const response = await axios.get('http://localhost:5002/api/users', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
     
-    // Map API response to component format
     users.value = response.data.map(user => ({
       id: user.id,
       username: user.username,
       fullName: user.fullName,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       active: user.isActive,
       created: user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'
     }))
-    
-    console.log('Loaded users:', users.value)
   } catch (error) {
     console.error('Error loading users:', error)
-    console.error('Error details:', error.response?.data || error.message)
+    message.error(error.response?.data?.message || 'Không thể tải danh sách người dùng')
   } finally {
     loading.value = false
   }
 }
 
 const filteredUsers = computed(() => {
-  if (filterRole.value === 'all') return users.value
-  return users.value.filter(u => u.role === filterRole.value)
+  let result = users.value
+  if (filterRole.value !== 'all') {
+    result = result.filter(u => u.role === filterRole.value)
+  }
+  if (search.value) {
+    const keyword = search.value.toLowerCase()
+    result = result.filter(u => 
+      u.fullName?.toLowerCase().includes(keyword) ||
+      u.username?.toLowerCase().includes(keyword) ||
+      u.email?.toLowerCase().includes(keyword)
+    )
+  }
+  return result
 })
 
-const roleColor = r => ({'Admin':'error','Staff':'info','Student':'success'}[r]||'grey')
-const roleIcon = r => ({'Admin':'mdi-shield-crown','Staff':'mdi-account-hard-hat','Student':'mdi-school'}[r]||'mdi-account')
-
-// Map role names for display
 const roleDisplay = r => ({'Admin':'Admin','Staff':'Nhân viên','Student':'Sinh viên'}[r]||r)
 
-// Dialog functions
 function openCreateDialog() {
   editMode.value = false
   form.value = {
@@ -351,7 +455,6 @@ function validateForm() {
     errors.role = 'Vui lòng chọn vai trò'
   }
   
-  // Password validation for create mode only
   if (!editMode.value) {
     if (!form.value.password) {
       errors.password = 'Vui lòng nhập mật khẩu'
@@ -374,7 +477,6 @@ async function saveUser() {
   saving.value = true
   try {
     if (editMode.value) {
-      // Update user
       await axios.put(`http://localhost:5002/api/users/${form.value.id}`, {
         fullName: form.value.fullName,
         email: form.value.email,
@@ -387,9 +489,8 @@ async function saveUser() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
-      showNotification('Cập nhật người dùng thành công', 'success')
+      message.success('Cập nhật người dùng thành công')
     } else {
-      // Create user
       await axios.post('http://localhost:5002/api/users', {
         username: form.value.username,
         password: form.value.password,
@@ -403,7 +504,7 @@ async function saveUser() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
-      showNotification('Thêm người dùng thành công', 'success')
+      message.success('Thêm người dùng thành công')
     }
     
     closeDialog()
@@ -411,7 +512,7 @@ async function saveUser() {
   } catch (error) {
     console.error('Error saving user:', error)
     const errorMsg = error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'
-    showNotification(errorMsg, 'error')
+    message.error(errorMsg)
   } finally {
     saving.value = false
   }
@@ -430,12 +531,12 @@ async function deleteUser() {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
-    showNotification('Xóa người dùng thành công', 'success')
+    message.success('Xóa người dùng thành công')
     deleteDialog.value = false
     await loadUsers()
   } catch (error) {
     console.error('Error deleting user:', error)
-    showNotification(error.response?.data?.message || 'Không thể xóa người dùng', 'error')
+    message.error(error.response?.data?.message || 'Không thể xóa người dùng')
   } finally {
     saving.value = false
   }
@@ -478,21 +579,13 @@ async function doResetPassword() {
         }
       }
     )
-    showNotification('Reset mật khẩu thành công', 'success')
+    message.success('Reset mật khẩu thành công')
     closeResetPasswordDialog()
   } catch (error) {
     console.error('Error resetting password:', error)
-    showNotification(error.response?.data?.message || 'Không thể reset mật khẩu', 'error')
+    message.error(error.response?.data?.message || 'Không thể reset mật khẩu')
   } finally {
     saving.value = false
-  }
-}
-
-function showNotification(message, color = 'success') {
-  snackbar.value = {
-    show: true,
-    message,
-    color
   }
 }
 
@@ -500,3 +593,9 @@ onMounted(() => {
   loadUsers()
 })
 </script>
+
+<style scoped>
+:deep(.ant-table-cell) {
+  padding: 12px 8px !important;
+}
+</style>

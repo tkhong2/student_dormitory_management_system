@@ -29,10 +29,10 @@
       </a-button>
     </div>
 
-    <!-- Filter Section -->
-    <a-card style="margin-bottom: 16px; background: #fafafa">
+    <!-- Filter Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
       <a-row :gutter="16">
-        <a-col :span="6">
+        <a-col :xs="24" :sm="8" :md="6">
           <a-select
             v-model:value="genderFilter"
             placeholder="Loại tòa"
@@ -44,7 +44,7 @@
             <a-select-option value="Mixed">Hỗn hợp</a-select-option>
           </a-select>
         </a-col>
-        <a-col :span="6">
+        <a-col :xs="24" :sm="8" :md="6">
           <a-input-number
             v-model:value="floorFilter"
             placeholder="Số tầng"
@@ -54,27 +54,22 @@
             allow-clear
           />
         </a-col>
-        <a-col :span="12">
+        <a-col :xs="24" :sm="8" :md="12">
           <a-input
             v-model:value="search"
             placeholder="Tìm tên tòa nhà..."
             allow-clear
           >
             <template #prefix>
-              <i class="anticon anticon-search"></i>
+              <SearchOutlined />
             </template>
           </a-input>
         </a-col>
       </a-row>
     </a-card>
 
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="buildings"
-      :treatEmptyAsError="false"
-      @retry="loadBuildings"
-    >
+    <!-- Buildings Grid Card -->
+    <a-card :bordered="false" :loading="loading">
       <!-- Empty State -->
       <div
         v-if="filteredBuildings.length === 0"
@@ -194,7 +189,7 @@
                   }"
                   title="Thang máy"
                 >
-                  <i class="anticon anticon-vertical-align-top"></i>
+                  <VerticalAlignTopOutlined />
                   <span>Thang máy</span>
                 </div>
                 <div
@@ -213,7 +208,7 @@
                   }"
                   title="Bãi đỗ xe"
                 >
-                  <i class="anticon anticon-car"></i>
+                  <CarOutlined />
                   <span>Đỗ xe</span>
                 </div>
                 <div
@@ -232,7 +227,7 @@
                   }"
                   title="Giặt ủi"
                 >
-                  <i class="anticon anticon-shopping"></i>
+                  <ShoppingOutlined />
                   <span>Giặt ủi</span>
                 </div>
               </div>
@@ -262,12 +257,12 @@
                 "
               >
                 <span style="display: flex; align-items: center; gap: 4px">
-                  <i class="anticon anticon-home"></i>
+                  <HomeOutlined />
                   {{ b.totalRooms }} phòng
                 </span>
                 <span style="color: #d1d5db">•</span>
                 <span style="display: flex; align-items: center; gap: 4px">
-                  <i class="anticon anticon-apartment"></i>
+                  <ApartmentOutlined />
                   {{ b.totalFloors }} tầng
                 </span>
               </div>
@@ -305,7 +300,7 @@
                   @click.stop="openEdit(b)"
                   style="flex: 1; border-radius: 8px"
                 >
-                  <i class="anticon anticon-edit"></i>
+                  <EditOutlined />
                   Sửa
                 </a-button>
                 <a-button
@@ -314,7 +309,7 @@
                   @click.stop="confirmDelete(b)"
                   style="flex: 1; border-radius: 8px"
                 >
-                  <i class="anticon anticon-delete"></i>
+                  <DeleteOutlined />
                   Xóa
                 </a-button>
               </div>
@@ -322,7 +317,7 @@
           </a-card>
         </div>
       </div>
-    </DataStatus>
+    </a-card>
 
     <!-- Add/Edit Drawer -->
     <a-drawer
@@ -515,26 +510,28 @@
         >? Hành động này không thể hoàn tác.
       </p>
     </a-modal>
-
-    <!-- Notification -->
-    <a-message
-      v-if="snackbar.show"
-      :type="snackbar.type"
-      :message="snackbar.message"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import DataStatus from "@/components/common/DataStatus.vue";
+import { message } from "ant-design-vue";
+import {
+  SearchOutlined,
+  VerticalAlignTopOutlined,
+  CarOutlined,
+  ShoppingOutlined,
+  HomeOutlined,
+  ApartmentOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons-vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import { buildingService } from "@/services/buildingService";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 const buildings = ref([]);
 const loading = ref(false);
-const error = ref(null);
 const saving = ref(false);
 
 // ─── Filter state ─────────────────────────────────────────────────────────────
@@ -564,8 +561,6 @@ const form = ref({
 });
 const formErrors = ref({});
 
-const snackbar = ref({ show: false, message: "", type: "success" });
-
 // ─── Computed - filtered buildings ────────────────────────────────────────────
 const filteredBuildings = computed(() => {
   const keyword = search.value.trim().toLowerCase();
@@ -587,11 +582,10 @@ function countByGender(gender) {
 // ─── Load data ───────────────────────────────────────────────────────────────
 async function loadBuildings() {
   loading.value = true;
-  error.value = null;
   try {
     buildings.value = await buildingService.getAll();
   } catch (err) {
-    error.value = err.message || "Không thể tải danh sách tòa nhà";
+    message.error(err.message || "Không thể tải danh sách tòa nhà");
   } finally {
     loading.value = false;
   }
@@ -693,15 +687,15 @@ async function saveBuilding() {
     
     if (editTarget.value) {
       await buildingService.update(editTarget.value.id, payload);
-      showSnackbar("Cập nhật tòa nhà thành công!", "success");
+      message.success("Cập nhật tòa nhà thành công!");
     } else {
       await buildingService.create(payload);
-      showSnackbar("Thêm tòa nhà thành công!", "success");
+      message.success("Thêm tòa nhà thành công!");
     }
     closeDialog();
     await loadBuildings();
   } catch (err) {
-    showSnackbar(err.message || "Có lỗi xảy ra", "error");
+    message.error(err.message || "Có lỗi xảy ra");
   } finally {
     saving.value = false;
   }
@@ -716,18 +710,14 @@ async function deleteBuilding() {
   saving.value = true;
   try {
     await buildingService.delete(deleteTarget.value.id);
-    showSnackbar("Đã xóa tòa nhà!", "success");
+    message.success("Đã xóa tòa nhà!");
     deleteDialog.value = false;
     await loadBuildings();
   } catch (err) {
-    showSnackbar(err.message || "Có lỗi xảy ra", "error");
+    message.error(err.message || "Có lỗi xảy ra");
   } finally {
     saving.value = false;
   }
-}
-
-function showSnackbar(message, type = "success") {
-  snackbar.value = { show: true, message, type };
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────

@@ -15,19 +15,11 @@
       </a-button>
     </div>
     
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="rooms"
-      empty-message="Chưa có phòng nào"
-      :show-create-button="true"
-      create-button-text="Thêm phòng"
-      @retry="loadRooms"
-      @create="openCreate"
-    >
+    <!-- Statistics and Table Card -->
+    <a-card :bordered="false" :loading="loading">
       <div style="margin-bottom: 16px;">
         <p style="font-size: 14px; color: #595959; margin: 0;">
-          Tổng: {{ rooms.length }} phòng —  
+          Tổng: <strong>{{ rooms.length }}</strong> phòng —  
           <span style="color: #16a34a">{{ countByStatus('Available') }} trống</span> ·
           <span style="color: #2563eb">{{ countByStatus('Occupied') }} đang ở</span> ·
           <span style="color: #dc2626">{{ countByStatus('Full') }} đầy</span> ·
@@ -85,10 +77,18 @@
           </template>
         </template>
       </a-table>
-    </DataStatus>
+    </a-card>
     
     <!-- Modal Create/Edit -->
-    <a-modal v-model:open="dialog" :title="editTarget ? 'Sửa' : 'Thêm'" @ok="save" @cancel="dialog = false" width="600px">
+    <a-modal 
+      v-model:open="dialog" 
+      :title="editTarget ? 'Sửa phòng' : 'Thêm phòng'" 
+      @ok="save" 
+      @cancel="dialog = false" 
+      width="600px"
+      okText="Lưu"
+      cancelText="Hủy"
+    >
       <a-form layout="vertical">
         <a-form-item label="Số phòng" required>
           <a-input v-model:value="form.roomNumber" placeholder="Ví dụ: A101" />
@@ -139,28 +139,34 @@
     </a-modal>
     
     <!-- Modal Delete -->
-    <a-modal v-model:open="deleteDialog" title="Xóa" @ok="doDelete" @cancel="deleteDialog = false">
-      <p>Xóa phòng {{ deleteTarget?.roomNumber }}?</p>
+    <a-modal 
+      v-model:open="deleteDialog" 
+      title="Xác nhận xóa" 
+      @ok="doDelete" 
+      @cancel="deleteDialog = false"
+      okText="Xóa"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <p>Bạn có chắc muốn xóa phòng <strong>{{ deleteTarget?.roomNumber }}</strong>? Hành động này không thể hoàn tác.</p>
     </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
 import { floorService } from '@/services/floorService'
 import ImageUpload from '@/components/common/ImageUpload.vue'
-import DataStatus from '@/components/common/DataStatus.vue'
 
 const rooms = ref([])
 const buildings = ref([])
 const roomTypes = ref([])
 const floors = ref([])
 const loading = ref(false)
-const error = ref(null)
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const editTarget = ref(null)
@@ -193,11 +199,10 @@ const filteredRoomTypes = computed(() => {
 
 async function loadRooms() {
   loading.value = true
-  error.value = null
   try {
     rooms.value = await roomService.getAll()
   } catch (err) {
-    error.value = err.message
+    message.error(err.message || 'Không thể tải danh sách phòng')
   } finally {
     loading.value = false
   }
@@ -318,7 +323,7 @@ async function openEdit(record) {
 
 async function save() {
   if (!form.value.roomNumber || !form.value.buildingId || !form.value.floorId || !form.value.roomTypeId) {
-    alert('Vui lòng điền đầy đủ thông tin')
+    message.warning('Vui lòng điền đầy đủ thông tin')
     return
   }
   try {
@@ -334,13 +339,15 @@ async function save() {
     
     if (editTarget.value) {
       await roomService.update(editTarget.value.id, payload)
+      message.success('Cập nhật phòng thành công')
     } else {
       await roomService.create(payload)
+      message.success('Thêm phòng thành công')
     }
     dialog.value = false
     await loadRooms()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 
@@ -352,10 +359,11 @@ function confirmDelete(record) {
 async function doDelete() {
   try {
     await roomService.delete(deleteTarget.value.id)
+    message.success('Đã xóa phòng')
     deleteDialog.value = false
     await loadRooms()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 

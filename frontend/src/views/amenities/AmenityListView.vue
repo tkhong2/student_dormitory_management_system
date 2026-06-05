@@ -15,19 +15,11 @@
       </a-button>
     </div>
     
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="amenities"
-      empty-message="Chưa có tiện nghi nào"
-      :show-create-button="true"
-      create-button-text="Thêm tiện nghi"
-      @retry="loadAmenities"
-      @create="openCreate"
-    >
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
       <div style="margin-bottom: 16px;">
         <p style="font-size: 14px; color: #595959; margin: 0;">
-          Tổng: {{ amenities.length }} tiện nghi
+          Tổng: <strong>{{ amenities.length }}</strong> tiện nghi
         </p>
       </div>
       
@@ -59,10 +51,17 @@
           </template>
         </template>
       </a-table>
-    </DataStatus>
+    </a-card>
     
     <!-- Modal Create/Edit -->
-    <a-modal v-model:open="dialog" :title="editTarget ? 'Sửa' : 'Thêm'" @ok="save" @cancel="dialog = false">
+    <a-modal 
+      v-model:open="dialog" 
+      :title="editTarget ? 'Sửa tiện nghi' : 'Thêm tiện nghi'" 
+      @ok="save" 
+      @cancel="dialog = false"
+      okText="Lưu"
+      cancelText="Hủy"
+    >
       <a-form layout="vertical">
         <a-form-item label="Tên">
           <a-input v-model:value="form.name" />
@@ -82,21 +81,27 @@
     </a-modal>
     
     <!-- Modal Delete -->
-    <a-modal v-model:open="deleteDialog" title="Xóa" @ok="doDelete" @cancel="deleteDialog = false">
-      <p>Xóa {{ deleteTarget?.name }}?</p>
+    <a-modal 
+      v-model:open="deleteDialog" 
+      title="Xác nhận xóa" 
+      @ok="doDelete" 
+      @cancel="deleteDialog = false"
+      okText="Xóa"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <p>Bạn có chắc muốn xóa tiện nghi <strong>{{ deleteTarget?.name }}</strong>? Hành động này không thể hoàn tác.</p>
     </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { amenityService } from '@/services/amenityService'
-import DataStatus from '@/components/common/DataStatus.vue'
 
 const amenities = ref([])
 const loading = ref(false)
-const error = ref(null)
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const editTarget = ref(null)
@@ -118,13 +123,10 @@ const columns = [
 
 async function loadAmenities() {
   loading.value = true
-  error.value = null
   try {
     amenities.value = await amenityService.getAll()
-    console.log('Amenities loaded:', amenities.value)
   } catch (err) {
-    error.value = err.message || 'Lỗi tải dữ liệu'
-    console.error('Error loading amenities:', err)
+    message.error(err.message || 'Không thể tải danh sách tiện nghi')
   } finally {
     loading.value = false
   }
@@ -146,13 +148,15 @@ async function save() {
   try {
     if (editTarget.value) {
       await amenityService.update(editTarget.value.id, form.value)
+      message.success('Cập nhật tiện nghi thành công')
     } else {
       await amenityService.create(form.value)
+      message.success('Thêm tiện nghi thành công')
     }
     dialog.value = false
     await loadAmenities()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 
@@ -164,10 +168,11 @@ function confirmDelete(item) {
 async function doDelete() {
   try {
     await amenityService.delete(deleteTarget.value.id)
+    message.success('Đã xóa tiện nghi')
     deleteDialog.value = false
     await loadAmenities()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 

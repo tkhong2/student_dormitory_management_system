@@ -5,45 +5,66 @@
       <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Theo dõi các khoản nợ chưa thanh toán</p>
     </div>
 
-    <v-card style="border:1px solid #e5e7eb">
-      <v-data-table :headers="headers" :items="debts" items-per-page="10">
-        <template #item.student="{ item }">
-          <div class="d-flex align-center ga-3 py-2">
-            <v-avatar size="32" color="error" variant="tonal"><v-icon size="16">mdi-account</v-icon></v-avatar>
-            <div>
-              <div class="text-body-2 font-weight-medium">{{ item.student }}</div>
-              <div class="text-caption text-medium-emphasis">{{ item.code }}</div>
+    <a-card :bordered="false">
+      <a-table 
+        :columns="columns" 
+        :data-source="debts" 
+        :row-key="item => item.code"
+        :pagination="{ pageSize: 10 }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'student'">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
+              <a-avatar size="32" style="background: #fff1f0; color: #ff4d4f">
+                <UserOutlined />
+              </a-avatar>
+              <div>
+                <div style="font-weight: 500">{{ record.student }}</div>
+                <div style="font-size: 12px; color: #8c8c8c">{{ record.code }}</div>
+              </div>
             </div>
-          </div>
+          </template>
+          <template v-else-if="column.key === 'total'">
+            <span style="font-weight: 600; color: #ff4d4f">{{ fmt(record.total) }}</span>
+          </template>
+          <template v-else-if="column.key === 'months'">
+            <a-tag color="error">{{ record.months }} tháng</a-tag>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <a-space>
+              <a-button type="default" size="small">
+                <template #icon><BellOutlined /></template>
+                Nhắc
+              </a-button>
+              <a-button type="primary" size="small" style="background: #52c41a; border-color: #52c41a">
+                <template #icon><DollarOutlined /></template>
+                Thu
+              </a-button>
+            </a-space>
+          </template>
         </template>
-        <template #item.total="{ item }">
-          <span class="font-weight-bold text-error">{{ fmt(item.total) }}</span>
-        </template>
-        <template #item.months="{ item }">
-          <v-chip color="error" size="x-small" variant="tonal">{{ item.months }} tháng</v-chip>
-        </template>
-        <template #item.actions="{ item }">
-          <v-btn size="small" variant="tonal" color="warning" prepend-icon="mdi-bell" class="mr-1">Nhắc</v-btn>
-          <v-btn size="small" variant="tonal" color="success" prepend-icon="mdi-cash">Thu</v-btn>
-        </template>
-      </v-data-table>
-    </v-card>
+      </a-table>
+    </a-card>
   </div>
 </template>
 
 <script setup>
-const headers = [
-  { title:'Sinh viên', key:'student' },
-  { title:'Phòng', key:'room', align:'center' },
-  { title:'Tổng nợ', key:'total', align:'end' },
-  { title:'Số tháng nợ', key:'months', align:'center' },
-  { title:'Hạn cuối', key:'deadline', align:'center' },
-  { title:'', key:'actions', align:'end', sortable:false },
+import { UserOutlined, BellOutlined, DollarOutlined } from '@ant-design/icons-vue'
+
+const columns = [
+  { title: 'Sinh viên', key: 'student', width: 250 },
+  { title: 'Phòng', dataIndex: 'room', key: 'room', align: 'center', width: 120 },
+  { title: 'Tổng nợ', key: 'total', align: 'right', width: 150 },
+  { title: 'Số tháng nợ', key: 'months', align: 'center', width: 120 },
+  { title: 'Hạn cuối', dataIndex: 'deadline', key: 'deadline', align: 'center', width: 120 },
+  { title: 'Thao tác', key: 'actions', align: 'center', width: 200 },
 ]
+
 const debts = [
-  { student:'Lê Minh Cường',code:'SV003',room:'103-A1',total:1600000,months:2,deadline:'20/04/2026' },
-  { student:'Ngô Thị Giang',code:'SV007',room:'103-A2',total:1500000,months:1,deadline:'20/04/2026' },
-  { student:'Đặng Văn Hải',code:'SV008',room:'—',total:800000,months:1,deadline:'20/05/2026' },
+  { student: 'Lê Minh Cường', code: 'SV003', room: '103-A1', total: 1600000, months: 2, deadline: '20/04/2026' },
+  { student: 'Ngô Thị Giang', code: 'SV007', room: '103-A2', total: 1500000, months: 1, deadline: '20/04/2026' },
+  { student: 'Đặng Văn Hải', code: 'SV008', room: '—', total: 800000, months: 1, deadline: '20/05/2026' },
 ]
-const fmt = v => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(v)
+
+const fmt = v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v)
 </script>

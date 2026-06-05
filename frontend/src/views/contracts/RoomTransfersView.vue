@@ -15,83 +15,76 @@
     </div>
 
     <!-- Statistics Cards -->
-    <v-row class="mb-4">
-      <v-col cols="6" md="3">
-        <v-card class="pa-4" style="border: 1px solid #e5e7eb">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="#fff7ed" size="40" rounded="lg">
-              <v-icon color="warning" size="20">mdi-clock-outline</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">{{ countStatus('Pending') }}</div>
-              <div class="text-caption text-medium-emphasis">Chờ duyệt</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4" style="border: 1px solid #e5e7eb">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="#dcfce7" size="40" rounded="lg">
-              <v-icon color="success" size="20">mdi-check-circle</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">{{ countStatus('Approved') }}</div>
-              <div class="text-caption text-medium-emphasis">Đã duyệt</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4" style="border: 1px solid #e5e7eb">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="#fee2e2" size="40" rounded="lg">
-              <v-icon color="error" size="20">mdi-close-circle</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">{{ countStatus('Rejected') }}</div>
-              <div class="text-caption text-medium-emphasis">Từ chối</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4" style="border: 1px solid #e5e7eb">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="#e0f2fe" size="40" rounded="lg">
-              <v-icon color="info" size="20">mdi-swap-horizontal</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">{{ countStatus('Completed') }}</div>
-              <div class="text-caption text-medium-emphasis">Hoàn thành</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <a-row :gutter="[16, 16]" style="margin-bottom: 16px">
+      <a-col :xs="12" :sm="12" :md="6">
+        <a-card :bordered="false" style="box-shadow: 0 1px 2px rgba(0,0,0,0.03); border: 1px solid #e5e7eb">
+          <a-statistic
+            title="Chờ duyệt"
+            :value="countStatus('Pending')"
+            :value-style="{ color: '#faad14' }"
+          >
+            <template #prefix>
+              <ClockCircleOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="12" :sm="12" :md="6">
+        <a-card :bordered="false" style="box-shadow: 0 1px 2px rgba(0,0,0,0.03); border: 1px solid #e5e7eb">
+          <a-statistic
+            title="Đã duyệt"
+            :value="countStatus('Approved')"
+            :value-style="{ color: '#52c41a' }"
+          >
+            <template #prefix>
+              <CheckCircleOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="12" :sm="12" :md="6">
+        <a-card :bordered="false" style="box-shadow: 0 1px 2px rgba(0,0,0,0.03); border: 1px solid #e5e7eb">
+          <a-statistic
+            title="Từ chối"
+            :value="countStatus('Rejected')"
+            :value-style="{ color: '#ff4d4f' }"
+          >
+            <template #prefix>
+              <CloseCircleOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="12" :sm="12" :md="6">
+        <a-card :bordered="false" style="box-shadow: 0 1px 2px rgba(0,0,0,0.03); border: 1px solid #e5e7eb">
+          <a-statistic
+            title="Hoàn thành"
+            :value="countStatus('Completed')"
+            :value-style="{ color: '#1890ff' }"
+          >
+            <template #prefix>
+              <SwapOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+    </a-row>
 
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="transfers"
-      :treatEmptyAsError="false"
-      @retry="loadTransfers"
-    >
-      <a-card
-        style="border: 1px solid #e5e7eb; background: #fafafa"
-        :body-style="{ padding: '0' }"
-      >
-        <div class="pa-4 d-flex flex-wrap align-center" style="gap: 12px">
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="16">
+        <a-col :xs="24" :sm="12" :md="8">
           <a-input-search
             v-model:value="search"
             placeholder="Tìm theo tên, mã SV..."
             allowClear
-            style="max-width: 300px; flex: 1"
           />
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
           <a-select
             v-model:value="statusFilter"
             placeholder="Trạng thái"
-            style="max-width: 200px"
+            style="width: 100%"
           >
             <a-select-option
               v-for="option in filterStatusOptions"
@@ -101,282 +94,306 @@
               {{ option.label }}
             </a-select-option>
           </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
           <a-button
             v-if="search || statusFilter !== 'all'"
-            type="text"
-            size="small"
             @click="resetFilters"
           >
             Đặt lại
           </a-button>
-        </div>
+        </a-col>
+      </a-row>
+    </a-card>
 
-        <a-table
-          :columns="columns"
-          :data-source="filteredTransfers"
-          row-key="id"
-          :pagination="{ pageSize: 10 }"
-          style="width: 100%"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'student'">
-              <div class="d-flex align-center" style="gap: 12px; padding: 12px 0">
-                <a-avatar size="36" style="background: #e6f7ff; color: #1890ff">
-                  {{ record.studentName?.charAt(0) || 'S' }}
-                </a-avatar>
-                <div>
-                  <div class="font-weight-bold">{{ record.studentName }}</div>
-                  <div style="font-size: 12px; color: #8c8c8c">{{ record.studentCode }}</div>
-                </div>
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
+      <a-table
+        :columns="columns"
+        :data-source="filteredTransfers"
+        row-key="id"
+        :pagination="{ pageSize: 10 }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'student'">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <a-avatar size="large" style="background: #e6f7ff; color: #1890ff">
+                {{ record.studentName?.charAt(0) || 'S' }}
+              </a-avatar>
+              <div>
+                <div style="font-weight: 600">{{ record.studentName }}</div>
+                <div style="font-size: 12px; color: #8c8c8c">{{ record.studentCode }}</div>
               </div>
-            </template>
-            <template v-else-if="column.key === 'rooms'">
-              <div class="text-center">
-                <div class="font-weight-medium">{{ record.currentRoomNumber }}</div>
-                <v-icon size="16" color="primary">mdi-arrow-right</v-icon>
-                <div class="font-weight-bold" style="color: #4caf50">
-                  {{ record.newRoomNumber || 'Chưa phân' }}
-                </div>
-              </div>
-            </template>
-            <template v-else-if="column.key === 'requestedRoom'">
-              <div v-if="record.requestedRoomTypeName || record.requestedBuildingName">
-                <div>{{ record.requestedRoomTypeName || 'Chưa chỉ định' }}</div>
-                <div style="font-size: 12px; color: #8c8c8c">
-                  {{ record.requestedBuildingName || 'Chưa chỉ định' }}
-                </div>
-              </div>
-              <div v-else style="color: #8c8c8c">Không yêu cầu cụ thể</div>
-            </template>
-            <template v-else-if="column.key === 'createdAt'">
-              {{ formatDate(record.createdAt) }}
-            </template>
-            <template v-else-if="column.key === 'status'">
-              <a-tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</a-tag>
-            </template>
-            <template v-else-if="column.key === 'actions'">
-              <a-space size="small">
-                <a-button
-                  v-if="record.status === 'Pending'"
-                  type="link"
-                  @click="openApprove(record)"
-                >
-                  Duyệt
-                </a-button>
-                <a-button
-                  v-if="record.status === 'Pending'"
-                  type="text"
-                  danger
-                  @click="openReject(record)"
-                >
-                  Từ chối
-                </a-button>
-                <a-button type="link" @click="viewDetail(record)">Chi tiết</a-button>
-              </a-space>
-            </template>
+            </div>
           </template>
-        </a-table>
-      </a-card>
-    </DataStatus>
+          <template v-else-if="column.key === 'rooms'">
+            <div style="text-align: center">
+              <div style="font-weight: 500">{{ record.currentRoomNumber }}</div>
+              <ArrowRightOutlined style="color: #1890ff; margin: 4px 0" />
+              <div style="font-weight: 600; color: #4caf50">
+                {{ record.newRoomNumber || 'Chưa phân' }}
+              </div>
+            </div>
+          </template>
+          <template v-else-if="column.key === 'requestedRoom'">
+            <div v-if="record.requestedRoomTypeName || record.requestedBuildingName">
+              <div>{{ record.requestedRoomTypeName || 'Chưa chỉ định' }}</div>
+              <div style="font-size: 12px; color: #8c8c8c">
+                {{ record.requestedBuildingName || 'Chưa chỉ định' }}
+              </div>
+            </div>
+            <div v-else style="color: #8c8c8c">Không yêu cầu cụ thể</div>
+          </template>
+          <template v-else-if="column.key === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <a-tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <a-space size="small">
+              <a-button
+                v-if="record.status === 'Pending'"
+                type="link"
+                @click="openApprove(record)"
+              >
+                Duyệt
+              </a-button>
+              <a-button
+                v-if="record.status === 'Pending'"
+                type="text"
+                danger
+                @click="openReject(record)"
+              >
+                Từ chối
+              </a-button>
+              <a-button type="link" @click="viewDetail(record)">Chi tiết</a-button>
+            </a-space>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
 
     <!-- Create Dialog -->
-    <v-dialog v-model="createDialog" max-width="600" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Tạo yêu cầu chuyển phòng</h2>
-        <v-row>
-          <v-col cols="12">
-            <v-select
-              v-model="createForm.contractId"
-              label="Hợp đồng *"
-              :items="activeContracts"
-              item-title="displayText"
-              item-value="id"
-              :error-messages="createErrors.contractId"
-              @update:model-value="onContractChange"
-            />
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-text-field
-              v-model="createForm.currentRoomNumber"
-              label="Phòng hiện tại"
-              readonly
-              disabled
-            />
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-text-field
-              v-model="createForm.requestedBuildingName"
-              label="Tòa nhà mong muốn"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="createForm.requestedRoomTypeName"
-              label="Loại phòng mong muốn"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-textarea
-              v-model="createForm.reason"
-              label="Lý do chuyển phòng *"
-              rows="3"
-              :error-messages="createErrors.reason"
-            />
-          </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="createDialog = false">Hủy</v-btn>
-          <v-btn color="primary" :loading="saving" @click="handleCreate">Tạo yêu cầu</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <a-modal
+      v-model:open="createDialog"
+      title="Tạo yêu cầu chuyển phòng"
+      :confirm-loading="saving"
+      :maskClosable="false"
+      @ok="handleCreate"
+      @cancel="createDialog = false"
+      okText="Tạo yêu cầu"
+      cancelText="Hủy"
+    >
+      <a-form layout="vertical">
+        <a-form-item
+          label="Hợp đồng"
+          :validate-status="createErrors.contractId ? 'error' : ''"
+          :help="createErrors.contractId"
+        >
+          <a-select
+            v-model:value="createForm.contractId"
+            placeholder="Chọn hợp đồng"
+            @change="onContractChange"
+          >
+            <a-select-option
+              v-for="contract in activeContracts"
+              :key="contract.id"
+              :value="contract.id"
+            >
+              {{ contract.displayText }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Phòng hiện tại">
+              <a-input
+                v-model:value="createForm.currentRoomNumber"
+                disabled
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Tòa nhà mong muốn">
+              <a-input
+                v-model:value="createForm.requestedBuildingName"
+                placeholder="Nhập tòa nhà"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-form-item label="Loại phòng mong muốn">
+          <a-input
+            v-model:value="createForm.requestedRoomTypeName"
+            placeholder="Nhập loại phòng"
+          />
+        </a-form-item>
+        <a-form-item
+          label="Lý do chuyển phòng"
+          :validate-status="createErrors.reason ? 'error' : ''"
+          :help="createErrors.reason"
+        >
+          <a-textarea
+            v-model:value="createForm.reason"
+            :rows="3"
+            placeholder="Nhập lý do"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <!-- Approve Dialog -->
-    <v-dialog v-model="approveDialog" max-width="500" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Duyệt chuyển phòng</h2>
-        <p class="mb-3">
-          Sinh viên: <strong>{{ approveTarget?.studentName }}</strong>
-        </p>
-        <p class="mb-4">
-          Từ phòng <strong>{{ approveTarget?.currentRoomNumber }}</strong>
-        </p>
-        <v-row>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.newRoomNumber"
-              label="Phòng mới *"
-              :error-messages="approveErrors.newRoomNumber"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.newRoomId"
-              label="ID Phòng mới *"
-              type="number"
-              :error-messages="approveErrors.newRoomId"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="approveForm.transferDate"
-              label="Ngày chuyển *"
-              type="date"
-              :error-messages="approveErrors.transferDate"
-            />
-          </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="approveDialog = false">Hủy</v-btn>
-          <v-btn color="primary" :loading="saving" @click="handleApprove">Duyệt</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <a-modal
+      v-model:open="approveDialog"
+      title="Duyệt chuyển phòng"
+      :confirm-loading="saving"
+      :maskClosable="false"
+      @ok="handleApprove"
+      @cancel="approveDialog = false"
+      okText="Duyệt"
+      cancelText="Hủy"
+    >
+      <div style="margin-bottom: 16px">
+        <div>Sinh viên: <strong>{{ approveTarget?.studentName }}</strong></div>
+        <div>Từ phòng <strong>{{ approveTarget?.currentRoomNumber }}</strong></div>
+      </div>
+      <a-form layout="vertical">
+        <a-form-item
+          label="Phòng mới"
+          :validate-status="approveErrors.newRoomNumber ? 'error' : ''"
+          :help="approveErrors.newRoomNumber"
+        >
+          <a-input
+            v-model:value="approveForm.newRoomNumber"
+            placeholder="Nhập số phòng mới"
+          />
+        </a-form-item>
+        <a-form-item
+          label="ID Phòng mới"
+          :validate-status="approveErrors.newRoomId ? 'error' : ''"
+          :help="approveErrors.newRoomId"
+        >
+          <a-input-number
+            v-model:value="approveForm.newRoomId"
+            :min="1"
+            style="width: 100%"
+            placeholder="Nhập ID phòng mới"
+          />
+        </a-form-item>
+        <a-form-item
+          label="Ngày chuyển"
+          :validate-status="approveErrors.transferDate ? 'error' : ''"
+          :help="approveErrors.transferDate"
+        >
+          <a-date-picker
+            v-model:value="approveForm.transferDate"
+            format="DD/MM/YYYY"
+            style="width: 100%"
+            placeholder="Chọn ngày chuyển"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <!-- Reject Dialog -->
-    <v-dialog v-model="rejectDialog" max-width="500" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Từ chối chuyển phòng</h2>
-        <p class="mb-4">
-          Sinh viên: <strong>{{ rejectTarget?.studentName }}</strong>
-        </p>
-        <v-textarea
-          v-model="rejectForm.rejectReason"
-          label="Lý do từ chối *"
-          rows="3"
-          :error-messages="rejectErrors.rejectReason"
-        />
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="rejectDialog = false">Hủy</v-btn>
-          <v-btn color="error" :loading="saving" @click="handleReject">Từ chối</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <a-modal
+      v-model:open="rejectDialog"
+      title="Từ chối chuyển phòng"
+      :confirm-loading="saving"
+      :maskClosable="false"
+      @ok="handleReject"
+      @cancel="rejectDialog = false"
+      okText="Từ chối"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <div style="margin-bottom: 16px">
+        Sinh viên: <strong>{{ rejectTarget?.studentName }}</strong>
+      </div>
+      <a-form layout="vertical">
+        <a-form-item
+          label="Lý do từ chối"
+          :validate-status="rejectErrors.rejectReason ? 'error' : ''"
+          :help="rejectErrors.rejectReason"
+        >
+          <a-textarea
+            v-model:value="rejectForm.rejectReason"
+            :rows="3"
+            placeholder="Nhập lý do từ chối"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <!-- Detail Dialog -->
-    <v-dialog v-model="detailDialog" max-width="560">
-      <v-card class="pa-6" v-if="detailTarget">
-        <h2 class="text-h6 font-weight-bold mb-4">Chi tiết yêu cầu chuyển phòng</h2>
-        <v-row dense>
-          <v-col cols="5" class="text-caption text-medium-emphasis">Sinh viên:</v-col>
-          <v-col cols="7" class="font-weight-bold">{{ detailTarget.studentName }}</v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Mã sinh viên:</v-col>
-          <v-col cols="7">{{ detailTarget.studentCode }}</v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Phòng hiện tại:</v-col>
-          <v-col cols="7" class="font-weight-medium">{{ detailTarget.currentRoomNumber }}</v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Phòng mới:</v-col>
-          <v-col cols="7" class="font-weight-bold" style="color: #4caf50">
-            {{ detailTarget.newRoomNumber || 'Chưa phân' }}
-          </v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Yêu cầu:</v-col>
-          <v-col cols="7">
-            {{ detailTarget.requestedRoomTypeName || 'Không cụ thể' }} - 
-            {{ detailTarget.requestedBuildingName || 'Không cụ thể' }}
-          </v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Lý do:</v-col>
-          <v-col cols="7">{{ detailTarget.reason }}</v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Trạng thái:</v-col>
-          <v-col cols="7">
-            <a-tag :color="statusColor(detailTarget.status)">
-              {{ statusLabel(detailTarget.status) }}
-            </a-tag>
-          </v-col>
-          
-          <v-col cols="5" class="text-caption text-medium-emphasis">Ngày tạo:</v-col>
-          <v-col cols="7">{{ formatDateTime(detailTarget.createdAt) }}</v-col>
-          
-          <template v-if="detailTarget.reviewedByName">
-            <v-divider class="my-3" />
-            <v-col cols="5" class="text-caption text-medium-emphasis">Người xử lý:</v-col>
-            <v-col cols="7" class="font-weight-medium">{{ detailTarget.reviewedByName }}</v-col>
-            
-            <v-col cols="5" class="text-caption text-medium-emphasis">Ngày xử lý:</v-col>
-            <v-col cols="7">{{ formatDateTime(detailTarget.reviewedAt) }}</v-col>
-            
-            <v-col
-              v-if="detailTarget.rejectReason"
-              cols="5"
-              class="text-caption text-medium-emphasis"
-            >
-              Lý do từ chối:
-            </v-col>
-            <v-col v-if="detailTarget.rejectReason" cols="7" style="color: #f44336">
-              {{ detailTarget.rejectReason }}
-            </v-col>
-            
-            <v-col
-              v-if="detailTarget.transferDate"
-              cols="5"
-              class="text-caption text-medium-emphasis"
-            >
-              Ngày chuyển:
-            </v-col>
-            <v-col v-if="detailTarget.transferDate" cols="7" class="font-weight-bold">
-              {{ formatDate(detailTarget.transferDate) }}
-            </v-col>
-          </template>
-        </v-row>
-        <div class="d-flex justify-end mt-4">
-          <v-btn variant="text" @click="detailDialog = false">Đóng</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" location="bottom right">
-      {{ snackbar.message }}
-    </v-snackbar>
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết yêu cầu chuyển phòng"
+      :footer="null"
+      width="600px"
+    >
+      <a-descriptions bordered :column="1" v-if="detailTarget">
+        <a-descriptions-item label="Sinh viên">
+          <strong>{{ detailTarget.studentName }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Mã sinh viên">
+          {{ detailTarget.studentCode }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Phòng hiện tại">
+          <strong>{{ detailTarget.currentRoomNumber }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Phòng mới">
+          <strong style="color: #4caf50">{{ detailTarget.newRoomNumber || 'Chưa phân' }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Yêu cầu">
+          {{ detailTarget.requestedRoomTypeName || 'Không cụ thể' }} - 
+          {{ detailTarget.requestedBuildingName || 'Không cụ thể' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Lý do">
+          {{ detailTarget.reason }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Trạng thái">
+          <a-tag :color="statusColor(detailTarget.status)">
+            {{ statusLabel(detailTarget.status) }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Ngày tạo">
+          {{ formatDateTime(detailTarget.createdAt) }}
+        </a-descriptions-item>
+        <template v-if="detailTarget.reviewedByName">
+          <a-descriptions-item label="Người xử lý">
+            <strong>{{ detailTarget.reviewedByName }}</strong>
+          </a-descriptions-item>
+          <a-descriptions-item label="Ngày xử lý">
+            {{ formatDateTime(detailTarget.reviewedAt) }}
+          </a-descriptions-item>
+          <a-descriptions-item v-if="detailTarget.rejectReason" label="Lý do từ chối">
+            <span style="color: #f44336">{{ detailTarget.rejectReason }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item v-if="detailTarget.transferDate" label="Ngày chuyển">
+            <strong>{{ formatDate(detailTarget.transferDate) }}</strong>
+          </a-descriptions-item>
+        </template>
+      </a-descriptions>
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px">
+        <a-button @click="detailDialog = false">Đóng</a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import DataStatus from '@/components/common/DataStatus.vue'
+import { message } from 'ant-design-vue'
+import dayjs from 'dayjs'
+import {
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  SwapOutlined,
+  ArrowRightOutlined
+} from '@ant-design/icons-vue'
 import { roomTransferService } from '@/services/roomTransferService'
 import { contractService } from '@/services/contractService'
 
@@ -404,7 +421,6 @@ const search = ref('')
 const statusFilter = ref('all')
 const loading = ref(false)
 const saving = ref(false)
-const error = ref(null)
 const createDialog = ref(false)
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
@@ -419,12 +435,15 @@ const createForm = ref({
   requestedRoomTypeName: '',
   reason: '',
 })
-const approveForm = ref({ newRoomId: '', newRoomNumber: '', transferDate: '' })
+const approveForm = ref({ 
+  newRoomId: null, 
+  newRoomNumber: '', 
+  transferDate: null 
+})
 const rejectForm = ref({ rejectReason: '' })
 const createErrors = ref({})
 const approveErrors = ref({})
 const rejectErrors = ref({})
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 const filteredTransfers = computed(() => {
   const keyword = search.value.trim().toLowerCase()
@@ -449,11 +468,10 @@ function resetFilters() {
 
 async function loadTransfers() {
   loading.value = true
-  error.value = null
   try {
     transfers.value = await roomTransferService.getAll()
   } catch (err) {
-    error.value = err.message || 'Không thể tải danh sách yêu cầu chuyển phòng'
+    message.error(err.message || 'Không thể tải danh sách yêu cầu chuyển phòng')
   } finally {
     loading.value = false
   }
@@ -511,11 +529,11 @@ async function handleCreate() {
       requestedRoomTypeName: createForm.value.requestedRoomTypeName?.trim() || null,
       reason: createForm.value.reason.trim(),
     })
-    notify('Tạo yêu cầu thành công')
+    message.success('Tạo yêu cầu thành công')
     createDialog.value = false
     await loadTransfers()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -524,9 +542,9 @@ async function handleCreate() {
 function openApprove(item) {
   approveTarget.value = item
   approveForm.value = {
-    newRoomId: '',
+    newRoomId: null,
     newRoomNumber: '',
-    transferDate: new Date().toISOString().slice(0, 10),
+    transferDate: dayjs(),
   }
   approveErrors.value = {}
   approveDialog.value = true
@@ -546,15 +564,15 @@ async function handleApprove() {
     await roomTransferService.approve(approveTarget.value.id, {
       newRoomId: parseInt(approveForm.value.newRoomId),
       newRoomNumber: approveForm.value.newRoomNumber.trim(),
-      transferDate: approveForm.value.transferDate,
+      transferDate: approveForm.value.transferDate.format('YYYY-MM-DD'),
       reviewedByUserId: 1, // TODO: Get from auth
       reviewedByName: 'Admin', // TODO: Get from auth
     })
-    notify('Đã duyệt yêu cầu chuyển phòng')
+    message.success('Đã duyệt yêu cầu chuyển phòng')
     approveDialog.value = false
     await loadTransfers()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -581,11 +599,11 @@ async function handleReject() {
       reviewedByName: 'Admin', // TODO: Get from auth
       rejectReason: rejectForm.value.rejectReason.trim(),
     })
-    notify('Đã từ chối yêu cầu chuyển phòng')
+    message.success('Đã từ chối yêu cầu chuyển phòng')
     rejectDialog.value = false
     await loadTransfers()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -621,11 +639,6 @@ function formatDateTime(value) {
         minute: '2-digit',
       })
     : ''
-}
-
-function notify(message, color = 'success') {
-  snackbar.value = { show: false, message, color }
-  snackbar.value.show = true
 }
 
 onMounted(() => {

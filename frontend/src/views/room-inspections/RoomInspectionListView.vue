@@ -15,19 +15,11 @@
       </a-button>
     </div>
     
-    <DataStatus
-      :loading="loading"
-      :error="error"
-      :items="inspections"
-      empty-message="Chưa có biên bản kiểm tra nào"
-      :show-create-button="true"
-      create-button-text="Tạo biên bản"
-      @retry="loadInspections"
-      @create="openCreate"
-    >
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
       <div style="margin-bottom: 16px;">
         <p style="font-size: 14px; color: #595959; margin: 0;">
-          Tổng: {{ inspections.length }} biên bản
+          Tổng: <strong>{{ inspections.length }}</strong> biên bản
         </p>
       </div>
       
@@ -71,10 +63,18 @@
           </template>
         </template>
       </a-table>
-    </DataStatus>
+    </a-card>
     
     <!-- Modal Create -->
-    <a-modal v-model:open="dialog" title="Tạo biên bản" @ok="save" @cancel="dialog = false" width="600px">
+    <a-modal 
+      v-model:open="dialog" 
+      title="Tạo biên bản kiểm tra" 
+      @ok="save" 
+      @cancel="dialog = false" 
+      width="600px"
+      okText="Lưu"
+      cancelText="Hủy"
+    >
       <a-form layout="vertical">
         <a-form-item label="Phòng">
           <a-select v-model:value="form.roomId" show-search>
@@ -111,23 +111,29 @@
     </a-modal>
     
     <!-- Modal Delete -->
-    <a-modal v-model:open="deleteDialog" title="Xóa" @ok="doDelete" @cancel="deleteDialog = false">
-      <p>Xóa biên bản này?</p>
+    <a-modal 
+      v-model:open="deleteDialog" 
+      title="Xác nhận xóa" 
+      @ok="doDelete" 
+      @cancel="deleteDialog = false"
+      okText="Xóa"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <p>Bạn có chắc muốn xóa biên bản kiểm tra này? Hành động này không thể hoàn tác.</p>
     </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { roomInspectionService } from '@/services/roomInspectionService'
 import { roomService } from '@/services/roomService'
-import DataStatus from '@/components/common/DataStatus.vue'
 
 const inspections = ref([])
 const rooms = ref([])
 const loading = ref(false)
-const error = ref(null)
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const deleteTarget = ref(null)
@@ -184,13 +190,10 @@ function formatDate(d) {
 
 async function loadInspections() {
   loading.value = true
-  error.value = null
   try {
     inspections.value = await roomInspectionService.getAll()
-    console.log('Inspections loaded:', inspections.value)
   } catch (err) {
-    error.value = err.message || 'Lỗi tải dữ liệu'
-    console.error('Error loading inspections:', err)
+    message.error(err.message || 'Không thể tải danh sách biên bản')
   } finally {
     loading.value = false
   }
@@ -224,20 +227,21 @@ function openCreate() {
 
 async function save() {
   if (!form.value.roomId) {
-    alert('Vui lòng chọn phòng')
+    message.warning('Vui lòng chọn phòng')
     return
   }
   try {
     await roomInspectionService.create(form.value)
+    message.success('Tạo biên bản thành công')
     dialog.value = false
     await loadInspections()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 
 function viewDetail(record) {
-  alert(JSON.stringify(record, null, 2))
+  message.info('Chức năng xem chi tiết đang được phát triển')
 }
 
 async function approve(record) {
@@ -247,9 +251,10 @@ async function approve(record) {
       approvedByName: 'Admin',
       approvalNote: 'OK'
     })
+    message.success('Đã duyệt biên bản')
     await loadInspections()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 
@@ -261,10 +266,11 @@ function confirmDelete(record) {
 async function doDelete() {
   try {
     await roomInspectionService.delete(deleteTarget.value.id)
+    message.success('Đã xóa biên bản')
     deleteDialog.value = false
     await loadInspections()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 

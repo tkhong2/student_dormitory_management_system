@@ -15,10 +15,9 @@
       </a-button>
     </div>
     
-    <div v-if="loading">Đang tải...</div>
-    <div v-else-if="error" style="color: red">{{ error }}</div>
-    <div v-else>
-      <p>Tổng: {{ roomTypes.length }} loại phòng</p>
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
+      <p style="margin-bottom: 16px">Tổng: <strong>{{ roomTypes.length }}</strong> loại phòng</p>
       
       <a-table 
         :dataSource="roomTypes" 
@@ -87,10 +86,18 @@
           </template>
         </template>
       </a-table>
-    </div>
+    </a-card>
     
     <!-- Modal Create/Edit -->
-    <a-modal v-model:open="dialog" :title="editTarget ? 'Sửa' : 'Thêm'" @ok="save" @cancel="dialog = false" width="700px">
+    <a-modal 
+      v-model:open="dialog" 
+      :title="editTarget ? 'Sửa loại phòng' : 'Thêm loại phòng'" 
+      @ok="save" 
+      @cancel="dialog = false" 
+      width="700px"
+      okText="Lưu"
+      cancelText="Hủy"
+    >
       <a-form layout="vertical">
         <a-form-item label="Tòa nhà" required>
           <a-select v-model:value="form.buildingId">
@@ -176,15 +183,23 @@
     </a-modal>
     
     <!-- Modal Delete -->
-    <a-modal v-model:open="deleteDialog" title="Xóa" @ok="doDelete" @cancel="deleteDialog = false">
-      <p>Xóa loại phòng {{ deleteTarget?.name }}?</p>
+    <a-modal 
+      v-model:open="deleteDialog" 
+      title="Xác nhận xóa" 
+      @ok="doDelete" 
+      @cancel="deleteDialog = false"
+      okText="Xóa"
+      cancelText="Hủy"
+      ok-button-props="{ danger: true }"
+    >
+      <p>Bạn có chắc muốn xóa loại phòng <strong>{{ deleteTarget?.name }}</strong>? Hành động này không thể hoàn tác.</p>
     </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { roomTypeService } from '@/services/roomTypeService'
 import { buildingService } from '@/services/buildingService'
 import { amenityService } from '@/services/amenityService'
@@ -193,7 +208,6 @@ const roomTypes = ref([])
 const buildings = ref([])
 const amenities = ref([])
 const loading = ref(false)
-const error = ref(null)
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const editTarget = ref(null)
@@ -231,11 +245,10 @@ const columns = [
 
 async function loadRoomTypes() {
   loading.value = true
-  error.value = null
   try {
     roomTypes.value = await roomTypeService.getAll()
   } catch (err) {
-    error.value = err.message
+    message.error(err.message || 'Không thể tải danh sách loại phòng')
   } finally {
     loading.value = false
   }
@@ -355,7 +368,7 @@ function openEdit(record) {
 
 async function save() {
   if (!form.value.name || !form.value.buildingId) {
-    alert('Vui lòng điền đầy đủ thông tin')
+    message.warning('Vui lòng điền đầy đủ thông tin')
     return
   }
   try {
@@ -378,13 +391,15 @@ async function save() {
     
     if (editTarget.value) {
       await roomTypeService.update(editTarget.value.id, payload)
+      message.success('Cập nhật loại phòng thành công')
     } else {
       await roomTypeService.create(payload)
+      message.success('Thêm loại phòng thành công')
     }
     dialog.value = false
     await loadRoomTypes()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 
@@ -396,10 +411,11 @@ function confirmDelete(record) {
 async function doDelete() {
   try {
     await roomTypeService.delete(deleteTarget.value.id)
+    message.success('Đã xóa loại phòng')
     deleteDialog.value = false
     await loadRoomTypes()
   } catch (err) {
-    alert(err.message)
+    message.error(err.message || 'Có lỗi xảy ra')
   }
 }
 

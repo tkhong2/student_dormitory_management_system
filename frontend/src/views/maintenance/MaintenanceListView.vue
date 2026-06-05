@@ -1,27 +1,19 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div style="margin-bottom: 16px;">
-      <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
-        Yêu Cầu Bảo Trì
-      </h1>
-      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
-        Tổng số: {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
-      </p>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; margin: 0;">
+          Yêu cầu Bảo trì
+        </h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+          Tổng số: {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
+        </p>
+      </div>
+      <a-button type="primary" style="background: #ff9800; border-color: #ff9800;">
+        + Tạo yêu cầu
+      </a-button>
     </div>
-
-    <!-- Status Tabs -->
-    <a-tabs v-model:activeKey="tab" style="margin-bottom: 16px" size="large">
-      <a-tab-pane key="all" tab="Tất cả" />
-      <a-tab-pane key="pending">
-        <template #tab>
-          Chờ xử lý
-          <a-badge :count="pendingCount" :number-style="{ backgroundColor: '#faad14', marginLeft: '8px' }" />
-        </template>
-      </a-tab-pane>
-      <a-tab-pane key="progress" tab="Đang xử lý" />
-      <a-tab-pane key="done" tab="Hoàn thành" />
-    </a-tabs>
 
     <!-- Filters Card -->
     <a-card style="margin-bottom: 16px" :bordered="false">
@@ -37,6 +29,19 @@
         </a-col>
         <a-col :xs="24" :sm="12" :md="6">
           <a-select
+            v-model:value="statusFilter"
+            placeholder="Trạng thái"
+            allow-clear
+            style="width: 100%"
+          >
+            <a-select-option value="">Tất cả</a-select-option>
+            <a-select-option value="Chờ xử lý">Chờ xử lý</a-select-option>
+            <a-select-option value="Đang xử lý">Đang xử lý</a-select-option>
+            <a-select-option value="Hoàn thành">Hoàn thành</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
             v-model:value="roomFilter"
             placeholder="Phòng"
             allow-clear
@@ -47,118 +52,83 @@
             </a-select-option>
           </a-select>
         </a-col>
-        <a-col :xs="24" :sm="12" :md="6">
-          <a-select
-            v-model:value="priorityFilter"
-            placeholder="Mức độ ưu tiên"
-            allow-clear
-            style="width: 100%"
-          >
-            <a-select-option value="Bình thường">Bình thường</a-select-option>
-            <a-select-option value="Khẩn cấp">Khẩn cấp</a-select-option>
-          </a-select>
-        </a-col>
-        <a-col :xs="24" :sm="12" :md="4" style="text-align: right">
+        <a-col :xs="24" :sm="12" :md="4">
           <a-button v-if="hasFilters" @click="resetFilters" block>
             <template #icon><ReloadOutlined /></template>
             Đặt lại
           </a-button>
-          <a-typography-text v-else type="secondary" style="line-height: 32px">
-            Kết quả: {{ filteredRequests.length }}/{{ requests.length }}
-          </a-typography-text>
         </a-col>
       </a-row>
     </a-card>
 
-    <!-- Request Cards Grid -->
-    <a-row :gutter="[16, 16]" v-if="!loading && filteredRequests.length > 0">
-      <a-col :xs="24" :md="12" v-for="r in filteredRequests" :key="r.id">
-        <a-card :bordered="false" hoverable>
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px">
-            <div style="display: flex; gap: 12px; align-items: flex-start">
+    <!-- Table Card -->
+    <a-card :bordered="false" :loading="loading">
+      <a-table
+        :columns="columns"
+        :data-source="filteredRequests"
+        row-key="id"
+        :pagination="{ pageSize: 10 }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'title'">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
               <a-avatar
-                :size="48"
-                :style="{ backgroundColor: priColor(r.priority) }"
+                size="40"
+                :style="{ backgroundColor: priColor(record.priority) }"
               >
                 <template #icon>
-                  <WarningOutlined v-if="r.priority === 'Khẩn cấp'" />
+                  <WarningOutlined v-if="record.priority === 'Khẩn cấp'" />
                   <ToolOutlined v-else />
                 </template>
               </a-avatar>
               <div>
-                <a-typography-title :level="5" style="margin: 0">
-                  {{ r.title }}
-                </a-typography-title>
-                <a-typography-text type="secondary" style="font-size: 12px">
-                  #{{ r.code }} · Phòng {{ r.room }} · {{ r.date }}
-                </a-typography-text>
+                <div style="font-weight: 600">{{ record.title }}</div>
+                <div style="font-size: 12px; color: #8c8c8c">#{{ record.code }}</div>
               </div>
             </div>
-            <a-tag :color="stColor(r.status)">{{ r.status }}</a-tag>
-          </div>
-
-          <a-typography-paragraph
-            :ellipsis="{ rows: 2 }"
-            type="secondary"
-            style="margin-bottom: 8px"
-          >
-            {{ r.desc }}
-          </a-typography-paragraph>
-
-          <a-typography-text v-if="r.note" type="secondary" style="font-size: 12px">
-            Ghi chú: {{ r.note }}
-          </a-typography-text>
-
-          <a-divider style="margin: 12px 0" />
-
-          <div style="display: flex; align-items: center; justify-content: space-between">
-            <div style="display: flex; align-items: center; gap: 8px">
-              <UserOutlined style="color: #8c8c8c" />
-              <a-typography-text type="secondary" style="font-size: 13px">
-                {{ r.student }}
-              </a-typography-text>
-              <a-tag v-if="r.priority === 'Khẩn cấp'" color="red" size="small">
-                Khẩn cấp
-              </a-tag>
-            </div>
+          </template>
+          <template v-else-if="column.key === 'description'">
+            <a-typography-paragraph
+              :ellipsis="{ rows: 2, tooltip: true }"
+              style="margin: 0; max-width: 300px"
+            >
+              {{ record.desc }}
+            </a-typography-paragraph>
+          </template>
+          <template v-else-if="column.key === 'priority'">
+            <a-tag v-if="record.priority === 'Khẩn cấp'" color="red">
+              Khẩn cấp
+            </a-tag>
+            <span v-else style="color: #8c8c8c">Bình thường</span>
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <a-tag :color="stColor(record.status)">{{ record.status }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'actions'">
             <a-space>
               <a-button
-                v-if="r.status === 'Chờ xử lý'"
+                v-if="record.status === 'Chờ xử lý'"
                 type="primary"
                 size="small"
               >
                 Xử lý
               </a-button>
               <a-button
-                v-if="r.status === 'Đang xử lý'"
+                v-if="record.status === 'Đang xử lý'"
                 type="primary"
                 size="small"
                 style="background: #52c41a; border-color: #52c41a"
               >
                 Hoàn thành
               </a-button>
-              <a-button type="text" size="small">
-                <template #icon><EyeOutlined /></template>
+              <a-button type="link" size="small">
+                Chi tiết
               </a-button>
             </a-space>
-          </div>
-        </a-card>
-      </a-col>
-    </a-row>
-
-    <!-- Loading State -->
-    <a-card v-if="loading" :bordered="false">
-      <a-skeleton active :paragraph="{ rows: 4 }" />
+          </template>
+        </template>
+      </a-table>
     </a-card>
-
-    <!-- Empty State -->
-    <a-empty
-      v-if="!loading && filteredRequests.length === 0"
-      description="Chưa có yêu cầu bảo trì nào"
-      style="padding: 60px 0"
-    >
-      <a-button type="primary">Tạo yêu cầu mới</a-button>
-    </a-empty>
   </div>
 </template>
 
@@ -169,18 +139,26 @@ import {
   ReloadOutlined,
   WarningOutlined,
   ToolOutlined,
-  UserOutlined,
-  EyeOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import maintenanceRequestService from '@/services/maintenanceRequestService'
 
 const loading = ref(false)
 const requests = ref([])
-const tab = ref('all')
 const searchKeyword = ref('')
+const statusFilter = ref('')
 const roomFilter = ref(undefined)
-const priorityFilter = ref(undefined)
+
+const columns = [
+  { title: 'Yêu cầu', key: 'title', width: 250 },
+  { title: 'Mô tả', key: 'description', width: 300 },
+  { title: 'Phòng', dataIndex: 'room', key: 'room', align: 'center', width: 100 },
+  { title: 'Sinh viên', dataIndex: 'student', key: 'student', width: 150 },
+  { title: 'Ngày tạo', dataIndex: 'date', key: 'date', align: 'center', width: 120 },
+  { title: 'Mức độ', key: 'priority', align: 'center', width: 120 },
+  { title: 'Trạng thái', key: 'status', align: 'center', width: 120 },
+  { title: 'Thao tác', key: 'actions', align: 'center', width: 200 },
+]
 
 const studentMap = {
   '30000000-0000-0000-0000-000000000001': 'Nguyễn Văn A',
@@ -200,32 +178,22 @@ const roomOptions = computed(() =>
   [...new Set(requests.value.map((r) => r.room))].filter(Boolean).sort()
 )
 
-const hasFilters = computed(() => searchKeyword.value || roomFilter.value || priorityFilter.value)
+const hasFilters = computed(() => searchKeyword.value || statusFilter.value || roomFilter.value)
 
 const pendingCount = computed(() => requests.value.filter((r) => r.status === 'Chờ xử lý').length)
-
-const statusFiltered = computed(() => {
-  if (tab.value === 'all') return requests.value
-  const m = {
-    pending: 'Chờ xử lý',
-    progress: 'Đang xử lý',
-    done: 'Hoàn thành'
-  }
-  return requests.value.filter((r) => r.status === m[tab.value])
-})
 
 const filteredRequests = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
 
-  return statusFiltered.value.filter((r) => {
+  return requests.value.filter((r) => {
     const matchesKeyword =
       !keyword ||
       r.title.toLowerCase().includes(keyword) ||
       r.desc.toLowerCase().includes(keyword) ||
       r.code.toLowerCase().includes(keyword)
     const matchesRoom = !roomFilter.value || r.room === roomFilter.value
-    const matchesPriority = !priorityFilter.value || r.priority === priorityFilter.value
-    return matchesKeyword && matchesRoom && matchesPriority
+    const matchesStatus = !statusFilter.value || r.status === statusFilter.value
+    return matchesKeyword && matchesRoom && matchesStatus
   })
 })
 
@@ -251,8 +219,7 @@ async function loadData() {
       note: r.note || ''
     }))
   } catch (err) {
-    console.error('Lỗi tải bảo trì:', err)
-    message.error(err.message || 'Lỗi tải dữ liệu')
+    message.error(err.message || 'Không thể tải danh sách yêu cầu bảo trì')
   } finally {
     loading.value = false
   }
@@ -260,8 +227,8 @@ async function loadData() {
 
 function resetFilters() {
   searchKeyword.value = ''
+  statusFilter.value = ''
   roomFilter.value = undefined
-  priorityFilter.value = undefined
 }
 
 const stColor = (s) =>
@@ -271,9 +238,3 @@ const priColor = (p) => (p === 'Khẩn cấp' ? '#ff4d4f' : '#1890ff')
 
 onMounted(loadData)
 </script>
-
-<style scoped>
-:deep(.ant-card-body) {
-  padding: 20px;
-}
-</style>
