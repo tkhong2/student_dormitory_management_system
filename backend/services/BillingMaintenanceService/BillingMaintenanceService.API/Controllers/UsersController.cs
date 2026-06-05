@@ -135,7 +135,8 @@ namespace BillingMaintenanceService.API.Controllers
                 StudentId = user.StudentId,
                 StudentCode = user.StudentCode,
                 IsActive = user.IsActive,
-                LastLoginAt = user.LastLoginAt
+                LastLoginAt = user.LastLoginAt,
+                CreatedAt = user.CreatedAt
             };
         }
     }

@@ -1,24 +1,153 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_BILLING_MAINTENANCE_API_URL || 'http://localhost:5052/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(JSON.parse(localStorage.getItem('user')) || null)
+  // State
+  const token = ref(localStorage.getItem('token') || null)
+  const refreshToken = ref(localStorage.getItem('refreshToken') || null)
+  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
-  const isAdmin = computed(() => user.value?.role === 'admin')
-  const isStaff = computed(() => user.value?.role === 'staff')
-  const isStudent = computed(() => user.value?.role === 'student')
+  // Getters
+  const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.role === 'Admin')
+  const isStaff = computed(() => user.value?.role === 'Staff')
+  const isStudent = computed(() => user.value?.role === 'Student')
 
-  const login = (userData) => {
-    user.value = userData
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('role', userData.role)
-    localStorage.setItem('token', 'mock-jwt')
+  // Actions
+  const login = async (username, password) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        username,
+        password
+      })
+
+      const { token: newToken, refreshToken: newRefreshToken, user: userData } = response.data
+
+      // Save to state
+      token.value = newToken
+      refreshToken.value = newRefreshToken
+      user.value = userData
+
+      // Save to localStorage
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('refreshToken', newRefreshToken)
+      localStorage.setItem('user', JSON.stringify(userData))
+
+      // Set axios default header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+
+      return userData
+    } catch (error) {
+      console.error('Login error:', error)
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      }
+      throw new Error('Đăng nhập thất bại. Vui lòng thử lại.')
+    }
   }
 
   const logout = () => {
+    token.value = null
+    refreshToken.value = null
     user.value = null
-    localStorage.clear()
+
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+
+    delete axios.defaults.headers.common['Authorization']
   }
 
-  return { user, isAdmin, isStaff, isStudent, login, logout }
+  const refreshAccessToken = async () => {
+    try {
+      if (!refreshToken.value) {
+        throw new Error('No refresh token')
+      }
+
+      const response = await axios.post(`${API_URL}/auth/refresh-token`, {
+        refreshToken: refreshToken.value
+      })
+
+      const { token: newToken, refreshToken: newRefreshToken } = response.data
+
+      token.value = newToken
+      refreshToken.value = newRefreshToken
+
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('refreshToken', newRefreshToken)
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+
+      return newToken
+    } catch (error) {
+      console.error('Refresh token error:', error)
+      logout()
+      throw error
+    }
+  }
+
+  const changePassword = async (userId, oldPassword, newPassword) => {
+    try {
+      await axios.post(`${API_URL}/auth/change-password`, {
+        userId,
+        oldPassword,
+        newPassword
+      })
+    } catch (error) {
+      console.error('Change password error:', error)
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      }
+      throw new Error('Đổi mật khẩu thất bại. Vui lòng thử lại.')
+    }
+  }
+
+  // Initialize axios interceptor for auto token refresh
+  const initializeInterceptor = () => {
+    axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true
+
+          try {
+            await refreshAccessToken()
+            return axios(originalRequest)
+          } catch (refreshError) {
+            return Promise.reject(refreshError)
+          }
+        }
+
+        return Promise.reject(error)
+      }
+    )
+  }
+
+  // Set token on store initialization
+  if (token.value) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+  }
+
+  return {
+    // State
+    token,
+    refreshToken,
+    user,
+    // Getters
+    isAuthenticated,
+    isAdmin,
+    isStaff,
+    isStudent,
+    // Actions
+    login,
+    logout,
+    refreshAccessToken,
+    changePassword,
+    initializeInterceptor
+  }
 })

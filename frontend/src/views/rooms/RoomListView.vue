@@ -1,21 +1,39 @@
 <template>
   <div>
-    <h1>Quản lý Phòng ở</h1>
-    
-    <div v-if="loading">Đang tải...</div>
-    <div v-else-if="error" style="color: red">{{ error }}</div>
-    <div v-else>
-      <p>
-        Tổng: {{ rooms.length }} phòng — 
-        <span style="color: #16a34a">{{ countByStatus('Available') }} trống</span> ·
-        <span style="color: #2563eb">{{ countByStatus('Occupied') }} đang ở</span> ·
-        <span style="color: #dc2626">{{ countByStatus('Full') }} đầy</span> ·
-        <span style="color: #d97706">{{ countByStatus('Maintenance') }} bảo trì</span>
-      </p>
-      
-      <a-button type="primary" @click="openCreate" style="margin-bottom: 16px">
+    <!-- Header -->
+    <div class="d-flex justify-space-between align-center mb-4">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
+          Quản lý Phòng ở
+        </h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+          Quản lý phòng, trạng thái và phân bổ sinh viên
+        </p>
+      </div>
+      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreate">
         Thêm phòng
-      </a-button>
+      </v-btn>
+    </div>
+    
+    <DataStatus
+      :loading="loading"
+      :error="error"
+      :items="rooms"
+      empty-message="Chưa có phòng nào"
+      :show-create-button="true"
+      create-button-text="Thêm phòng"
+      @retry="loadRooms"
+      @create="openCreate"
+    >
+      <div style="margin-bottom: 16px;">
+        <p style="font-size: 14px; color: #595959; margin: 0;">
+          Tổng: {{ rooms.length }} phòng —  
+          <span style="color: #16a34a">{{ countByStatus('Available') }} trống</span> ·
+          <span style="color: #2563eb">{{ countByStatus('Occupied') }} đang ở</span> ·
+          <span style="color: #dc2626">{{ countByStatus('Full') }} đầy</span> ·
+          <span style="color: #d97706">{{ countByStatus('Maintenance') }} bảo trì</span>
+        </p>
+      </div>
       
       <a-table 
         :dataSource="rooms" 
@@ -67,7 +85,7 @@
           </template>
         </template>
       </a-table>
-    </div>
+    </DataStatus>
     
     <!-- Modal Create/Edit -->
     <a-modal v-model:open="dialog" :title="editTarget ? 'Sửa' : 'Thêm'" @ok="save" @cancel="dialog = false" width="600px">
@@ -134,6 +152,7 @@ import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
 import { floorService } from '@/services/floorService'
 import ImageUpload from '@/components/common/ImageUpload.vue'
+import DataStatus from '@/components/common/DataStatus.vue'
 
 const rooms = ref([])
 const buildings = ref([])

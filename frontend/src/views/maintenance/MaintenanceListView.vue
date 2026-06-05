@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div style="background: #fff; margin-bottom: 16px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 16px 24px">
-      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 4px 0; color: #000">
+    <div style="margin-bottom: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
         Yêu Cầu Bảo Trì
       </h1>
-      <p style="font-size: 14px; color: #8c8c8c; margin: 0">
-        {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
+      <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+        Tổng số: {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
       </p>
     </div>
 

@@ -14,6 +14,7 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? StudentCode { get; set; }
         public bool IsActive { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class CreateUserDto

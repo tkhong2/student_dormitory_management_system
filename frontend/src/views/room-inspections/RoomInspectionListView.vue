@@ -1,20 +1,35 @@
 <template>
   <div>
-    <h1>Biên bản kiểm tra phòng</h1>
-    
-    <!-- Loading -->
-    <div v-if="loading">Đang tải...</div>
-    
-    <!-- Error -->
-    <div v-else-if="error" style="color: red">{{ error }}</div>
-    
-    <!-- Success -->
-    <div v-else>
-      <p>Tổng: {{ inspections.length }} biên bản</p>
-      
-      <a-button type="primary" @click="openCreate" style="margin-bottom: 16px">
+    <!-- Header -->
+    <div class="d-flex justify-space-between align-center mb-4">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
+          Biên bản kiểm tra phòng
+        </h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+          Quản lý biên bản kiểm tra định kỳ và sự cố
+        </p>
+      </div>
+      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreate">
         Tạo biên bản
-      </a-button>
+      </v-btn>
+    </div>
+    
+    <DataStatus
+      :loading="loading"
+      :error="error"
+      :items="inspections"
+      empty-message="Chưa có biên bản kiểm tra nào"
+      :show-create-button="true"
+      create-button-text="Tạo biên bản"
+      @retry="loadInspections"
+      @create="openCreate"
+    >
+      <div style="margin-bottom: 16px;">
+        <p style="font-size: 14px; color: #595959; margin: 0;">
+          Tổng: {{ inspections.length }} biên bản
+        </p>
+      </div>
       
       <!-- Table -->
       <a-table 
@@ -56,7 +71,7 @@
           </template>
         </template>
       </a-table>
-    </div>
+    </DataStatus>
     
     <!-- Modal Create -->
     <a-modal v-model:open="dialog" title="Tạo biên bản" @ok="save" @cancel="dialog = false" width="600px">
@@ -106,6 +121,7 @@
 import { ref, onMounted } from 'vue'
 import { roomInspectionService } from '@/services/roomInspectionService'
 import { roomService } from '@/services/roomService'
+import DataStatus from '@/components/common/DataStatus.vue'
 
 const inspections = ref([])
 const rooms = ref([])

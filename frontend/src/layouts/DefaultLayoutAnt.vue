@@ -41,13 +41,13 @@
               :bodyStyle="{ padding: '8px 10px' }"
             >
               <div style="display: flex; align-items: center; gap: 8px">
-                <a-avatar src="https://i.pravatar.cc/150?u=admin" :size="32" />
+                <a-avatar :src="userAvatarUrl" :size="32" />
                 <div style="flex: 1; min-width: 0">
                   <div style="color: white; font-weight: 600; font-size: 11px; line-height: 1.3">
-                    Administrator
+                    {{ currentUser.fullName }}
                   </div>
                   <div style="color: rgba(255, 255, 255, 0.5); font-size: 10px; line-height: 1.2">
-                    Hệ thống
+                    {{ currentUser.role === 'Admin' ? 'Quản trị viên' : currentUser.role === 'Staff' ? 'Nhân viên' : 'Sinh viên' }}
                   </div>
                 </div>
                 <a-button
@@ -118,17 +118,14 @@
 
           <a-dropdown placement="bottomRight">
             <a-avatar
-              src="https://i.pravatar.cc/150?u=admin"
+              :src="userAvatarUrl"
               :size="36"
               style="cursor: pointer"
             />
             <template #overlay>
               <a-menu>
                 <a-menu-item key="profile">
-                  <UserOutlined style="margin-right: 8px" /> Hồ sơ cá nhân
-                </a-menu-item>
-                <a-menu-item key="settings">
-                  <SettingOutlined style="margin-right: 8px" /> Cài đặt
+                  <UserOutlined style="margin-right: 8px" /> {{ currentUser.fullName }}
                 </a-menu-item>
                 <a-menu-divider />
                 <a-menu-item
@@ -166,6 +163,7 @@
 <script setup>
 import { ref, h, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { message } from "ant-design-vue";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -184,11 +182,23 @@ import {
   AppstoreOutlined,
 } from "@ant-design/icons-vue";
 import AppLogo from "@/components/common/AppLogo.vue";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+
 const collapsed = ref(false);
 const selectedKeys = ref([route.path]);
+
+// Get current user
+const currentUser = authStore.user || {
+  fullName: 'Unknown User',
+  role: 'Unknown',
+  avatarUrl: null
+};
+
+const userAvatarUrl = currentUser.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser.username || 'default'}`;
 
 watch(
   () => route.path,
@@ -348,7 +358,8 @@ const handleMenuClick = ({ key }) => {
 };
 
 const logout = () => {
-  localStorage.clear();
+  authStore.logout();
+  message.success('Đăng xuất thành công');
   router.push("/login");
 };
 </script>

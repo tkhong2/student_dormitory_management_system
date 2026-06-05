@@ -6,7 +6,7 @@ Hệ thống quản lý ký túc xá với kiến trúc microservices.
 
 ```
 ┌─────────────────┐
-│   API Gateway   │ ──> Port 5000
+│   API Gateway   │ ──> Port 5052
 │    (Ocelot)     │
 └────────┬────────┘
          │
@@ -16,7 +16,7 @@ Hệ thống quản lý ký túc xá với kiến trúc microservices.
          ├──> BillingMaintenanceService (Port 5002)
          │    └─> BillingMaintenanceDb
          │
-         └──> ContractStudentService (Port 5003)
+         └──> ContractStudentService (Port 5059)
               └─> ContractStudentDb
 ```
 
@@ -41,7 +41,7 @@ Quản lý thanh toán và bảo trì
   - Maintenance request workflow
   - Notification system
 
-### 3. **ContractStudentService** - Port 5003
+### 3. **ContractStudentService** - Port 5059
 Quản lý sinh viên và hợp đồng
 - **Controllers**: Students, Contracts, RoomApplications, ContractExtensions, RoomTransfers, StudentDocuments
 - **Database**: ContractStudentDb
@@ -52,14 +52,35 @@ Quản lý sinh viên và hợp đồng
   - Contract extensions
   - Room transfer requests
 
-### 4. **API Gateway** - Port 5000
+### 4. **API Gateway** - Port 5052
 Ocelot API Gateway - Single entry point
 - Routes requests to appropriate microservices
 - Swagger aggregation
 
 ## 🚀 Quick Start
 
-### Cách 1: Docker Compose (Recommended)
+### ⚡ Cách nhanh nhất: Chạy tất cả services cùng lúc
+
+#### Windows:
+```bash
+# Sử dụng Batch file (Recommended)
+cd backend
+start-all-services.bat
+```
+
+#### PowerShell:
+```powershell
+cd backend
+.\start-all-services.ps1
+```
+
+Services sẽ tự động khởi động trong các terminal riêng:
+- **RoomBuildingService**: http://localhost:5001
+- **ContractStudentService**: http://localhost:5059  
+- **BillingMaintenanceService**: http://localhost:5002
+- **API Gateway**: http://localhost:5052
+
+### Cách 1: Docker Compose (Future)
 
 ```bash
 # Build và chạy tất cả services
@@ -74,13 +95,6 @@ docker-compose logs -f
 # Stop tất cả
 docker-compose down
 ```
-
-Services sẽ chạy tại:
-- API Gateway: http://localhost:5000
-- RoomBuildingService: http://localhost:5001
-- BillingMaintenanceService: http://localhost:5002
-- ContractStudentService: http://localhost:5003
-- SQL Server: localhost:1433
 
 ### Cách 2: Chạy từng service local
 
@@ -161,7 +175,7 @@ dotnet run
 
 ## 🔌 API Endpoints (via Gateway)
 
-Tất cả requests đi qua Gateway tại `http://localhost:5000`
+Tất cả requests đi qua Gateway tại `http://localhost:5052`
 
 ### RoomBuildingService
 - `GET /api/buildings` - Danh sách tòa nhà
@@ -182,10 +196,33 @@ Tất cả requests đi qua Gateway tại `http://localhost:5000`
 - `GET /api/maintenancerequests` - Yêu cầu sửa chữa
 
 ### Swagger UI
-- Gateway: http://localhost:5000/swagger
+- Gateway: http://localhost:5052/swagger
 - RoomBuildingService: http://localhost:5001/swagger
-- ContractStudentService: http://localhost:5003/swagger
+- ContractStudentService: http://localhost:5059/swagger
 - BillingMaintenanceService: http://localhost:5002/swagger
+
+## 🔐 Authentication
+
+Hệ thống đã có authentication với JWT. 3 tài khoản mặc định đã được seed:
+
+| Username | Password | Role | Description |
+|----------|----------|------|-------------|
+| admin | Admin@123 | Admin | Quản trị viên - Full access |
+| staff01 | Staff@123 | Staff | Nhân viên - Limited admin access |
+| student01 | Student@123 | Student | Sinh viên - Student portal only |
+
+### Login API:
+```bash
+POST http://localhost:5002/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+```
+
+Response trả về JWT token và user info.
 
 ## 🧪 Testing
 

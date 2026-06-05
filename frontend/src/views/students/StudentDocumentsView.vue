@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="d-flex justify-space-between align-center flex-wrap ga-3 mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
         <h1 style="font-size: 20px; font-weight: 700; margin: 0">
           Quản lý Tài liệu Sinh viên
@@ -9,14 +9,10 @@
           Xác minh và quản lý hồ sơ giấy tờ của sinh viên
         </p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-upload"
-        variant="flat"
-        @click="openUpload"
-      >
+      <a-button type="primary" @click="openUpload" style="background: #ff9800; border-color: #ff9800;">
+        <template #icon><UploadOutlined /></template>
         Tải tài liệu lên
-      </v-btn>
+      </a-button>
     </div>
 
     <DataStatus
@@ -26,62 +22,59 @@
       :treatEmptyAsError="false"
       @retry="loadDocuments"
     >
-      <a-card
-        style="border: 1px solid #e5e7eb; background: #fafafa"
-        :body-style="{ padding: '0' }"
-      >
-        <div class="pa-4 d-flex flex-wrap align-center" style="gap: 12px">
-          <a-input-search
-            v-model:value="search"
-            placeholder="Tìm theo tên sinh viên, loại tài liệu..."
-            allowClear
-            style="max-width: 350px; flex: 1"
-          />
-          <a-select
-            v-model:value="typeFilter"
-            placeholder="Loại tài liệu"
-            allowClear
-            style="max-width: 200px"
-          >
-            <a-select-option value="all">Tất cả loại</a-select-option>
-            <a-select-option
-              v-for="type in documentTypes"
-              :key="type"
-              :value="type"
+      <!-- Filters Card -->
+      <a-card style="margin-bottom: 16px" :bordered="false">
+        <a-row :gutter="[16, 16]">
+          <a-col :xs="24" :sm="12" :md="8">
+            <a-input-search
+              v-model:value="search"
+              placeholder="Tìm theo tên sinh viên, loại tài liệu..."
+              allow-clear
+            />
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="8">
+            <a-select
+              v-model:value="typeFilter"
+              placeholder="Loại tài liệu"
+              allow-clear
+              style="width: 100%"
             >
-              {{ type }}
-            </a-select-option>
-          </a-select>
-          <a-select
-            v-model:value="verifiedFilter"
-            placeholder="Trạng thái xác minh"
-            allowClear
-            style="max-width: 200px"
-          >
-            <a-select-option value="all">Tất cả</a-select-option>
-            <a-select-option value="verified">Đã xác minh</a-select-option>
-            <a-select-option value="unverified">Chưa xác minh</a-select-option>
-          </a-select>
-          <a-button
-            v-if="search || typeFilter !== 'all' || verifiedFilter !== 'all'"
-            type="text"
-            size="small"
-            @click="resetFilters"
-          >
-            Đặt lại
-          </a-button>
-        </div>
+              <a-select-option value="all">Tất cả loại</a-select-option>
+              <a-select-option
+                v-for="type in documentTypes"
+                :key="type"
+                :value="type"
+              >
+                {{ type }}
+              </a-select-option>
+            </a-select>
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="8">
+            <a-select
+              v-model:value="verifiedFilter"
+              placeholder="Trạng thái xác minh"
+              allow-clear
+              style="width: 100%"
+            >
+              <a-select-option value="all">Tất cả</a-select-option>
+              <a-select-option value="verified">Đã xác minh</a-select-option>
+              <a-select-option value="unverified">Chưa xác minh</a-select-option>
+            </a-select>
+          </a-col>
+        </a-row>
+      </a-card>
 
+      <!-- Table Card -->
+      <a-card :bordered="false">
         <a-table
           :columns="columns"
           :data-source="filteredDocuments"
           row-key="id"
           :pagination="{ pageSize: 10 }"
-          style="width: 100%"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'documentName'">
-              <div class="d-flex align-center" style="gap: 12px; padding: 12px 0">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
                 <a-avatar
                   :style="{
                     background: getFileIcon(record.fileType).color,
@@ -90,10 +83,12 @@
                   size="40"
                   shape="square"
                 >
-                  <v-icon size="20">{{ getFileIcon(record.fileType).icon }}</v-icon>
+                  <template #icon>
+                    <component :is="getFileIcon(record.fileType).icon" />
+                  </template>
                 </a-avatar>
                 <div>
-                  <div class="font-weight-bold">{{ record.documentName }}</div>
+                  <div style="font-weight: 600">{{ record.documentName }}</div>
                   <div style="font-size: 12px; color: #8c8c8c">
                     {{ record.documentType }} • {{ formatFileSize(record.fileSizeBytes) }}
                   </div>
@@ -102,7 +97,7 @@
             </template>
             <template v-else-if="column.key === 'student'">
               <div>
-                <div class="font-weight-medium">{{ record.studentName }}</div>
+                <div style="font-weight: 500">{{ record.studentName }}</div>
                 <div style="font-size: 12px; color: #8c8c8c">{{ record.studentCode }}</div>
               </div>
             </template>
@@ -124,7 +119,7 @@
                 >
                   Xác minh
                 </a-button>
-                <a-button type="text" danger @click="confirmDelete(record)">Xóa</a-button>
+                <a-button type="link" danger @click="confirmDelete(record)">Xóa</a-button>
               </a-space>
             </template>
           </template>
@@ -132,82 +127,83 @@
       </a-card>
     </DataStatus>
 
-    <!-- Upload Dialog -->
-    <v-dialog v-model="uploadDialog" max-width="560" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">Tải tài liệu lên</h2>
-        <v-row>
-          <v-col cols="12">
-            <v-select
-              v-model="uploadForm.studentId"
-              label="Sinh viên *"
-              :items="students"
-              item-title="fullName"
-              item-value="id"
-              :error-messages="uploadErrors.studentId"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-select
-              v-model="uploadForm.documentType"
-              label="Loại tài liệu *"
-              :items="documentTypes"
-              :error-messages="uploadErrors.documentType"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-text-field
-              v-model="uploadForm.documentName"
-              label="Tên tài liệu *"
-              :error-messages="uploadErrors.documentName"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-file-input
-              v-model="uploadForm.file"
-              label="Chọn file *"
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              :error-messages="uploadErrors.file"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-textarea
-              v-model="uploadForm.notes"
-              label="Ghi chú"
-              rows="2"
-            />
-          </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="uploadDialog = false">Hủy</v-btn>
-          <v-btn color="primary" :loading="saving" @click="handleUpload">Tải lên</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
+    <!-- Upload Modal -->
+    <a-modal
+      v-model:open="uploadDialog"
+      title="Tải tài liệu lên"
+      width="560px"
+      @ok="handleUpload"
+      @cancel="uploadDialog = false"
+      :confirmLoading="saving"
+      okText="Tải lên"
+      cancelText="Hủy"
+    >
+      <a-form layout="vertical" style="margin-top: 24px">
+        <a-form-item label="Sinh viên" required :validate-status="uploadErrors.studentId ? 'error' : ''" :help="uploadErrors.studentId">
+          <a-select v-model:value="uploadForm.studentId" placeholder="Chọn sinh viên">
+            <a-select-option v-for="student in students" :key="student.id" :value="student.id">
+              {{ student.fullName }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Loại tài liệu" required :validate-status="uploadErrors.documentType ? 'error' : ''" :help="uploadErrors.documentType">
+          <a-select v-model:value="uploadForm.documentType" placeholder="Chọn loại tài liệu">
+            <a-select-option v-for="type in documentTypes" :key="type" :value="type">
+              {{ type }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Tên tài liệu" required :validate-status="uploadErrors.documentName ? 'error' : ''" :help="uploadErrors.documentName">
+          <a-input v-model:value="uploadForm.documentName" />
+        </a-form-item>
+        <a-form-item label="Chọn file" required :validate-status="uploadErrors.file ? 'error' : ''" :help="uploadErrors.file">
+          <a-upload
+            v-model:file-list="uploadForm.file"
+            :before-upload="() => false"
+            :max-count="1"
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          >
+            <a-button>
+              <template #icon><UploadOutlined /></template>
+              Chọn file
+            </a-button>
+          </a-upload>
+        </a-form-item>
+        <a-form-item label="Ghi chú">
+          <a-textarea v-model:value="uploadForm.notes" :rows="2" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
-    <!-- Delete Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="420">
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-3">Xác nhận xóa</h2>
-        <p>
-          Bạn có chắc muốn xóa tài liệu
-          <strong>{{ deleteTarget?.documentName }}</strong>?
-        </p>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="deleteDialog = false">Hủy</v-btn>
-          <v-btn color="error" :loading="saving" @click="deleteDocument">Xóa</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" location="bottom right">
-      {{ snackbar.message }}
-    </v-snackbar>
+    <!-- Delete Modal -->
+    <a-modal
+      v-model:open="deleteDialog"
+      title="Xác nhận xóa"
+      @ok="deleteDocument"
+      @cancel="deleteDialog = false"
+      :confirmLoading="saving"
+      okText="Xóa"
+      cancelText="Hủy"
+      okType="danger"
+    >
+      <p>
+        Bạn có chắc muốn xóa tài liệu
+        <strong>{{ deleteTarget?.documentName }}</strong>?
+      </p>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { 
+  UploadOutlined, 
+  FilePdfOutlined, 
+  FileImageOutlined, 
+  FileWordOutlined, 
+  FileOutlined 
+} from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import DataStatus from '@/components/common/DataStatus.vue'
 import { studentDocumentService } from '@/services/studentDocumentService'
 import { studentService } from '@/services/studentService'
@@ -246,11 +242,10 @@ const uploadForm = ref({
   studentId: null,
   documentType: '',
   documentName: '',
-  file: null,
+  file: [],
   notes: '',
 })
 const uploadErrors = ref({})
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 const filteredDocuments = computed(() => {
   const keyword = search.value.trim().toLowerCase()
@@ -300,7 +295,7 @@ function openUpload() {
     studentId: null,
     documentType: '',
     documentName: '',
-    file: null,
+    file: [],
     notes: '',
   }
   uploadErrors.value = {}
@@ -313,28 +308,29 @@ async function handleUpload() {
   if (!uploadForm.value.documentType) errors.documentType = 'Vui lòng chọn loại tài liệu'
   if (!uploadForm.value.documentName.trim())
     errors.documentName = 'Vui lòng nhập tên tài liệu'
-  if (!uploadForm.value.file) errors.file = 'Vui lòng chọn file'
+  if (!uploadForm.value.file || uploadForm.value.file.length === 0) errors.file = 'Vui lòng chọn file'
   uploadErrors.value = errors
   if (Object.keys(errors).length > 0) return
 
   saving.value = true
   try {
+    const fileObj = uploadForm.value.file[0]
     // TODO: Upload file to server first, then create document record
     // For now, create with mock URL
     await studentDocumentService.create({
       studentId: uploadForm.value.studentId,
       documentType: uploadForm.value.documentType,
       documentName: uploadForm.value.documentName.trim(),
-      fileUrl: '/uploads/documents/' + uploadForm.value.file[0].name,
-      fileType: uploadForm.value.file[0].type,
-      fileSizeBytes: uploadForm.value.file[0].size,
+      fileUrl: '/uploads/documents/' + fileObj.name,
+      fileType: fileObj.type,
+      fileSizeBytes: fileObj.size,
       notes: uploadForm.value.notes?.trim() || null,
     })
-    notify('Tải tài liệu lên thành công')
+    message.success('Tải tài liệu lên thành công')
     uploadDialog.value = false
     await loadDocuments()
   } catch (err) {
-    notify(err.message || 'Có lỗi xảy ra', 'error')
+    message.error(err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -346,10 +342,10 @@ async function verifyDocument(item) {
     await studentDocumentService.verify(item.id, {
       verifiedByUserId: 1, // TODO: Get from auth
     })
-    notify('Đã xác minh tài liệu')
+    message.success('Đã xác minh tài liệu')
     await loadDocuments()
   } catch (err) {
-    notify(err.message || 'Không thể xác minh tài liệu', 'error')
+    message.error(err.message || 'Không thể xác minh tài liệu')
   } finally {
     saving.value = false
   }
@@ -369,21 +365,21 @@ async function deleteDocument() {
   try {
     await studentDocumentService.delete(deleteTarget.value.id)
     deleteDialog.value = false
-    notify('Đã xóa tài liệu')
+    message.success('Đã xóa tài liệu')
     await loadDocuments()
   } catch (err) {
-    notify(err.message || 'Không thể xóa tài liệu', 'error')
+    message.error(err.message || 'Không thể xóa tài liệu')
   } finally {
     saving.value = false
   }
 }
 
 function getFileIcon(fileType) {
-  if (fileType?.includes('pdf')) return { icon: 'mdi-file-pdf-box', color: '#f44336' }
-  if (fileType?.includes('image')) return { icon: 'mdi-file-image', color: '#4caf50' }
+  if (fileType?.includes('pdf')) return { icon: FilePdfOutlined, color: '#f44336' }
+  if (fileType?.includes('image')) return { icon: FileImageOutlined, color: '#4caf50' }
   if (fileType?.includes('word') || fileType?.includes('document'))
-    return { icon: 'mdi-file-word', color: '#2196f3' }
-  return { icon: 'mdi-file-document', color: '#9e9e9e' }
+    return { icon: FileWordOutlined, color: '#2196f3' }
+  return { icon: FileOutlined, color: '#9e9e9e' }
 }
 
 function formatFileSize(bytes) {
@@ -396,11 +392,6 @@ function formatFileSize(bytes) {
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleDateString('vi-VN') : ''
-}
-
-function notify(message, color = 'success') {
-  snackbar.value = { show: false, message, color }
-  snackbar.value.show = true
 }
 
 onMounted(() => {

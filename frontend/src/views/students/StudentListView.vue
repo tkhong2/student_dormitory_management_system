@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="d-flex justify-space-between align-center flex-wrap ga-3 mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
         <h1 style="font-size: 20px; font-weight: 700; margin: 0">
           Quản lý Sinh viên
@@ -9,237 +9,232 @@
           Tổng số: {{ students.length }} sinh viên nội trú
         </p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="flat"
-        @click="openCreate"
-        >Thêm sinh viên</v-btn
-      >
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        <template #icon><PlusOutlined /></template>
+        Thêm sinh viên
+      </a-button>
     </div>
 
     <DataStatus
       :loading="loading"
       :error="error"
       :items="students"
-      :treatEmptyAsError="false"
+      empty-message="Chưa có sinh viên nội trú nào"
+      :show-create-button="true"
+      create-button-text="Thêm sinh viên"
       @retry="loadStudents"
+      @create="openCreate"
     >
-      <a-card
-        style="border: 1px solid #e5e7eb; background: #fafafa"
-        :body-style="{ padding: '0' }"
-      >
-        <div class="pa-4 d-flex flex-wrap align-center" style="gap: 12px">
-          <a-input-search
-            v-model:value="search"
-            placeholder="Tìm theo tên, mã SV..."
-            allowClear
-            style="max-width: 300px; flex: 1"
-          />
-          <a-select
-            v-model:value="buildingFilter"
-            placeholder="Tòa nhà"
-            allowClear
-            style="max-width: 180px"
-          >
-            <a-select-option value="all">Tất cả</a-select-option>
-            <a-select-option
-              v-for="option in buildingOptions"
-              :key="option.value"
-              :value="option.value"
+      <!-- Filters Card -->
+      <a-card style="margin-bottom: 16px" :bordered="false">
+        <a-row :gutter="[16, 16]">
+          <a-col :xs="24" :sm="12" :md="6">
+            <a-input-search
+              v-model:value="search"
+              placeholder="Tìm theo tên, mã SV..."
+              allow-clear
+            />
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="6">
+            <a-select
+              v-model:value="buildingFilter"
+              placeholder="Tòa nhà"
+              allow-clear
+              style="width: 100%"
             >
-              {{ option.label }}
-            </a-select-option>
-          </a-select>
-          <a-select
-            v-model:value="classFilter"
-            placeholder="Lớp"
-            allowClear
-            style="max-width: 180px"
-          >
-            <a-select-option value="all">Tất cả</a-select-option>
-            <a-select-option
-              v-for="option in classOptions"
-              :key="option"
-              :value="option"
+              <a-select-option value="all">Tất cả</a-select-option>
+              <a-select-option
+                v-for="option in buildingOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </a-select-option>
+            </a-select>
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="4">
+            <a-select
+              v-model:value="classFilter"
+              placeholder="Lớp"
+              allow-clear
+              style="width: 100%"
             >
-              {{ option }}
-            </a-select-option>
-          </a-select>
-          <a-select
-            v-model:value="genderFilter"
-            placeholder="Giới tính"
-            allowClear
-            style="max-width: 150px"
-          >
-            <a-select-option value="all">Tất cả</a-select-option>
-            <a-select-option value="Nam">Nam</a-select-option>
-            <a-select-option value="Nữ">Nữ</a-select-option>
-          </a-select>
-          <a-select
-            v-model:value="statusFilter"
-            placeholder="Trạng thái"
-            allowClear
-            style="max-width: 220px"
-          >
-            <a-select-option
-              v-for="option in filterStatusOptions"
-              :key="option.value"
-              :value="option.value"
+              <a-select-option value="all">Tất cả</a-select-option>
+              <a-select-option
+                v-for="option in classOptions"
+                :key="option"
+                :value="option"
+              >
+                {{ option }}
+              </a-select-option>
+            </a-select>
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="4">
+            <a-select
+              v-model:value="genderFilter"
+              placeholder="Giới tính"
+              allow-clear
+              style="width: 100%"
             >
-              {{ option.label }}
-            </a-select-option>
-          </a-select>
-          <a-button
-            v-if="
-              search ||
-              classFilter !== 'all' ||
-              genderFilter ||
-              statusFilter !== 'all' ||
-              buildingFilter !== 'all'
-            "
-            type="text"
-            size="small"
-            @click="resetFilters"
-          >
-            Đặt lại
-          </a-button>
-        </div>
+              <a-select-option value="all">Tất cả</a-select-option>
+              <a-select-option value="Nam">Nam</a-select-option>
+              <a-select-option value="Nữ">Nữ</a-select-option>
+            </a-select>
+          </a-col>
+          <a-col :xs="24" :sm="12" :md="4">
+            <a-select
+              v-model:value="statusFilter"
+              placeholder="Trạng thái"
+              allow-clear
+              style="width: 100%"
+            >
+              <a-select-option
+                v-for="option in filterStatusOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </a-select-option>
+            </a-select>
+          </a-col>
+        </a-row>
+      </a-card>
 
+      <!-- Table Card -->
+      <a-card :bordered="false">
         <a-table
           :columns="studentColumns"
           :data-source="filteredStudents"
           row-key="id"
           :pagination="{ pageSize: 10 }"
-          style="width: 100%"
         >
-          <template #bodyCell_fullName="{ record }">
-            <div class="d-flex align-center" style="gap: 12px; padding: 12px 0">
-              <a-avatar size="32" style="background: #e6f7ff; color: #1890ff">
-                {{ record.fullName.charAt(0) }}
-              </a-avatar>
-              <div class="font-weight-bold">{{ record.fullName }}</div>
-            </div>
-          </template>
-          <template #bodyCell_joinDate="{ record }">
-            {{ formatDate(record.joinDate) }}
-          </template>
-          <template #bodyCell_status="{ record }">
-            <a-tag :color="statusColor(record.status)">{{
-              statusLabel(record.status)
-            }}</a-tag>
-          </template>
-          <template #bodyCell_actions="{ record }">
-            <a-space size="small">
-              <a-button type="link" @click="openEdit(record)"
-                >Chỉnh sửa</a-button
-              >
-              <a-button type="text" danger @click="confirmDelete(record)"
-                >Xóa</a-button
-              >
-            </a-space>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'fullName'">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
+                <a-avatar size="32" style="background: #e6f7ff; color: #1890ff">
+                  {{ record.fullName.charAt(0) }}
+                </a-avatar>
+                <div style="font-weight: 600">{{ record.fullName }}</div>
+              </div>
+            </template>
+            <template v-else-if="column.key === 'joinDate'">
+              {{ formatDate(record.joinDate) }}
+            </template>
+            <template v-else-if="column.key === 'status'">
+              <a-tag :color="statusColor(record.status)">{{
+                statusLabel(record.status)
+              }}</a-tag>
+            </template>
+            <template v-else-if="column.key === 'actions'">
+              <a-space size="small">
+                <a-button type="link" @click="openEdit(record)"
+                  >Chỉnh sửa</a-button
+                >
+                <a-button type="link" danger @click="confirmDelete(record)"
+                  >Xóa</a-button
+                >
+              </a-space>
+            </template>
           </template>
         </a-table>
       </a-card>
     </DataStatus>
 
-    <v-dialog v-model="dialog" max-width="760" persistent>
-      <v-card class="pa-6">
-        <h2 class="text-h5 font-weight-bold mb-6">
-          {{ editTarget ? "Chỉnh sửa sinh viên" : "Thêm sinh viên" }}
-        </h2>
-        <v-row>
-          <v-col cols="12" sm="4"
-            ><v-text-field
-              v-model="form.studentCode"
-              label="Mã sinh viên *"
-              :error-messages="formErrors.studentCode"
-          /></v-col>
-          <v-col cols="12" sm="8"
-            ><v-text-field
-              v-model="form.fullName"
-              label="Họ tên *"
-              :error-messages="formErrors.fullName"
-          /></v-col>
-          <v-col cols="12" sm="6"
-            ><v-text-field v-model="form.email" label="Email"
-          /></v-col>
-          <v-col cols="12" sm="6"
-            ><v-text-field v-model="form.phoneNumber" label="Số điện thoại"
-          /></v-col>
-          <v-col cols="12" sm="4"
-            ><v-text-field
-              v-model="form.roomNumber"
-              label="Phòng *"
-              :error-messages="formErrors.roomNumber"
-          /></v-col>
-          <v-col cols="12" sm="4"
-            ><v-text-field
-              v-model="form.buildingName"
-              label="Tòa *"
-              :error-messages="formErrors.buildingName"
-          /></v-col>
-          <v-col cols="12" sm="4"
-            ><v-text-field
-              v-model="form.className"
-              label="Lớp *"
-              :error-messages="formErrors.className"
-          /></v-col>
-          <v-col cols="12" sm="6"
-            ><v-text-field
-              v-model="form.joinDate"
-              label="Ngày vào *"
-              type="date"
-              :error-messages="formErrors.joinDate"
-          /></v-col>
-          <v-col cols="12" sm="6"
-            ><v-select
-              v-model="form.status"
-              label="Trạng thái"
-              :items="statusOptions"
-              item-title="label"
-              item-value="value"
-          /></v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" :disabled="saving" @click="closeDialog"
-            >Hủy</v-btn
-          >
-          <v-btn color="primary" :loading="saving" @click="saveStudent">{{
-            editTarget ? "Lưu thay đổi" : "Thêm sinh viên"
-          }}</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="deleteDialog" max-width="420">
-      <v-card class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-3">Xác nhận xóa</h2>
-        <p>
-          Bạn có chắc muốn xóa sinh viên
-          <strong>{{ deleteTarget?.fullName }}</strong
-          >?
-        </p>
-        <div class="d-flex justify-end ga-3 mt-4">
-          <v-btn variant="text" @click="deleteDialog = false">Hủy</v-btn>
-          <v-btn color="error" :loading="saving" @click="deleteStudent"
-            >Xóa</v-btn
-          >
-        </div>
-      </v-card>
-    </v-dialog>
-
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      location="bottom right"
-      >{{ snackbar.message }}</v-snackbar
+    <!-- Create/Edit Modal -->
+    <a-modal
+      v-model:open="dialog"
+      :title="editTarget ? 'Chỉnh sửa sinh viên' : 'Thêm sinh viên'"
+      width="760px"
+      @ok="saveStudent"
+      @cancel="closeDialog"
+      :confirmLoading="saving"
+      okText="Lưu"
+      cancelText="Hủy"
     >
+      <a-form layout="vertical" style="margin-top: 24px">
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="Mã sinh viên" required :validate-status="formErrors.studentCode ? 'error' : ''" :help="formErrors.studentCode">
+              <a-input v-model:value="form.studentCode" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="16">
+            <a-form-item label="Họ tên" required :validate-status="formErrors.fullName ? 'error' : ''" :help="formErrors.fullName">
+              <a-input v-model:value="form.fullName" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Email">
+              <a-input v-model:value="form.email" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Số điện thoại">
+              <a-input v-model:value="form.phoneNumber" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="Phòng" required :validate-status="formErrors.roomNumber ? 'error' : ''" :help="formErrors.roomNumber">
+              <a-input v-model:value="form.roomNumber" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="Tòa" required :validate-status="formErrors.buildingName ? 'error' : ''" :help="formErrors.buildingName">
+              <a-input v-model:value="form.buildingName" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="Lớp" required :validate-status="formErrors.className ? 'error' : ''" :help="formErrors.className">
+              <a-input v-model:value="form.className" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="Ngày vào" required :validate-status="formErrors.joinDate ? 'error' : ''" :help="formErrors.joinDate">
+              <a-date-picker v-model:value="form.joinDate" style="width: 100%" format="YYYY-MM-DD" valueFormat="YYYY-MM-DD" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Trạng thái">
+              <a-select v-model:value="form.status">
+                <a-select-option v-for="option in statusOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
+    </a-modal>
+
+    <!-- Delete Modal -->
+    <a-modal
+      v-model:open="deleteDialog"
+      title="Xác nhận xóa"
+      @ok="deleteStudent"
+      @cancel="deleteDialog = false"
+      :confirmLoading="saving"
+      okText="Xóa"
+      cancelText="Hủy"
+      okType="danger"
+    >
+      <p>
+        Bạn có chắc muốn xóa sinh viên
+        <strong>{{ deleteTarget?.fullName }}</strong>?
+      </p>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { PlusOutlined } from '@ant-design/icons-vue';
+import { message } from 'ant-design-vue';
 import DataStatus from "@/components/common/DataStatus.vue";
 import { studentService } from "@/services/studentService";
 
@@ -298,7 +293,6 @@ const editTarget = ref(null);
 const deleteTarget = ref(null);
 const formErrors = ref({});
 const form = ref(defaultForm());
-const snackbar = ref({ show: false, message: "", color: "success" });
 
 const buildingOptions = computed(() => [
   { label: "Tất cả", value: "all" },
@@ -428,15 +422,15 @@ async function saveStudent() {
   try {
     if (editTarget.value) {
       await studentService.update(editTarget.value.id, payload());
-      notify("Cập nhật sinh viên thành công");
+      message.success("Cập nhật sinh viên thành công");
     } else {
       await studentService.create(payload());
-      notify("Thêm sinh viên thành công");
+      message.success("Thêm sinh viên thành công");
     }
     closeDialog();
     await loadStudents();
   } catch (err) {
-    notify(err.message || "Có lỗi xảy ra", "error");
+    message.error(err.message || "Có lỗi xảy ra");
   } finally {
     saving.value = false;
   }
@@ -452,10 +446,10 @@ async function deleteStudent() {
   try {
     await studentService.delete(deleteTarget.value.id);
     deleteDialog.value = false;
-    notify("Đã xóa sinh viên");
+    message.success("Đã xóa sinh viên");
     await loadStudents();
   } catch (err) {
-    notify(err.message || "Không thể xóa sinh viên", "error");
+    message.error(err.message || "Không thể xóa sinh viên");
   } finally {
     saving.value = false;
   }
@@ -467,8 +461,8 @@ function statusLabel(status) {
 
 function statusColor(status) {
   return (
-    { Active: "success", Expiring: "warning", Departed: "grey" }[status] ||
-    "grey"
+    { Active: "success", Expiring: "warning", Departed: "default" }[status] ||
+    "default"
   );
 }
 
@@ -476,20 +470,5 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleDateString("vi-VN") : "";
 }
 
-function notify(message, color = "success") {
-  snackbar.value = { show: false, message, color };
-  snackbar.value.show = true;
-}
-
 onMounted(loadStudents);
 </script>
-
-<style scoped>
-:deep(.v-data-table__th) {
-  font-weight: 800 !important;
-  text-transform: uppercase;
-  font-size: 11px !important;
-  letter-spacing: 0.5px;
-  color: #64748b !important;
-}
-</style>

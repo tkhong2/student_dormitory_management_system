@@ -1,20 +1,35 @@
 <template>
   <div>
-    <h1>Quản lý Tiện nghi</h1>
-    
-    <!-- Loading -->
-    <div v-if="loading">Đang tải...</div>
-    
-    <!-- Error -->
-    <div v-else-if="error" style="color: red">{{ error }}</div>
-    
-    <!-- Success -->
-    <div v-else>
-      <p>Tổng: {{ amenities.length }} tiện nghi</p>
-      
-      <a-button type="primary" @click="openCreate" style="margin-bottom: 16px">
+    <!-- Header -->
+    <div class="d-flex justify-space-between align-center mb-4">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
+          Quản lý Tiện nghi
+        </h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+          Quản lý tiện nghi và trang thiết bị trong phòng
+        </p>
+      </div>
+      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreate">
         Thêm tiện nghi
-      </a-button>
+      </v-btn>
+    </div>
+    
+    <DataStatus
+      :loading="loading"
+      :error="error"
+      :items="amenities"
+      empty-message="Chưa có tiện nghi nào"
+      :show-create-button="true"
+      create-button-text="Thêm tiện nghi"
+      @retry="loadAmenities"
+      @create="openCreate"
+    >
+      <div style="margin-bottom: 16px;">
+        <p style="font-size: 14px; color: #595959; margin: 0;">
+          Tổng: {{ amenities.length }} tiện nghi
+        </p>
+      </div>
       
       <!-- Table -->
       <a-table 
@@ -44,7 +59,7 @@
           </template>
         </template>
       </a-table>
-    </div>
+    </DataStatus>
     
     <!-- Modal Create/Edit -->
     <a-modal v-model:open="dialog" :title="editTarget ? 'Sửa' : 'Thêm'" @ok="save" @cancel="dialog = false">
@@ -76,6 +91,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { amenityService } from '@/services/amenityService'
+import DataStatus from '@/components/common/DataStatus.vue'
 
 const amenities = ref([])
 const loading = ref(false)

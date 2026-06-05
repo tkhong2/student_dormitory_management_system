@@ -26,7 +26,16 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Users
+            .Where(u => !u.IsDeleted && u.Email == email)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    {
+        return await _context.Users
+            .Where(u => !u.IsDeleted && u.RefreshToken == refreshToken)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<User>> GetAllAsync()
@@ -41,6 +50,11 @@ public class UserRepository : IUserRepository
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return user;
+    }
+
+    public async Task<User> CreateAsync(User user)
+    {
+        return await AddAsync(user);
     }
 
     public async Task UpdateAsync(User user)

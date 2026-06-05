@@ -27,7 +27,7 @@ function createApi(baseURL) {
 
 // Hardcoded API URLs for development (fallback if env vars not loaded)
 const ROOM_BUILDING_API = 'http://localhost:5001/api'
-const CONTRACT_STUDENT_API = 'http://localhost:5003/api'
+const CONTRACT_STUDENT_API = 'http://localhost:5059/api'
 const BILLING_MAINTENANCE_API = 'http://localhost:5002/api'
 
 const api = createApi(

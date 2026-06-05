@@ -1,14 +1,14 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div style="background: #fff; margin-bottom: 16px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 16px 24px">
+    <div style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start">
         <div>
-          <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 4px 0; color: #000">
+          <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
             Quản Lý Thanh Toán
           </h1>
-          <p style="font-size: 14px; color: #8c8c8c; margin: 0">
-            Quản lý lịch sử thanh toán và ghi nhận thanh toán mới
+          <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+            Tổng số: {{ payments.length }} thanh toán
           </p>
         </div>
         <a-button type="primary" @click="showCreateDialog" size="large">

@@ -1,9 +1,11 @@
 <template>
-  <router-view />
+  <a-config-provider :locale="viVN">
+    <router-view />
+  </a-config-provider>
 </template>
 
 <script setup>
-// Main entry point
+import viVN from 'ant-design-vue/es/locale/vi_VN'
 </script>
 
 <style>

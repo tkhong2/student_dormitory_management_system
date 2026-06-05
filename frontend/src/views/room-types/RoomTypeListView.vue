@@ -1,15 +1,24 @@
 <template>
   <div>
-    <h1>Quản lý Loại phòng</h1>
+    <!-- Header with button on the right -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
+          Quản lý Loại phòng
+        </h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
+          Quản lý các loại phòng và mức giá ký túc xá
+        </p>
+      </div>
+      <v-btn color="warning" @click="openCreate">
+        Thêm loại phòng
+      </v-btn>
+    </div>
     
     <div v-if="loading">Đang tải...</div>
     <div v-else-if="error" style="color: red">{{ error }}</div>
     <div v-else>
       <p>Tổng: {{ roomTypes.length }} loại phòng</p>
-      
-      <a-button type="primary" @click="openCreate" style="margin-bottom: 16px">
-        Thêm loại phòng
-      </a-button>
       
       <a-table 
         :dataSource="roomTypes" 

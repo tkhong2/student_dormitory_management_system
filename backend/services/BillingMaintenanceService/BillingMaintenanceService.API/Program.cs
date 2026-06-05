@@ -1,4 +1,6 @@
 using BillingMaintenanceService.Application.Interfaces;
+using BillingMaintenanceService.Infrastructure.Auth;
+using BillingMaintenanceService.Infrastructure.Data;
 using BillingMaintenanceService.Infrastructure.Persistence;
 using BillingMaintenanceService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +36,9 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
 
+// Register services
+builder.Services.AddScoped<JwtService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -57,6 +62,10 @@ using (var scope = app.Services.CreateScope())
         {
             db.Database.Migrate();
             Console.WriteLine("✅ BillingMaintenanceDb migration applied successfully.");
+            
+            // Seed initial data
+            await DataSeeder.SeedAsync(db);
+            
             break;
         }
         catch (Exception ex)

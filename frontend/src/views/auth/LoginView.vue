@@ -101,23 +101,33 @@ const loading = ref(false)
 const rememberMe = ref(false)
 const form = reactive({ username: '', password: '' })
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!form.username || !form.password) {
     return
   }
 
   loading.value = true
-  setTimeout(() => {
-    let role = 'student'
-    const userLower = form.username.toLowerCase()
-    if (userLower.includes('admin')) role = 'admin'
-    else if (userLower.includes('staff') || userLower.includes('nv')) role = 'staff'
-
-    const userNames = { admin: 'Administrator', staff: 'Nhân viên KTX', student: 'Nguyễn Văn An' }
-    authStore.login({ name: userNames[role] || 'User', role: role })
-    router.push(role === 'student' ? '/student' : '/admin')
+  
+  try {
+    await authStore.login(form.username, form.password)
+    
+    // Success - redirect based on role
+    const user = authStore.user
+    if (user.role === 'Student') {
+      router.push('/student')
+    } else if (user.role === 'Staff') {
+      router.push('/staff/dashboard')
+    } else {
+      router.push('/admin')
+    }
+  } catch (error) {
+    // Show error message
+    console.error('Login failed:', error)
+    // You can add ant-design-vue message here if you want
+    alert(error.message || 'Đăng nhập thất bại')
+  } finally {
     loading.value = false
-  }, 600)
+  }
 }
 </script>
 
