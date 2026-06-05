@@ -110,7 +110,18 @@ const handleLogin = async () => {
 
   try {
     const userData = await authStore.login({ username: form.username, password: form.password })
-    router.push(userData.role === 'student' ? '/student' : '/admin')
+    
+    // Redirect based on role
+    const role = String(userData.role).toLowerCase()
+    if (role === 'student') {
+      router.push('/student')
+    } else if (role === 'staff') {
+      router.push('/staff')
+    } else {
+      router.push('/admin')
+    }
+  } catch (error) {
+    alert(error.message || 'Đăng nhập thất bại')
   } finally {
     loading.value = false
   }

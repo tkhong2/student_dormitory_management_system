@@ -29,6 +29,19 @@ const routes = [
     ],
   },
 
+  // ══ CỔNG NHÂN VIÊN (Sau đăng nhập) ═════════
+  {
+    path: '/staff',
+    component: () => import('../layouts/StaffLayout.vue'),
+    children: [
+      { path: '', name: 'staff-dashboard', meta: { title: 'Dashboard' }, component: () => import('../views/staff/StaffDashboard.vue') },
+      { path: 'invoices', name: 'staff-invoices', meta: { title: 'Hóa đơn' }, component: () => import('../views/staff/StaffInvoiceList.vue') },
+      { path: 'payments', name: 'staff-payments', meta: { title: 'Thanh toán' }, component: () => import('../views/staff/StaffPaymentList.vue') },
+      { path: 'debt', name: 'staff-debt', meta: { title: 'Công nợ' }, component: () => import('../views/staff/StaffDebtList.vue') },
+      { path: 'maintenance-requests', name: 'staff-maintenance', meta: { title: 'Yêu cầu sửa chữa' }, component: () => import('../views/staff/StaffMaintenanceList.vue') },
+    ],
+  },
+
   // ══ TRANG QUẢN TRỊ ══════════════════════════
   {
     path: '/admin',
