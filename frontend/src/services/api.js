@@ -50,7 +50,7 @@ const api = createApi(
 )
 
 export const billingApi = createApi(
-  import.meta.env.VITE_BILLING_API_URL || 'http://localhost:5141/api'
+  import.meta.env.VITE_BILLING_API_URL || BILLING_MAINTENANCE_API
 )
 
 export const contractStudentApi = createApi(

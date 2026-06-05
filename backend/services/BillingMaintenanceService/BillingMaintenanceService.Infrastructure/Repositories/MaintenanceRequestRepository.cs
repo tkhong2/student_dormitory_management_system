@@ -17,7 +17,6 @@ public class MaintenanceRequestRepository : IMaintenanceRequestRepository
     public async Task<MaintenanceRequest?> GetByIdAsync(int id)
     {
         return await _context.MaintenanceRequests
-            .Include(m => m.AssignedToUser)
             .Include(m => m.StatusLogs)
             .FirstOrDefaultAsync(m => m.Id == id);
     }
@@ -25,7 +24,6 @@ public class MaintenanceRequestRepository : IMaintenanceRequestRepository
     public async Task<IEnumerable<MaintenanceRequest>> GetAllAsync()
     {
         return await _context.MaintenanceRequests
-            .Include(m => m.AssignedToUser)
             .Include(m => m.StatusLogs)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -34,7 +32,6 @@ public class MaintenanceRequestRepository : IMaintenanceRequestRepository
     public async Task<IEnumerable<MaintenanceRequest>> GetByRoomIdAsync(int roomId)
     {
         return await _context.MaintenanceRequests
-            .Include(m => m.AssignedToUser)
             .Include(m => m.StatusLogs)
             .Where(m => m.RoomId == roomId)
             .OrderByDescending(m => m.CreatedAt)
@@ -44,7 +41,6 @@ public class MaintenanceRequestRepository : IMaintenanceRequestRepository
     public async Task<IEnumerable<MaintenanceRequest>> GetByStudentIdAsync(int studentId)
     {
         return await _context.MaintenanceRequests
-            .Include(m => m.AssignedToUser)
             .Include(m => m.StatusLogs)
             .Where(m => m.RequestedByStudentId == studentId)
             .OrderByDescending(m => m.CreatedAt)

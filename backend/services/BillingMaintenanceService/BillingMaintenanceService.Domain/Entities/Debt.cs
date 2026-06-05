@@ -2,18 +2,15 @@ using BillingMaintenanceService.Domain.Enums;
 
 namespace BillingMaintenanceService.Domain.Entities
 {
-    public class Debt
+    public class Debt : BaseEntity
     {
-        public Guid Id { get; set; }
-        public Guid BillId { get; set; }
-        public Guid StudentId { get; set; }
+        public int InvoiceId { get; set; }
+        public int StudentId { get; set; }
         public decimal Amount { get; set; }
         public decimal PaidAmount { get; set; }
-        public DateTime DueDate { get; set; }
+        public DateOnly DueDate { get; set; }
         public DebtStatus Status { get; set; } = DebtStatus.Open;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
 
-        public Bill? Bill { get; set; }
+        public Invoice? Invoice { get; set; }
     }
 }

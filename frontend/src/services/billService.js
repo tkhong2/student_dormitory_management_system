@@ -1,19 +1,19 @@
-import { billingApi } from './api';
+import { billingMaintenanceApi } from './api';
 
 export default {
   getAll() {
-    return billingApi.get('/bills');
+    return billingMaintenanceApi.get('/invoices');
   },
   getById(id) {
-    return billingApi.get(`/bills/${id}`);
+    return billingMaintenanceApi.get(`/invoices/${id}`);
   },
   create(data) {
-    return billingApi.post('/bills', data);
+    return billingMaintenanceApi.post('/invoices', data);
   },
   update(id, data) {
-    return billingApi.put(`/bills/${id}`, data);
+    return billingMaintenanceApi.put(`/invoices/${id}`, data);
   },
   delete(id) {
-    return billingApi.delete(`/bills/${id}`);
+    return billingMaintenanceApi.delete(`/invoices/${id}`);
   }
 };

@@ -18,7 +18,6 @@ public class PaymentRepository : IPaymentRepository
     {
         return await _context.Payments
             .Include(p => p.Invoice)
-            .Include(p => p.ReceivedByUser)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -26,7 +25,6 @@ public class PaymentRepository : IPaymentRepository
     {
         return await _context.Payments
             .Include(p => p.Invoice)
-            .Include(p => p.ReceivedByUser)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -34,7 +32,6 @@ public class PaymentRepository : IPaymentRepository
     public async Task<IEnumerable<Payment>> GetByInvoiceIdAsync(int invoiceId)
     {
         return await _context.Payments
-            .Include(p => p.ReceivedByUser)
             .Where(p => p.InvoiceId == invoiceId)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();

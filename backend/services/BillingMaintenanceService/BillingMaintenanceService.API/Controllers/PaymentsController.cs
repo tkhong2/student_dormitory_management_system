@@ -1,7 +1,6 @@
 using BillingMaintenanceService.Application.DTOs;
 using BillingMaintenanceService.Application.Interfaces;
 using BillingMaintenanceService.Domain.Entities;
-using BillingMaintenanceService.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,89 +12,116 @@ namespace BillingMaintenanceService.API.Controllers
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentRepository _paymentRepository;
-        public PaymentsController(IPaymentRepository paymentRepository)
+        private readonly IPaymentService _paymentService;
+
+        public PaymentsController(IPaymentRepository paymentRepository, IPaymentService paymentService)
         {
             _paymentRepository = paymentRepository;
+            _paymentService = paymentService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentDto>>> GetAll()
         {
             var payments = await _paymentRepository.GetAllAsync();
-            var dtos = payments.Select(p => new PaymentDto
-            {
-                Id = p.Id,
-                BillId = p.BillId,
-                StudentId = p.StudentId,
-                Amount = p.Amount,
-                PaymentMethod = (int)p.PaymentMethod,
-                TransactionCode = p.TransactionCode,
-                PaidAt = p.PaidAt,
-                Note = p.Note
-            });
-            return Ok(dtos);
+            return Ok(payments.Select(MapToDto));
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PaymentDto>> GetById(Guid id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<PaymentDto>> GetById(int id)
         {
-            var p = await _paymentRepository.GetByIdAsync(id);
-            if (p == null) return NotFound();
-            var dto = new PaymentDto
-            {
-                Id = p.Id,
-                BillId = p.BillId,
-                StudentId = p.StudentId,
-                Amount = p.Amount,
-                PaymentMethod = (int)p.PaymentMethod,
-                TransactionCode = p.TransactionCode,
-                PaidAt = p.PaidAt,
-                Note = p.Note
-            };
-            return Ok(dto);
+            var payment = await _paymentRepository.GetByIdAsync(id);
+            if (payment == null) return NotFound();
+            return Ok(MapToDto(payment));
+        }
+
+        [HttpGet("invoice/{invoiceId:int}")]
+        public async Task<ActionResult<IEnumerable<PaymentDto>>> GetByInvoiceId(int invoiceId)
+        {
+            var payments = await _paymentRepository.GetByInvoiceIdAsync(invoiceId);
+            return Ok(payments.Select(MapToDto));
+        }
+
+        [HttpGet("student/{studentId:int}/debt")]
+        public async Task<ActionResult<object>> GetTotalDebtByStudentId(int studentId)
+        {
+            var totalDebt = await _paymentService.GetTotalDebtByStudentIdAsync(studentId);
+            return Ok(new { studentId, totalDebt });
+        }
+
+        [HttpGet("contract/{contractId:int}/debt")]
+        public async Task<ActionResult<object>> GetTotalDebtByContractId(int contractId)
+        {
+            var totalDebt = await _paymentService.GetTotalDebtByContractIdAsync(contractId);
+            return Ok(new { contractId, totalDebt });
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] PaymentDto dto)
+        public async Task<ActionResult<PaymentDto>> Create([FromBody] PaymentDto dto)
         {
-            var p = new Payment
+            var payment = await _paymentService.ProcessPaymentAsync(
+                dto.InvoiceId,
+                dto.Amount,
+                dto.Method,
+                dto.Note,
+                dto.ReceivedByUserId,
+                dto.ReceivedByName);
+
+            return CreatedAtAction(nameof(GetById), new { id = payment.Id }, payment);
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> Update(int id, [FromBody] PaymentDto dto)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(id);
+            if (payment == null) return NotFound();
+
+            payment.InvoiceId = dto.InvoiceId;
+            payment.Amount = dto.Amount;
+            payment.Method = dto.Method;
+            payment.TransactionCode = dto.TransactionCode;
+            payment.BankName = dto.BankName;
+            payment.BankAccountNumber = dto.BankAccountNumber;
+            payment.PaymentDate = dto.PaymentDate;
+            payment.PaidAt = dto.PaidAt;
+            payment.ReceivedByUserId = dto.ReceivedByUserId;
+            payment.ReceivedByName = dto.ReceivedByName;
+            payment.ReceiptImageUrl = dto.ReceiptImageUrl;
+            payment.Note = dto.Note;
+            payment.UpdatedAt = DateTime.UtcNow;
+
+            await _paymentRepository.UpdateAsync(payment);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(id);
+            if (payment == null) return NotFound();
+
+            await _paymentRepository.DeleteAsync(payment);
+            return NoContent();
+        }
+
+        private static PaymentDto MapToDto(Payment payment)
+        {
+            return new PaymentDto
             {
-                Id = Guid.NewGuid(),
-                BillId = dto.BillId,
-                StudentId = dto.StudentId,
-                Amount = dto.Amount,
-                PaymentMethod = (PaymentMethod)dto.PaymentMethod,
-                TransactionCode = dto.TransactionCode,
-                PaidAt = dto.PaidAt,
-                Note = dto.Note
+                Id = payment.Id,
+                InvoiceId = payment.InvoiceId,
+                Amount = payment.Amount,
+                Method = payment.Method,
+                TransactionCode = payment.TransactionCode,
+                BankName = payment.BankName,
+                BankAccountNumber = payment.BankAccountNumber,
+                PaymentDate = payment.PaymentDate,
+                PaidAt = payment.PaidAt,
+                ReceivedByUserId = payment.ReceivedByUserId,
+                ReceivedByName = payment.ReceivedByName,
+                ReceiptImageUrl = payment.ReceiptImageUrl,
+                Note = payment.Note
             };
-            await _paymentRepository.AddAsync(p);
-            return CreatedAtAction(nameof(GetById), new { id = p.Id }, dto);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(Guid id, [FromBody] PaymentDto dto)
-        {
-            var p = await _paymentRepository.GetByIdAsync(id);
-            if (p == null) return NotFound();
-            p.BillId = dto.BillId;
-            p.StudentId = dto.StudentId;
-            p.Amount = dto.Amount;
-            p.PaymentMethod = (PaymentMethod)dto.PaymentMethod;
-            p.TransactionCode = dto.TransactionCode;
-            p.PaidAt = dto.PaidAt;
-            p.Note = dto.Note;
-            await _paymentRepository.UpdateAsync(p);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(Guid id)
-        {
-            var p = await _paymentRepository.GetByIdAsync(id);
-            if (p == null) return NotFound();
-            await _paymentRepository.DeleteAsync(p);
-            return NoContent();
         }
     }
 }

@@ -42,6 +42,11 @@ namespace BillingMaintenanceService.Infrastructure.Auth
                 new Claim("role", user.Role.ToString())
             };
 
+            if (user.ReferenceId.HasValue)
+            {
+                claims.Add(new Claim("referenceId", user.ReferenceId.Value.ToString()));
+            }
+
             var keyBytes = Encoding.UTF8.GetBytes(key);
             var creds = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256);
             var expiresAt = DateTime.UtcNow.AddMinutes(expiresMinutes);

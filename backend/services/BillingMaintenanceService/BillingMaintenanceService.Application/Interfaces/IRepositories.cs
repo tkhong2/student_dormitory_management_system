@@ -4,7 +4,7 @@ namespace BillingMaintenanceService.Application.Interfaces
 {
     public interface IUserRepository
     {
-        Task<User?> GetByIdAsync(int id);
+        Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByUsernameAsync(string username);
         Task<User?> GetByEmailAsync(string email);
         Task<IEnumerable<User>> GetAllAsync();
@@ -19,6 +19,8 @@ namespace BillingMaintenanceService.Application.Interfaces
         Task<IEnumerable<Invoice>> GetAllAsync();
         Task<IEnumerable<Invoice>> GetByStudentIdAsync(int studentId);
         Task<IEnumerable<Invoice>> GetByContractIdAsync(int contractId);
+        Task<Invoice?> GetByContractIdAndBillingPeriodAsync(int contractId, int billingMonth, int billingYear);
+        Task<IEnumerable<Invoice>> GetPendingOverdueInvoicesAsync(DateOnly beforeDate);
         Task<Invoice?> GetByInvoiceCodeAsync(string invoiceCode);
         Task<Invoice> AddAsync(Invoice invoice);
         Task UpdateAsync(Invoice invoice);
@@ -46,13 +48,4 @@ namespace BillingMaintenanceService.Application.Interfaces
         Task DeleteAsync(MaintenanceRequest request);
     }
 
-    public interface IUserRepository
-    {
-        Task<User?> GetByIdAsync(Guid id);
-        Task<User?> GetByUsernameAsync(string username);
-        Task<IEnumerable<User>> GetAllAsync();
-        Task AddAsync(User user);
-        Task UpdateAsync(User user);
-        Task DeleteAsync(User user);
-    }
 }

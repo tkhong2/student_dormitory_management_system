@@ -1,22 +1,28 @@
 using BillingMaintenanceService.Application.DTOs;
 using BillingMaintenanceService.Application.Interfaces;
 using BillingMaintenanceService.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BillingMaintenanceService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InvoicesController : ControllerBase
     {
         private readonly IInvoiceRepository _invoiceRepository;
+        private readonly IInvoiceService _invoiceService;
 
-        public InvoicesController(IInvoiceRepository invoiceRepository)
+        public InvoicesController(IInvoiceRepository invoiceRepository, IInvoiceService invoiceService)
         {
             _invoiceRepository = invoiceRepository;
+            _invoiceService = invoiceService;
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetAll()
         {
             var invoices = await _invoiceRepository.GetAllAsync();
@@ -29,18 +35,41 @@ namespace BillingMaintenanceService.API.Controllers
         {
             var invoice = await _invoiceRepository.GetByIdAsync(id);
             if (invoice == null) return NotFound();
+
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role");
+            if (role == "Student")
+            {
+                var refIdStr = User.FindFirstValue("referenceId");
+                if (!int.TryParse(refIdStr, out var refId) || refId != invoice.StudentId)
+                {
+                    return Forbid();
+                }
+            }
+
             return Ok(MapToDto(invoice));
         }
 
         [HttpGet("student/{studentId}")]
+        [Authorize(Roles = "Admin,Student")]
         public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetByStudentId(int studentId)
         {
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role");
+            if (role == "Student")
+            {
+                var refIdStr = User.FindFirstValue("referenceId");
+                if (!int.TryParse(refIdStr, out var refId) || refId != studentId)
+                {
+                    return Forbid();
+                }
+            }
+
             var invoices = await _invoiceRepository.GetByStudentIdAsync(studentId);
             var dtos = invoices.Select(MapToDto);
             return Ok(dtos);
         }
 
         [HttpGet("contract/{contractId}")]
+        [Authorize(Roles = "Admin,Staff")] // Restrict to Admin and Staff for now, unless Student needs it later
         public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetByContractId(int contractId)
         {
             var invoices = await _invoiceRepository.GetByContractIdAsync(contractId);
@@ -48,15 +77,37 @@ namespace BillingMaintenanceService.API.Controllers
             return Ok(dtos);
         }
 
+        [HttpGet("contract/{contractId}/debt")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<ActionResult<object>> GetContractDebt(int contractId)
+        {
+            var invoices = await _invoiceRepository.GetByContractIdAsync(contractId);
+            var totalDebt = invoices.Where(i => i.Status != "Paid" && i.Status != "Cancelled").Sum(i => i.DebtAmount);
+            return Ok(new { contractId, totalDebt, unpaidInvoiceCount = invoices.Count(i => i.Status != "Paid" && i.Status != "Cancelled") });
+        }
+
         [HttpGet("code/{invoiceCode}")]
+        [Authorize(Roles = "Admin,Staff,Student")]
         public async Task<ActionResult<InvoiceDto>> GetByInvoiceCode(string invoiceCode)
         {
             var invoice = await _invoiceRepository.GetByInvoiceCodeAsync(invoiceCode);
             if (invoice == null) return NotFound();
+
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role");
+            if (role == "Student")
+            {
+                var refIdStr = User.FindFirstValue("referenceId");
+                if (!int.TryParse(refIdStr, out var refId) || refId != invoice.StudentId)
+                {
+                    return Forbid();
+                }
+            }
+
             return Ok(MapToDto(invoice));
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceDto dto)
         {
             var invoice = new Invoice
@@ -110,7 +161,32 @@ namespace BillingMaintenanceService.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, MapToDto(invoice));
         }
 
+        [HttpPost("generate-monthly")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<ActionResult<InvoiceDto>> GenerateMonthlyInvoice([FromBody] GenerateMonthlyInvoiceRequestDto request)
+        {
+            var invoice = await _invoiceService.GenerateMonthlyInvoiceAsync(request.ContractId, request.BillingMonth, request.BillingYear, request.CreatedByUserId);
+            return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice);
+        }
+
+        [HttpPost("generate-monthly-batch")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<ActionResult<IEnumerable<InvoiceDto>>> GenerateMonthlyInvoices([FromBody] GenerateMonthlyInvoicesRequestDto request)
+        {
+            var invoices = await _invoiceService.GenerateMonthlyInvoicesForMonthAsync(request.BillingMonth, request.BillingYear, request.CreatedByUserId);
+            return Ok(invoices);
+        }
+
+        [HttpPost("process-overdue")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<ActionResult<object>> ProcessOverdueInvoices([FromQuery] int reminderIntervalDays = 7)
+        {
+            var updatedCount = await _invoiceService.ProcessOverdueInvoicesAsync(reminderIntervalDays);
+            return Ok(new { updatedCount });
+        }
+
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Update(int id, [FromBody] InvoiceDto dto)
         {
             var invoice = await _invoiceRepository.GetByIdAsync(id);
@@ -128,6 +204,7 @@ namespace BillingMaintenanceService.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             var invoice = await _invoiceRepository.GetByIdAsync(id);

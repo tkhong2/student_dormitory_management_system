@@ -19,7 +19,6 @@ public class InvoiceRepository : IInvoiceRepository
         return await _context.Invoices
             .Include(i => i.Items)
             .Include(i => i.Payments)
-            .Include(i => i.CreatedByUser)
             .FirstOrDefaultAsync(i => i.Id == id);
     }
 
@@ -28,7 +27,6 @@ public class InvoiceRepository : IInvoiceRepository
         return await _context.Invoices
             .Include(i => i.Items)
             .Include(i => i.Payments)
-            .Include(i => i.CreatedByUser)
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync();
     }
@@ -50,6 +48,24 @@ public class InvoiceRepository : IInvoiceRepository
             .Include(i => i.Payments)
             .Where(i => i.ContractId == contractId)
             .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<Invoice?> GetByContractIdAndBillingPeriodAsync(int contractId, int billingMonth, int billingYear)
+    {
+        return await _context.Invoices
+            .Include(i => i.Items)
+            .Include(i => i.Payments)
+            .FirstOrDefaultAsync(i => i.ContractId == contractId && i.BillingMonth == billingMonth && i.BillingYear == billingYear);
+    }
+
+    public async Task<IEnumerable<Invoice>> GetPendingOverdueInvoicesAsync(DateOnly beforeDate)
+    {
+        return await _context.Invoices
+            .Include(i => i.Items)
+            .Include(i => i.Payments)
+            .Where(i => (i.Status == "Unpaid" || i.Status == "PartiallyPaid") && i.DueDate < beforeDate)
+            .OrderBy(i => i.DueDate)
             .ToListAsync();
     }
 

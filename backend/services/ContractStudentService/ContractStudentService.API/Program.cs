@@ -14,8 +14,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("ContractStudentDatabase"));
 });
-builder.Services.AddScoped<IContractRepository, EfContractRepository>();
-builder.Services.AddScoped<IStudentRepository, EfStudentRepository>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentDocumentRepository, StudentDocumentRepository>();
+builder.Services.AddScoped<IRoomApplicationRepository, RoomApplicationRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IContractExtensionRepository, ContractExtensionRepository>();
+builder.Services.AddScoped<IRoomTransferRepository, RoomTransferRepository>();
 
 builder.Services.AddCors(options =>
 {

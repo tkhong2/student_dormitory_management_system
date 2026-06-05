@@ -10,9 +10,11 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Bill> Bills { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
         public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
+        public DbSet<MaintenanceStatusLog> MaintenanceStatusLogs { get; set; }
         public DbSet<Debt> Debts { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<MaintenanceAssignment> MaintenanceAssignments { get; set; }
@@ -26,7 +28,6 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
             {
                 entity.ToTable("Accounts");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
@@ -46,36 +47,50 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
                 entity.HasIndex(e => e.ReferenceId);
             });
 
-            modelBuilder.Entity<Bill>(entity =>
+            modelBuilder.Entity<Invoice>(entity =>
             {
-                entity.ToTable("Bills");
+                entity.ToTable("Invoices");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
-                entity.Property(e => e.BillCode).IsRequired().HasMaxLength(100);
-                entity.HasIndex(e => e.BillCode).IsUnique();
-                entity.Property(e => e.Amount).HasPrecision(18, 2);
-                entity.Property(e => e.Status).HasConversion<int>();
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.InvoiceCode).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.InvoiceCode).IsUnique();
+                entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+                entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
+                entity.Property(e => e.DebtAmount).HasPrecision(18, 2);
+                entity.Property(e => e.DueDate);
                 entity.HasIndex(e => new { e.StudentId, e.BillingYear, e.BillingMonth });
                 entity.HasIndex(e => e.ContractId);
+                entity.Ignore(e => e.CreatedByUser);
+                entity.HasMany(e => e.Items)
+                    .WithOne(e => e.Invoice)
+                    .HasForeignKey(e => e.InvoiceId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<InvoiceItem>(entity =>
+            {
+                entity.ToTable("InvoiceItems");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ItemName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.ItemDescription).HasMaxLength(500);
+                entity.Property(e => e.Quantity).HasPrecision(18, 2);
+                entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
             });
 
             modelBuilder.Entity<Payment>(entity =>
             {
                 entity.ToTable("Payments");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
-                entity.Property(e => e.PaymentMethod).HasConversion<int>();
                 entity.Property(e => e.TransactionCode).HasMaxLength(100);
                 entity.Property(e => e.Note).HasMaxLength(500);
                 entity.Property(e => e.PaidAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.HasIndex(e => e.BillId);
-                entity.HasIndex(e => e.StudentId);
-                entity.HasIndex(e => e.TransactionCode);
-                entity.HasOne(e => e.Bill)
+                entity.HasIndex(e => e.InvoiceId);
+                entity.HasIndex(e => e.ReceivedByUserId);
+                entity.Ignore(e => e.ReceivedByUser);
+                entity.HasOne(e => e.Invoice)
                     .WithMany(p => p.Payments)
-                    .HasForeignKey(e => e.BillId)
+                    .HasForeignKey(e => e.InvoiceId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -83,34 +98,52 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
             {
                 entity.ToTable("MaintenanceRequests");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
-                entity.Property(e => e.RequestCode).IsRequired().HasMaxLength(100);
-                entity.HasIndex(e => e.RequestCode).IsUnique();
+                entity.Property(e => e.RoomNumber).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.BuildingName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.RequestedByStudentName).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
-                entity.Property(e => e.Status).HasConversion<int>();
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.HasIndex(e => e.StudentId);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Priority).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.EstimatedCost).HasPrecision(18, 2);
+                entity.Property(e => e.ActualCost).HasPrecision(18, 2);
+                entity.HasIndex(e => e.RequestedByStudentId);
                 entity.HasIndex(e => e.RoomId);
                 entity.HasIndex(e => e.Status);
+                entity.Ignore(e => e.AssignedToUser);
+                entity.HasMany(e => e.StatusLogs)
+                    .WithOne(e => e.MaintenanceRequest)
+                    .HasForeignKey(e => e.MaintenanceRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MaintenanceStatusLog>(entity =>
+            {
+                entity.ToTable("MaintenanceStatusLogs");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.OldStatus).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.NewStatus).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Note).HasMaxLength(1000);
+                entity.Property(e => e.ChangedByName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.ChangedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.HasIndex(e => e.MaintenanceRequestId);
+                entity.HasIndex(e => e.ChangedByUserId);
             });
 
             modelBuilder.Entity<Debt>(entity =>
             {
                 entity.ToTable("Debts");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
                 entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
                 entity.Property(e => e.Status).HasConversion<int>();
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.HasIndex(e => e.BillId);
+                entity.HasIndex(e => e.InvoiceId);
                 entity.HasIndex(e => e.StudentId);
                 entity.HasIndex(e => e.Status);
-                entity.HasOne(e => e.Bill)
-                    .WithMany(e => e.Debts)
-                    .HasForeignKey(e => e.BillId)
+                entity.HasOne(e => e.Invoice)
+                    .WithMany()
+                    .HasForeignKey(e => e.InvoiceId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -118,7 +151,6 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
             {
                 entity.ToTable("RefreshTokens");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
@@ -134,13 +166,12 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
             {
                 entity.ToTable("MaintenanceAssignments");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Note).HasMaxLength(1000);
                 entity.Property(e => e.AssignedAt).HasDefaultValueSql("GETUTCDATE()");
                 entity.HasIndex(e => e.MaintenanceRequestId);
                 entity.HasIndex(e => e.StaffUserId);
                 entity.HasOne(e => e.MaintenanceRequest)
-                    .WithMany(e => e.Assignments)
+                    .WithMany()
                     .HasForeignKey(e => e.MaintenanceRequestId)
                     .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.StaffUser)
@@ -153,7 +184,6 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
             {
                 entity.ToTable("MaintenanceLogs");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Status).HasConversion<int>();
                 entity.Property(e => e.Note).IsRequired().HasMaxLength(2000);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
@@ -161,7 +191,7 @@ namespace BillingMaintenanceService.Infrastructure.Persistence
                 entity.HasIndex(e => e.MaintenanceAssignmentId);
                 entity.HasIndex(e => e.CreatedByUserId);
                 entity.HasOne(e => e.MaintenanceRequest)
-                    .WithMany(e => e.Logs)
+                    .WithMany()
                     .HasForeignKey(e => e.MaintenanceRequestId)
                     .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.MaintenanceAssignment)

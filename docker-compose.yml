@@ -47,7 +47,7 @@ services:
     container_name: contract-student-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContractStudentDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__ContractStudentDatabase=Server=sqlserver;Database=ContractStudentDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
     ports:
       - "5003:8080"
     depends_on:
@@ -66,7 +66,7 @@ services:
     container_name: billing-maintenance-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=BillingMaintenanceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__BillingMaintenanceDatabase=Server=sqlserver;Database=BillingMaintenanceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
     ports:
       - "5002:8080"
     depends_on:

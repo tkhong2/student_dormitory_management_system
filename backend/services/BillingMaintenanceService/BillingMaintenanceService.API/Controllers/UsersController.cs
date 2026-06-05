@@ -1,142 +1,181 @@
 using BillingMaintenanceService.Application.DTOs;
 using BillingMaintenanceService.Application.Interfaces;
 using BillingMaintenanceService.Domain.Entities;
+using BillingMaintenanceService.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
 
 namespace BillingMaintenanceService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-
         public UsersController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
         {
             var users = await _userRepository.GetAllAsync();
-            var dtos = users.Select(MapToDto);
+            var dtos = users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                FullName = u.FullName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Role = u.Role.ToString(),
+                ReferenceId = u.ReferenceId,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt
+            });
             return Ok(dtos);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetById(int id)
+        [HttpGet("me")]
+        public async Task<ActionResult<UserDto>> Me()
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (uid == null || !Guid.TryParse(uid, out var userId)) return Unauthorized();
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return NotFound();
-            return Ok(MapToDto(user));
-        }
-
-        [HttpGet("username/{username}")]
-        public async Task<ActionResult<UserDto>> GetByUsername(string username)
-        {
-            var user = await _userRepository.GetByUsernameAsync(username);
-            if (user == null) return NotFound();
-            return Ok(MapToDto(user));
-        }
-
-        [HttpGet("email/{email}")]
-        public async Task<ActionResult<UserDto>> GetByEmail(string email)
-        {
-            var user = await _userRepository.GetByEmailAsync(email);
-            if (user == null) return NotFound();
-            return Ok(MapToDto(user));
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserDto dto)
-        {
-            // Check if username exists
-            var existingUser = await _userRepository.GetByUsernameAsync(dto.Username);
-            if (existingUser != null)
-            {
-                return BadRequest("Username already exists");
-            }
-
-            // Check if email exists
-            existingUser = await _userRepository.GetByEmailAsync(dto.Email);
-            if (existingUser != null)
-            {
-                return BadRequest("Email already exists");
-            }
-
-            var user = new User
-            {
-                Username = dto.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                FullName = dto.FullName,
-                Email = dto.Email,
-                Phone = dto.Phone,
-                Role = dto.Role,
-                StudentId = dto.StudentId,
-                StudentCode = dto.StudentCode,
-                IsActive = true
-            };
-
-            await _userRepository.AddAsync(user);
-            return CreatedAtAction(nameof(GetById), new { id = user.Id }, MapToDto(user));
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] UserDto dto)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return NotFound();
-
-            user.FullName = dto.FullName;
-            user.Email = dto.Email;
-            user.Phone = dto.Phone;
-            user.Role = dto.Role;
-            user.AvatarUrl = dto.AvatarUrl;
-            user.IsActive = dto.IsActive;
-
-            await _userRepository.UpdateAsync(user);
-            return NoContent();
-        }
-
-        [HttpPut("{id}/password")]
-        public async Task<ActionResult> UpdatePassword(int id, [FromBody] string newPassword)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return NotFound();
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            await _userRepository.UpdateAsync(user);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return NotFound();
-
-            await _userRepository.DeleteAsync(user);
-            return NoContent();
-        }
-
-        private static UserDto MapToDto(User user)
-        {
-            return new UserDto
+            return Ok(new UserDto
             {
                 Id = user.Id,
                 Username = user.Username,
                 FullName = user.FullName,
                 Email = user.Email,
-                Phone = user.Phone,
-                Role = user.Role,
-                AvatarUrl = user.AvatarUrl,
-                StudentId = user.StudentId,
-                StudentCode = user.StudentCode,
+                PhoneNumber = user.PhoneNumber,
+                Role = user.Role.ToString(),
+                ReferenceId = user.ReferenceId,
                 IsActive = user.IsActive,
-                LastLoginAt = user.LastLoginAt
+                CreatedAt = user.CreatedAt
+            });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> Create([FromBody] CreateUserRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest(new { message = "Username and Password are required" });
+
+            var existing = await _userRepository.GetByUsernameAsync(dto.Username.Trim());
+            if (existing != null) return Conflict(new { message = "Username already exists" });
+
+            var u = new User
+            {
+                Username = dto.Username.Trim(),
+                FullName = dto.FullName,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                Role = ParseUserRole(dto.Role),
+                ReferenceId = dto.ReferenceId,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                IsActive = dto.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
+            await _userRepository.AddAsync(u);
+            return CreatedAtAction(nameof(GetAll), new { id = u.Id }, null);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> Update(Guid id, [FromBody] UpdateUserRequestDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+            user.FullName = dto.FullName;
+            user.Email = dto.Email;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.Role = ParseUserRole(dto.Role);
+            user.ReferenceId = dto.ReferenceId;
+            if (dto.IsActive.HasValue)
+                user.IsActive = dto.IsActive.Value;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> SetStatus(Guid id, [FromBody] SetActiveRequestDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+            user.IsActive = dto.IsActive;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> ResetPassword(Guid id, [FromBody] ResetPasswordRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.NewPassword))
+                return BadRequest(new { message = "NewPassword is required" });
+
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpPut("me/password")]
+        public async Task<ActionResult> ChangeMyPassword([FromBody] ChangeMyPasswordRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.CurrentPassword) || string.IsNullOrWhiteSpace(dto.NewPassword))
+                return BadRequest(new { message = "CurrentPassword and NewPassword are required" });
+
+            var uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (uid == null) return Unauthorized();
+
+            var user = await _userRepository.GetByIdAsync(Guid.Parse(uid));
+            if (user == null) return NotFound();
+
+            if (user.IsActive == false)
+                return Unauthorized(new { message = "Account is disabled" });
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+                return Unauthorized(new { message = "Current password is incorrect" });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> Delete(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+            await _userRepository.DeleteAsync(user);
+            return NoContent();
+        }
+
+        private static UserRole ParseUserRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role is required", nameof(role));
+
+            var normalized = role.Trim().ToLowerInvariant();
+            if (normalized is "admin" or "administrator") return UserRole.Admin;
+            if (normalized is "staff" or "nhanvien" or "nhânviên" or "nhân viên" or "employee") return UserRole.Staff;
+            if (normalized is "student" or "sinhvien" or "sinhviên" or "sinh viên") return UserRole.Student;
+
+            return Enum.Parse<UserRole>(role, ignoreCase: true);
         }
     }
 }

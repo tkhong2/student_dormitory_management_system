@@ -2,8 +2,8 @@ namespace BillingMaintenanceService.Domain.Entities
 {
     public class MaintenanceAssignment
     {
-        public Guid Id { get; set; }
-        public Guid MaintenanceRequestId { get; set; }
+        public int Id { get; set; }
+        public int MaintenanceRequestId { get; set; }
         public Guid StaffUserId { get; set; }
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }

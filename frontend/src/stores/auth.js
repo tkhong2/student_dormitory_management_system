@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { billingApi } from '@/services/api'
+import { billingMaintenanceApi } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user')) || null)
@@ -19,10 +19,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const login = async ({ username, password }) => {
-    const auth = await billingApi.post('/auth/login', { username, password })
+    const auth = await billingMaintenanceApi.post('/auth/login', { username, password })
     localStorage.setItem('token', auth.token)
 
-    const me = auth.user || await billingApi.get('/auth/me')
+    const me = auth.user || await billingMaintenanceApi.get('/auth/me')
     const userData = {
       id: me.id,
       name: me.fullName || me.username,

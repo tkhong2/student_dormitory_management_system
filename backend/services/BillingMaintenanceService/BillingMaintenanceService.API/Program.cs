@@ -57,11 +57,27 @@ if (!string.IsNullOrEmpty(jwtKey))
 }
 
 // Register EF repositories for Billing/Maintenance
-builder.Services.AddScoped<IBillRepository, EfBillRepository>();
-builder.Services.AddScoped<IPaymentRepository, EfPaymentRepository>();
-builder.Services.AddScoped<IMaintenanceRequestRepository, EfMaintenanceRequestRepository>();
-builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IMaintenanceService, BillingMaintenanceService.Application.Services.MaintenanceService>();
+builder.Services.AddScoped<IPaymentService, BillingMaintenanceService.Application.Services.PaymentService>();
+
+var contractServiceBaseUrl = builder.Configuration.GetValue<string>("ContractServiceBaseUrl");
+if (string.IsNullOrWhiteSpace(contractServiceBaseUrl))
+{
+    throw new InvalidOperationException("ContractServiceBaseUrl is not configured. Add it to appsettings or environment variables.");
+}
+
+builder.Services.AddHttpClient<IContractService, BillingMaintenanceService.Application.Services.ContractService>(client =>
+{
+    client.BaseAddress = new Uri(contractServiceBaseUrl);
+});
+
+builder.Services.AddScoped<IInvoiceService, BillingMaintenanceService.Application.Services.InvoiceService>();
+builder.Services.AddHostedService<BillingMaintenanceService.Application.Services.MonthlyInvoiceBatchService>();
 
 // Enable CORS for local frontend development
 builder.Services.AddCors(options =>
