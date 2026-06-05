@@ -10,9 +10,9 @@
           Quản lý các loại phòng và mức giá ký túc xá
         </p>
       </div>
-      <v-btn color="warning" @click="openCreate">
-        Thêm loại phòng
-      </v-btn>
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Thêm loại phòng
+      </a-button>
     </div>
     
     <div v-if="loading">Đang tải...</div>
@@ -184,6 +184,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { roomTypeService } from '@/services/roomTypeService'
 import { buildingService } from '@/services/buildingService'
 import { amenityService } from '@/services/amenityService'

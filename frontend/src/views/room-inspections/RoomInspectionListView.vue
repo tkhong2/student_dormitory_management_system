@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
         <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
           Biên bản kiểm tra phòng
@@ -10,9 +10,9 @@
           Quản lý biên bản kiểm tra định kỳ và sự cố
         </p>
       </div>
-      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreate">
-        Tạo biên bản
-      </v-btn>
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Tạo biên bản
+      </a-button>
     </div>
     
     <DataStatus
@@ -119,6 +119,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { roomInspectionService } from '@/services/roomInspectionService'
 import { roomService } from '@/services/roomService'
 import DataStatus from '@/components/common/DataStatus.vue'

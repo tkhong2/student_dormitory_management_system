@@ -11,9 +11,8 @@
             Tổng số: {{ requests.length }} yêu cầu
           </p>
         </div>
-        <a-button type="primary" @click="showCreateDialog" size="large">
-          <template #icon><PlusOutlined /></template>
-          Tạo Yêu Cầu
+        <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+          + Tạo Yêu Cầu
         </a-button>
       </div>
     </div>

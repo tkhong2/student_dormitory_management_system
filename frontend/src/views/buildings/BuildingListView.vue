@@ -24,9 +24,8 @@
           <span style="color: #8b5cf6">{{ countByGender("Mixed") }} Hỗn hợp</span>
         </p>
       </div>
-      <a-button type="primary" @click="openCreate">
-        <template #icon><i class="anticon anticon-plus"></i></template>
-        Thêm tòa nhà
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Thêm tòa nhà
       </a-button>
     </div>
 

@@ -5,9 +5,9 @@
         <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">Quản lý Người dùng</h1>
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Tổng số: {{ users.length }} người dùng</p>
       </div>
-      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreateDialog">
-        Thêm người dùng
-      </v-btn>
+      <a-button type="primary" @click="openCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+        + Thêm người dùng
+      </a-button>
     </div>
 
     <!-- Role stats -->
@@ -166,7 +166,7 @@
         />
         <div class="d-flex justify-end ga-3 mt-4">
           <v-btn variant="text" @click="closeResetPasswordDialog">Hủy</v-btn>
-          <v-btn color="warning" @click="doResetPassword" :loading="saving">Reset</v-btn>
+          <v-btn color="warning" @click="doResetPassword" :loading="saving" style="color: white;">Reset</v-btn>
         </div>
       </v-card>
     </v-dialog>
@@ -180,6 +180,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import axios from 'axios'
 
 const search = ref('')

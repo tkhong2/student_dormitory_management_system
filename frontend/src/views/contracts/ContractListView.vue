@@ -9,13 +9,9 @@
           Quản lý hợp đồng KTX của sinh viên
         </p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="flat"
-        @click="openCreate"
-        >Tạo hợp đồng</v-btn
-      >
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Tạo hợp đồng
+      </a-button>
     </div>
 
     <v-row class="mb-4">

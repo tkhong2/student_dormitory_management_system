@@ -60,7 +60,7 @@
             <v-col cols="12" sm="4"><v-text-field label="Xác nhận mật khẩu" type="password" /></v-col>
           </v-row>
           <div class="d-flex justify-end mt-2">
-            <v-btn color="warning" variant="tonal">Đổi mật khẩu</v-btn>
+            <v-btn color="warning" variant="tonal" style="color: white;">Đổi mật khẩu</v-btn>
           </div>
         </v-card>
       </v-col>

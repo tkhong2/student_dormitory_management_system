@@ -11,9 +11,8 @@
             Tổng số: {{ invoices.length }} phiếu thu
           </p>
         </div>
-        <a-button type="primary" @click="showCreateDialog" size="large">
-          <template #icon><PlusOutlined /></template>
-          Tạo Phiếu Thu
+        <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+          + Tạo Phiếu Thu
         </a-button>
       </div>
     </div>

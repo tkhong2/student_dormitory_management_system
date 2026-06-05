@@ -9,14 +9,9 @@
           Xem và phê duyệt yêu cầu gia hạn hợp đồng thuê phòng
         </p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="flat"
-        @click="openCreate"
-      >
-        Tạo gia hạn
-      </v-btn>
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Tạo gia hạn
+      </a-button>
     </div>
 
     <DataStatus

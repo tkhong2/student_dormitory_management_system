@@ -9,14 +9,9 @@
           Xử lý yêu cầu chuyển phòng từ sinh viên
         </p>
       </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="flat"
-        @click="openCreate"
-      >
-        Tạo yêu cầu
-      </v-btn>
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Tạo yêu cầu
+      </a-button>
     </div>
 
     <!-- Statistics Cards -->

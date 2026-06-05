@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
         <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
           Quản lý Phòng ở
@@ -10,9 +10,9 @@
           Quản lý phòng, trạng thái và phân bổ sinh viên
         </p>
       </div>
-      <v-btn color="warning" prepend-icon="mdi-plus" @click="openCreate">
-        Thêm phòng
-      </v-btn>
+      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+        + Thêm phòng
+      </a-button>
     </div>
     
     <DataStatus
@@ -147,6 +147,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'

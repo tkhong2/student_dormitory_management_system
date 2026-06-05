@@ -11,9 +11,8 @@
             Tổng số: {{ payments.length }} thanh toán
           </p>
         </div>
-        <a-button type="primary" @click="showCreateDialog" size="large">
-          <template #icon><PlusOutlined /></template>
-          Ghi Nhận Thanh Toán
+        <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+          + Ghi Nhận Thanh Toán
         </a-button>
       </div>
     </div>

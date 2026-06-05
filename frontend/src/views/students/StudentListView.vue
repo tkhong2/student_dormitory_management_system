@@ -10,8 +10,7 @@
         </p>
       </div>
       <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
-        <template #icon><PlusOutlined /></template>
-        Thêm sinh viên
+        + Thêm sinh viên
       </a-button>
     </div>
 

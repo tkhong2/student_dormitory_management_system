@@ -11,9 +11,8 @@
             Tổng số: {{ announcements.length }} thông báo
           </p>
         </div>
-        <a-button type="primary" @click="openCreate" size="large">
-          <template #icon><PlusOutlined /></template>
-          Tạo Thông Báo
+        <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+          + Tạo Thông Báo
         </a-button>
       </div>
     </div>
