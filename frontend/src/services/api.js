@@ -25,24 +25,19 @@ function createApi(baseURL) {
   return api
 }
 
-// Hardcoded API URLs for development (fallback if env vars not loaded)
-const ROOM_BUILDING_API = 'http://localhost:5001/api'
-const CONTRACT_STUDENT_API = 'http://localhost:5059/api'
-const BILLING_MAINTENANCE_API = 'http://localhost:5002/api'
+// API Gateway base URL - all services should go through gateway
+const API_GATEWAY_URL = 'http://localhost:5000/api'
 
 const api = createApi(
-  import.meta.env.VITE_ROOM_BUILDING_API_URL || ROOM_BUILDING_API
+  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
 )
 
 export const contractStudentApi = createApi(
-  import.meta.env.VITE_CONTRACT_STUDENT_API_URL ||
-    import.meta.env.VITE_CONTRACT_API_URL ||
-    CONTRACT_STUDENT_API
+  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
 )
 
 export const billingMaintenanceApi = createApi(
-  import.meta.env.VITE_BILLING_MAINTENANCE_API_URL ||
-    BILLING_MAINTENANCE_API
+  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
 )
 
 export default api

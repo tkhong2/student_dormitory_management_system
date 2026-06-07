@@ -102,11 +102,29 @@ namespace ContractStudentService.Infrastructure.Repositories
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
+        public async Task<IEnumerable<RoomApplication>> GetByUserIdAsync(int userId) =>
+            await _context.RoomApplications
+                .Include(a => a.Student)
+                .Where(a => a.Student.UserId == userId)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
         public async Task<IEnumerable<RoomApplication>> GetByStatusAsync(string status) => 
             await _context.RoomApplications
                 .Include(a => a.Student)
                 .Where(a => a.Status == status)
                 .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+        public async Task<IEnumerable<RoomApplication>> GetActiveApplicationsByStudentAsync(int studentId) =>
+            await _context.RoomApplications
+                .Where(a => a.StudentId == studentId && (a.Status == "Pending" || a.Status == "Approved"))
+                .ToListAsync();
+
+        public async Task<IEnumerable<RoomApplication>> GetActiveApplicationsByUserIdAsync(int userId) =>
+            await _context.RoomApplications
+                .Include(a => a.Student)
+                .Where(a => a.Student.UserId == userId && (a.Status == "Pending" || a.Status == "Approved"))
                 .ToListAsync();
 
         public async Task AddAsync(RoomApplication application) 
@@ -153,6 +171,13 @@ namespace ContractStudentService.Infrastructure.Repositories
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
+        public async Task<IEnumerable<Contract>> GetByUserIdAsync(int userId) =>
+            await _context.Contracts
+                .Include(c => c.Student)
+                .Where(c => c.Student.UserId == userId)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
         public async Task<Contract?> GetByContractCodeAsync(string contractCode) => 
             await _context.Contracts.FirstOrDefaultAsync(c => c.ContractCode == contractCode);
 
@@ -162,6 +187,35 @@ namespace ContractStudentService.Infrastructure.Repositories
                 .Where(c => c.Status == status)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
+
+        public async Task<IEnumerable<Contract>> GetActiveContractsByStudentAsync(int studentId) =>
+            await _context.Contracts
+                .Where(c => c.StudentId == studentId && c.Status == "Active")
+                .ToListAsync();
+
+        public async Task<IEnumerable<Contract>> GetActiveContractsByUserIdAsync(int userId) =>
+            await _context.Contracts
+                .Include(c => c.Student)
+                .Where(c => c.Student.UserId == userId && c.Status == "Active")
+                .ToListAsync();
+
+        public async Task<int> GetNextSequenceForYearAsync(int year)
+        {
+            var lastContract = await _context.Contracts
+                .Where(c => c.ContractCode.StartsWith($"HD{year}"))
+                .OrderByDescending(c => c.ContractCode)
+                .FirstOrDefaultAsync();
+
+            if (lastContract == null)
+                return 1;
+
+            // Extract sequence number from HD2024001 -> 001 -> 1
+            var sequenceStr = lastContract.ContractCode.Substring(6);
+            if (int.TryParse(sequenceStr, out int sequence))
+                return sequence + 1;
+
+            return 1;
+        }
 
         public async Task AddAsync(Contract contract) 
         { 

@@ -147,8 +147,17 @@ namespace ContractStudentService.Application.DTOs
         public string? SpecialRequirements { get; set; }
         public string? Note { get; set; }
         public bool IsLocalStudent { get; set; } = false;
-        public int Priority { get; set; } = 0;
         public string? AttachedDocumentUrls { get; set; }
+        
+        // Phòng sinh viên đã chọn (bắt buộc)
+        public int AssignedRoomId { get; set; }
+        public string AssignedRoomNumber { get; set; } = string.Empty;
+        public string? AssignedBuildingName { get; set; }
+        
+        // Thông tin user để tạo Student record nếu chưa có
+        public string? UserFullName { get; set; }
+        public string? UserEmail { get; set; }
+        public string? UserPhone { get; set; }
     }
 
     // ===== Contract DTOs =====

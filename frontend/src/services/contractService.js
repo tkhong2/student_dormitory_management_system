@@ -13,6 +13,10 @@ export const contractService = {
     return api.get(`/contracts/student/${studentId}`)
   },
 
+  getByUserId(userId) {
+    return api.get(`/contracts/user/${userId}`)
+  },
+
   getByStatus(status) {
     return api.get(`/contracts/status/${status}`)
   },
@@ -31,6 +35,10 @@ export const contractService = {
 
   activate(id) {
     return api.put(`/contracts/${id}/activate`)
+  },
+
+  acceptContract(id, data) {
+    return api.post(`/contracts/${id}/accept`, data)
   },
 
   terminate(id, data) {

@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ContactInquiry> ContactInquiries => Set<ContactInquiry>();
+    public DbSet<BuildingAssignment> BuildingAssignments => Set<BuildingAssignment>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -28,6 +29,7 @@ public class AppDbContext : DbContext
         mb.Entity<Notification>().HasQueryFilter(x => !x.IsDeleted);
         mb.Entity<SystemSetting>().HasQueryFilter(x => !x.IsDeleted);
         mb.Entity<ContactInquiry>().HasQueryFilter(x => !x.IsDeleted);
+        mb.Entity<BuildingAssignment>().HasQueryFilter(x => !x.IsDeleted);
 
         // User
         mb.Entity<User>(e =>
@@ -201,6 +203,19 @@ public class AppDbContext : DbContext
             e.Property(x => x.Status).HasMaxLength(15).HasDefaultValue("New");
             e.Property(x => x.RepliedByName).HasMaxLength(100);
             e.Property(x => x.IpAddress).HasMaxLength(50);
+        });
+
+        // BuildingAssignment
+        mb.Entity<BuildingAssignment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.UserId, x.BuildingId }).IsUnique();
+            e.HasIndex(x => x.UserId);
+            e.HasIndex(x => x.BuildingId);
+            e.HasOne(x => x.User)
+             .WithMany()
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

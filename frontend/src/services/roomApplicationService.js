@@ -13,6 +13,10 @@ export const roomApplicationService = {
     return api.get(`/roomapplications/student/${studentId}`)
   },
 
+  getByUserId(userId) {
+    return api.get(`/roomapplications/user/${userId}`)
+  },
+
   getByStatus(status) {
     return api.get(`/roomapplications/status/${status}`)
   },
@@ -31,6 +35,10 @@ export const roomApplicationService = {
 
   reject(id, data) {
     return api.put(`/roomapplications/${id}/reject`, data)
+  },
+
+  accept(id, data) {
+    return api.post(`/roomapplications/${id}/accept`, data)
   },
 
   delete(id) {

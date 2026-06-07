@@ -18,5 +18,14 @@ import viVN from 'ant-design-vue/es/locale/vi_VN'
   color: white !important;
 }
 
+/* Force remove all overlays and scrims globally */
+.v-overlay,
+.v-overlay__scrim,
+.v-navigation-drawer__scrim {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Toàn bộ style chung sẽ nằm ở đây hoặc style.css */
 </style>

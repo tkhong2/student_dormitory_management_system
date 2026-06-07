@@ -22,6 +22,8 @@ const routes = [
     meta: { requiresAuth: true, role: 'Student' },
     children: [
       { path: '', name: 'student-dashboard', meta: { title: 'Trang chủ' }, component: () => import('../views/student/StudentDashboard.vue') },
+      { path: 'rooms', name: 'student-rooms', meta: { title: 'Đăng ký phòng' }, component: () => import('../views/student/StudentRoomListView.vue') },
+      { path: 'room-registration', name: 'student-room-registration', meta: { title: 'Đăng ký phòng' }, component: () => import('../views/student/StudentRoomRegistrationView.vue') },
       { path: 'my-room', name: 'my-room', meta: { title: 'Phòng của tôi' }, component: () => import('../views/student/MyRoomView.vue') },
       { path: 'my-contract', name: 'my-contract', meta: { title: 'Hợp đồng' }, component: () => import('../views/student/MyContractView.vue') },
       { path: 'my-payments', name: 'my-payments', meta: { title: 'Thanh toán' }, component: () => import('../views/student/MyPaymentsView.vue') },

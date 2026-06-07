@@ -351,13 +351,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { roomService } from '@/services/roomService'
+import { buildingService } from '@/services/buildingService'
+import { roomTypeService } from '@/services/roomTypeService'
 
+const router = useRouter()
 const viewMode = ref('grid')
 const registrationDialog = ref(false)
 const successDialog = ref(false)
 const selectedRoom = ref(null)
 const registrationForm = ref(null)
+const loading = ref(false)
 
 const filters = ref({
   building: null,
@@ -376,79 +383,78 @@ const registrationData = ref({
   note: ''
 })
 
-const buildings = ['Tòa A1', 'Tòa A2', 'Tòa B1', 'Tòa B2', 'Tòa C1']
-const roomTypes = ['Phòng 2 người', 'Phòng 4 người', 'Phòng 6 người', 'Phòng 8 người']
+// Data from API
+const rooms = ref([])
+const buildings = ref([])
+const roomTypes = ref([])
 const priceRanges = ['Dưới 500k', '500k - 1tr', '1tr - 1.5tr', 'Trên 1.5tr']
 
-// Sample room data
-const rooms = ref([
-  {
-    id: 1,
-    name: 'Phòng 101',
-    building: 'Tòa A1',
-    capacity: 4,
-    area: 25,
-    price: 800000,
-    available: 2,
-    facilities: 'Điều hòa, Nóng lạnh',
-    image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop'
-  },
-  {
-    id: 2,
-    name: 'Phòng 102',
-    building: 'Tòa A1',
-    capacity: 6,
-    area: 35,
-    price: 600000,
-    available: 3,
-    facilities: 'Quạt trần, Nóng lạnh',
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400&h=300&fit=crop'
-  },
-  {
-    id: 3,
-    name: 'Phòng 201',
-    building: 'Tòa A2',
-    capacity: 2,
-    area: 20,
-    price: 1200000,
-    available: 1,
-    facilities: 'Điều hòa, Nóng lạnh, Ban công',
-    image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=400&h=300&fit=crop'
-  },
-  {
-    id: 4,
-    name: 'Phòng 202',
-    building: 'Tòa A2',
-    capacity: 4,
-    area: 28,
-    price: 900000,
-    available: 2,
-    facilities: 'Điều hòa, Nóng lạnh',
-    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop'
-  },
-  {
-    id: 5,
-    name: 'Phòng 301',
-    building: 'Tòa B1',
-    capacity: 8,
-    area: 45,
-    price: 500000,
-    available: 4,
-    facilities: 'Quạt trần, Nóng lạnh',
-    image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=400&h=300&fit=crop'
-  },
-  {
-    id: 6,
-    name: 'Phòng 302',
-    building: 'Tòa B1',
-    capacity: 6,
-    area: 32,
-    price: 650000,
-    available: 2,
-    facilities: 'Điều hòa, Nóng lạnh',
-    image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=400&h=300&fit=crop'
+onMounted(async () => {
+  await loadData()
+})
+
+async function loadData() {
+  loading.value = true
+  try {
+    // Load buildings, room types, and rooms
+    console.log('Loading data from APIs...')
+    const [buildingsData, roomTypesData, roomsData] = await Promise.all([
+      buildingService.getAll(),
+      roomTypeService.getAll(),
+      roomService.getAll()
+    ])
+
+    console.log('Buildings:', buildingsData)
+    console.log('Room Types:', roomTypesData)
+    console.log('Rooms:', roomsData)
+
+    buildings.value = buildingsData.map(b => b.name)
+    roomTypes.value = roomTypesData.map(rt => rt.name)
+    
+    // Map rooms data to display format
+    rooms.value = roomsData
+      // Tạm thời bỏ filter để debug
+      // .filter(r => r.status === 'Available' && r.currentOccupants < r.maxOccupants)
+      .map(room => {
+        const roomType = roomTypesData.find(rt => rt.id === room.roomTypeId)
+        const building = buildingsData.find(b => b.id === room.buildingId)
+        
+        return {
+          id: room.id,
+          name: room.roomNumber,
+          building: building?.name || 'N/A',
+          buildingId: room.buildingId,
+          capacity: room.maxOccupants,
+          area: roomType?.area || 25,
+          price: roomType?.pricePerMonth || 0,
+          available: room.maxOccupants - room.currentOccupants,
+          facilities: getFacilities(roomType),
+          image: roomType?.thumbnailUrl || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
+          roomTypeId: room.roomTypeId,
+          roomTypeName: roomType?.name || 'N/A'
+        }
+      })
+      
+    console.log('Mapped rooms:', rooms.value)
+    console.log(`Total available rooms: ${rooms.value.length}`)
+  } catch (error) {
+    console.error('Error loading data:', error)
+    message.error('Không thể tải danh sách phòng: ' + (error.message || 'Unknown error'))
+  } finally {
+    loading.value = false
   }
-])
+}
+
+function getFacilities(roomType) {
+  if (!roomType) return 'Tiện nghi cơ bản'
+  
+  const facilities = []
+  if (roomType.hasAirConditioner) facilities.push('Điều hòa')
+  if (roomType.hasWaterHeater) facilities.push('Nóng lạnh')
+  if (roomType.hasPrivateBathroom) facilities.push('WC riêng')
+  
+  return facilities.length > 0 ? facilities.join(', ') : 'Tiện nghi cơ bản'
+}
 
 const filteredRooms = computed(() => {
   let result = rooms.value
@@ -458,8 +464,7 @@ const filteredRooms = computed(() => {
   }
 
   if (filters.value.roomType) {
-    const capacity = parseInt(filters.value.roomType.match(/\d+/)[0])
-    result = result.filter(r => r.capacity === capacity)
+    result = result.filter(r => r.roomTypeName === filters.value.roomType)
   }
 
   if (filters.value.priceRange) {
@@ -485,8 +490,27 @@ const searchRooms = () => {
 }
 
 const openRegistrationDialog = (room) => {
-  selectedRoom.value = room
-  registrationDialog.value = true
+  // Kiểm tra xem user đã đăng nhập chưa
+  const token = localStorage.getItem('token')
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  
+  if (!token || !user) {
+    // Lưu thông tin phòng đã chọn vào localStorage để dùng sau khi login
+    localStorage.setItem('selectedRoom', JSON.stringify(room))
+    // Redirect đến trang login
+    router.push('/login')
+    return
+  }
+
+  // Nếu là sinh viên và đã đăng nhập, redirect đến trang đăng ký của sinh viên
+  if (user.role === 'Student') {
+    localStorage.setItem('selectedRoom', JSON.stringify(room))
+    router.push('/student/room-registration')
+    return
+  }
+
+  // Nếu không phải sinh viên, hiển thị thông báo
+  message.warning('Chỉ sinh viên mới có thể đăng ký phòng')
 }
 
 const submitRegistration = async () => {

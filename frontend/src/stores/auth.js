@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_BILLING_MAINTENANCE_API_URL || 'http://localhost:5052/api'
+const API_URL = import.meta.env.VITE_BILLING_MAINTENANCE_API_URL || 'http://localhost:5002/api'
 
 export const useAuthStore = defineStore('auth', () => {
   // State

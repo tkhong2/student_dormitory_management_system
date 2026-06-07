@@ -9,11 +9,18 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(AppDbContext context)
     {
-        // Check if users already exist
-        if (await context.Users.AnyAsync())
+        // TEMPORARY: Force reset to update passwords to "123"
+        var existingUsers = await context.Users.ToListAsync();
+        if (existingUsers.Any())
         {
-            Console.WriteLine("✅ Database already contains users. Skipping seed.");
-            return;
+            Console.WriteLine("🔄 FORCE RESET: Deleting existing users to update passwords...");
+            context.Users.RemoveRange(existingUsers);
+            await context.SaveChangesAsync();
+            
+            // Clear change tracker to avoid conflicts
+            context.ChangeTracker.Clear();
+            
+            Console.WriteLine($"✅ Deleted {existingUsers.Count} existing users");
         }
 
         Console.WriteLine("🌱 Seeding initial users...");

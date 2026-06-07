@@ -62,8 +62,10 @@
             </template>
             <template v-else-if="column.key === 'preferredBuilding'">
               <div>
-                <div style="font-weight: 500">{{ record.preferredBuildingName }}</div>
-                <div style="font-size: 12px; color: #8c8c8c">{{ record.preferredRoomTypeName }}</div>
+                <div style="font-weight: 500">{{ record.assignedRoomNumber || 'Chưa chọn' }}</div>
+                <div style="font-size: 12px; color: #8c8c8c">
+                  {{ record.assignedBuildingName || record.preferredBuildingName }}
+                </div>
               </div>
             </template>
             <template v-else-if="column.key === 'requestedDate'">
@@ -104,35 +106,27 @@
       okText="Duyệt đơn"
       cancelText="Hủy"
     >
-      <div style="margin-bottom: 16px">Sinh viên: <strong>{{ approveTarget?.studentName }}</strong></div>
-      <a-form layout="vertical">
-        <a-form-item
-          label="Số phòng được phân"
-          :validate-status="approveErrors.assignedRoomNumber ? 'error' : ''"
-          :help="approveErrors.assignedRoomNumber"
-        >
-          <a-input v-model:value="approveForm.assignedRoomNumber" placeholder="Nhập số phòng" />
-        </a-form-item>
-        <a-form-item
-          label="Tên tòa nhà"
-          :validate-status="approveErrors.assignedBuildingName ? 'error' : ''"
-          :help="approveErrors.assignedBuildingName"
-        >
-          <a-input v-model:value="approveForm.assignedBuildingName" placeholder="Nhập tên tòa" />
-        </a-form-item>
-        <a-form-item
-          label="ID Phòng"
-          :validate-status="approveErrors.assignedRoomId ? 'error' : ''"
-          :help="approveErrors.assignedRoomId"
-        >
-          <a-input-number
-            v-model:value="approveForm.assignedRoomId"
-            :min="1"
-            style="width: 100%"
-            placeholder="Nhập ID phòng"
-          />
-        </a-form-item>
-      </a-form>
+      <div style="margin-bottom: 16px">
+        <p>Sinh viên: <strong>{{ approveTarget?.studentName }}</strong></p>
+        <p v-if="approveTarget?.assignedRoomNumber">
+          Phòng đã chọn: <strong>{{ approveTarget?.assignedRoomNumber }} - {{ approveTarget?.assignedBuildingName }}</strong>
+        </p>
+        <a-alert
+          v-else
+          message="Đơn cũ - Chưa có thông tin phòng"
+          description="Đây là đơn đăng ký cũ (trước khi cập nhật hệ thống). Bạn nên xóa đơn này và yêu cầu sinh viên đăng ký lại để có đầy đủ thông tin phòng."
+          type="warning"
+          show-icon
+          style="margin-bottom: 16px"
+        />
+      </div>
+      <a-alert
+        v-if="approveTarget?.assignedRoomNumber"
+        message="Xác nhận duyệt đơn"
+        description="Sinh viên đã chọn phòng cụ thể. Bạn có chắc chắn muốn duyệt đơn này không?"
+        type="info"
+        show-icon
+      />
     </a-modal>
 
     <!-- Reject Dialog -->
@@ -175,7 +169,7 @@ const router = useRouter()
 
 const columns = [
   { title: 'Sinh viên', key: 'studentName', width: 220 },
-  { title: 'Tòa & Loại phòng', key: 'preferredBuilding', width: 200 },
+  { title: 'Phòng đã chọn', key: 'preferredBuilding', width: 200 },
   { title: 'Thời gian yêu cầu', key: 'requestedDate', align: 'center' },
   { title: 'Giá thuê', key: 'price', align: 'right', width: 120 },
   { title: 'Trạng thái', key: 'status', align: 'center', width: 120 },
@@ -200,9 +194,7 @@ const approveDialog = ref(false)
 const rejectDialog = ref(false)
 const approveTarget = ref(null)
 const rejectTarget = ref(null)
-const approveForm = ref({ assignedRoomId: null, assignedRoomNumber: '', assignedBuildingName: '' })
 const rejectForm = ref({ rejectReason: '' })
-const approveErrors = ref({})
 const rejectErrors = ref({})
 
 const filteredApplications = computed(() => {
@@ -234,13 +226,12 @@ async function loadApplications() {
 }
 
 function openApprove(item) {
-  approveTarget.value = item
-  approveForm.value = {
-    assignedRoomId: null,
-    assignedRoomNumber: '',
-    assignedBuildingName: item.preferredBuildingName,
+  // Kiểm tra xem sinh viên đã chọn phòng chưa
+  if (!item.assignedRoomId || !item.assignedRoomNumber) {
+    message.warning('Đơn này chưa có thông tin phòng. Đây có thể là đơn cũ, vui lòng xóa và yêu cầu sinh viên đăng ký lại.')
+    // Tạm thời cho phép duyệt để xử lý đơn cũ
   }
-  approveErrors.value = {}
+  approveTarget.value = item
   approveDialog.value = true
 }
 
@@ -252,23 +243,12 @@ function openReject(item) {
 }
 
 async function handleApprove() {
-  const errors = {}
-  if (!approveForm.value.assignedRoomId) errors.assignedRoomId = 'Vui lòng nhập ID phòng'
-  if (!approveForm.value.assignedRoomNumber.trim())
-    errors.assignedRoomNumber = 'Vui lòng nhập số phòng'
-  if (!approveForm.value.assignedBuildingName.trim())
-    errors.assignedBuildingName = 'Vui lòng nhập tên tòa nhà'
-  approveErrors.value = errors
-  if (Object.keys(errors).length > 0) return
-
   saving.value = true
   try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
     await roomApplicationService.approve(approveTarget.value.id, {
-      reviewedByUserId: 1, // TODO: Get from auth
-      reviewedByName: 'Admin', // TODO: Get from auth
-      assignedRoomId: parseInt(approveForm.value.assignedRoomId),
-      assignedRoomNumber: approveForm.value.assignedRoomNumber.trim(),
-      assignedBuildingName: approveForm.value.assignedBuildingName.trim(),
+      reviewedByUserId: user.id || 1,
+      reviewedByName: user.fullName || 'Admin',
     })
     message.success('Đã duyệt đơn đăng ký thành công')
     approveDialog.value = false
@@ -289,9 +269,10 @@ async function handleReject() {
 
   saving.value = true
   try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
     await roomApplicationService.reject(rejectTarget.value.id, {
-      reviewedByUserId: 1, // TODO: Get from auth
-      reviewedByName: 'Admin', // TODO: Get from auth
+      reviewedByUserId: user.id || 1,
+      reviewedByName: user.fullName || 'Admin',
       rejectReason: rejectForm.value.rejectReason.trim(),
     })
     message.success('Đã từ chối đơn đăng ký')

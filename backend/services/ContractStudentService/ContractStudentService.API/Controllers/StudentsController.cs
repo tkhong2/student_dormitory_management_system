@@ -16,7 +16,19 @@ namespace ContractStudentService.API.Controllers
             _studentRepository = studentRepository;
         }
 
-        [HttpGet]
+        [HttpGet("by-user/{userId}")]
+    public async Task<ActionResult<StudentDto>> GetByUserId(int userId)
+    {
+        var students = await _studentRepository.GetAllAsync();
+        var student = students.FirstOrDefault(s => s.UserId == userId);
+        
+        if (student == null)
+            return NotFound(new { message = $"Không tìm thấy sinh viên với UserId = {userId}" });
+
+        return Ok(MapToDto(student));
+    }
+
+    [HttpGet]
         public async Task<ActionResult<IEnumerable<StudentDto>>> GetAll()
         {
             var students = await _studentRepository.GetAllAsync();

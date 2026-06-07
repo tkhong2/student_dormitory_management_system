@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using RoomBuildingService.Application.Interfaces;
+using RoomBuildingService.Infrastructure.Data;
 using RoomBuildingService.Infrastructure.Persistence;
 using RoomBuildingService.Infrastructure.Repositories;
 
@@ -61,6 +62,9 @@ using (var scope = app.Services.CreateScope())
         {
             db.Database.Migrate();
             Console.WriteLine("✅ Migration thành công!");
+            
+            // Seed data
+            await DataSeeder.SeedAsync(db);
             break;
         }
         catch (Exception ex)

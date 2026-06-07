@@ -28,7 +28,10 @@ namespace ContractStudentService.Application.Interfaces
         Task<RoomApplication?> GetByIdAsync(int id);
         Task<IEnumerable<RoomApplication>> GetAllAsync();
         Task<IEnumerable<RoomApplication>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<RoomApplication>> GetByUserIdAsync(int userId);
         Task<IEnumerable<RoomApplication>> GetByStatusAsync(string status);
+        Task<IEnumerable<RoomApplication>> GetActiveApplicationsByStudentAsync(int studentId);
+        Task<IEnumerable<RoomApplication>> GetActiveApplicationsByUserIdAsync(int userId);
         Task AddAsync(RoomApplication application);
         Task UpdateAsync(RoomApplication application);
         Task DeleteAsync(RoomApplication application);
@@ -39,8 +42,12 @@ namespace ContractStudentService.Application.Interfaces
         Task<Contract?> GetByIdAsync(int id);
         Task<IEnumerable<Contract>> GetAllAsync();
         Task<IEnumerable<Contract>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<Contract>> GetByUserIdAsync(int userId);
         Task<Contract?> GetByContractCodeAsync(string contractCode);
         Task<IEnumerable<Contract>> GetByStatusAsync(string status);
+        Task<IEnumerable<Contract>> GetActiveContractsByStudentAsync(int studentId);
+        Task<IEnumerable<Contract>> GetActiveContractsByUserIdAsync(int userId);
+        Task<int> GetNextSequenceForYearAsync(int year);
         Task AddAsync(Contract contract);
         Task UpdateAsync(Contract contract);
         Task DeleteAsync(Contract contract);

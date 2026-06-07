@@ -47,4 +47,16 @@ namespace BillingMaintenanceService.Application.Interfaces
         Task UpdateAsync(MaintenanceRequest request);
         Task DeleteAsync(MaintenanceRequest request);
     }
+
+    public interface IBuildingAssignmentRepository
+    {
+        Task<BuildingAssignment?> GetByIdAsync(int id);
+        Task<IEnumerable<BuildingAssignment>> GetAllAsync();
+        Task<IEnumerable<BuildingAssignment>> GetByUserIdAsync(int userId);
+        Task<IEnumerable<BuildingAssignment>> GetByBuildingIdAsync(int buildingId);
+        Task<BuildingAssignment?> GetByUserAndBuildingAsync(int userId, int buildingId);
+        Task<BuildingAssignment> AddAsync(BuildingAssignment assignment);
+        Task UpdateAsync(BuildingAssignment assignment);
+        Task DeleteAsync(BuildingAssignment assignment);
+    }
 }

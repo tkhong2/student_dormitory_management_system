@@ -1,7 +1,15 @@
 <template>
   <v-app style="background-color: #f8fafc">
     <!-- Student Sidebar -->
-    <v-navigation-drawer v-model="drawer" width="280" border="none" class="elevation-4">
+    <v-navigation-drawer 
+      :model-value="true"
+      width="280" 
+      border="none" 
+      class="elevation-4"
+      :scrim="false"
+      permanent
+      :rail="false"
+    >
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
         <router-link to="/student" class="d-flex align-center ga-2 pa-8 text-decoration-none border-b">
@@ -50,7 +58,7 @@
     <!-- Top bar -->
     <v-app-bar flat color="transparent" height="80">
       <div class="d-flex align-center w-100 px-6">
-        <v-btn icon="mdi-menu-variant" variant="text" @click="drawer = !drawer" class="mr-4" />
+        <!-- Remove menu toggle button since drawer is permanent -->
         
         <div class="d-none d-sm-flex align-center ga-2">
           <span class="text-caption font-weight-bold opacity-60 uppercase">Cổng SV</span>
@@ -96,11 +104,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const drawer = ref(true)
+const drawer = ref(true) // Always keep drawer open
 const router = useRouter()
 
 const menu = [
   { title: 'Trang chủ', icon: 'mdi-home-outline', to: '/student' },
+  { title: 'Đăng ký phòng', icon: 'mdi-home-search', to: '/student/rooms' },
   { title: 'Phòng của tôi', icon: 'mdi-door-closed', to: '/student/my-room' },
   { title: 'Hợp đồng', icon: 'mdi-file-document-outline', to: '/student/my-contract' },
   { title: 'Thanh toán', icon: 'mdi-credit-card-outline', to: '/student/my-payments' },
@@ -109,6 +118,11 @@ const menu = [
 ]
 
 const logout = () => { localStorage.clear(); router.push('/login') }
+
+// Prevent drawer toggle
+const toggleDrawer = () => {
+  // Do nothing - keep drawer always open
+}
 </script>
 
 <style scoped>
@@ -126,4 +140,13 @@ const logout = () => { localStorage.clear(); router.push('/login') }
 }
 .text-primary { color: #ff6b00 !important; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Force hide navigation drawer overlay */
+:deep(.v-navigation-drawer__scrim) {
+  display: none !important;
+}
+
+:deep(.v-overlay) {
+  display: none !important;
+}
 </style>

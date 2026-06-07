@@ -49,6 +49,14 @@ namespace ContractStudentService.API.Controllers
             return Ok(dtos);
         }
 
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<ContractDto>>> GetByUserId(int userId)
+        {
+            var contracts = await _contractRepository.GetByUserIdAsync(userId);
+            var dtos = contracts.Select(MapToDto);
+            return Ok(dtos);
+        }
+
         [HttpGet("code/{contractCode}")]
         public async Task<ActionResult<ContractDto>> GetByContractCode(string contractCode)
         {
@@ -155,6 +163,37 @@ namespace ContractStudentService.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Sinh viên chấp thuận hợp đồng (Pending → Active)
+        /// </summary>
+        [HttpPost("{id}/accept")]
+        public async Task<ActionResult> AcceptContract(int id, [FromBody] AcceptContractRequest request)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            // Kiểm tra quyền: Sinh viên chỉ có thể accept hợp đồng của mình
+            var student = contract.Student;
+            if (student == null || student.UserId != request.UserId)
+                return Forbid();
+
+            // Kiểm tra trạng thái: Chỉ accept được hợp đồng Pending
+            if (contract.Status != "Pending")
+                return BadRequest(new { message = "Hợp đồng không ở trạng thái chờ chấp thuận" });
+
+            // Cập nhật trạng thái sang Active
+            contract.Status = "Active";
+            contract.SignedAt = DateTime.UtcNow;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return Ok(new { 
+                message = "Đã chấp thuận hợp đồng thành công",
+                contract = MapToDto(contract)
+            });
+        }
+
         [HttpPut("{id}/terminate")]
         public async Task<ActionResult> Terminate(int id, [FromBody] TerminateContractRequest request)
         {
@@ -258,5 +297,10 @@ namespace ContractStudentService.API.Controllers
         public int TerminatedByUserId { get; set; }
         public decimal DepositReturnedAmount { get; set; }
         public string? DepositDeductionReason { get; set; }
+    }
+
+    public class AcceptContractRequest
+    {
+        public int UserId { get; set; }
     }
 }

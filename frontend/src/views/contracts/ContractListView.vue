@@ -6,13 +6,68 @@
         <h1 style="font-size: 20px; font-weight: 700; margin: 0">Hợp đồng thuê phòng</h1>
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">Quản lý hợp đồng KTX của sinh viên</p>
       </div>
-      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
-        + Tạo hợp đồng
-      </a-button>
+      <a-space>
+        <a-button @click="showApprovedApplications" :type="viewMode === 'applications' ? 'primary' : 'default'">
+          <template #icon><FileAddOutlined /></template>
+          Đơn đã duyệt ({{ approvedApplications.length }})
+        </a-button>
+        <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+          + Tạo hợp đồng thủ công
+        </a-button>
+      </a-space>
     </div>
 
-    <!-- Stats Cards -->
-    <a-row :gutter="[16, 16]" style="margin-bottom: 16px;">
+    <!-- Approved Applications Table (shown when viewMode === 'applications') -->
+    <a-card v-if="viewMode === 'applications'" :bordered="false" :loading="loadingApplications" style="margin-bottom: 16px;">
+      <template #title>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Đơn đăng ký đã duyệt - Chưa có hợp đồng</span>
+          <a-button type="link" @click="viewMode = 'contracts'">← Quay lại danh sách hợp đồng</a-button>
+        </div>
+      </template>
+      
+      <a-table
+        :columns="applicationColumns"
+        :data-source="approvedApplications"
+        :pagination="{ pageSize: 10 }"
+        row-key="id"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'studentName'">
+            <div>
+              <div style="font-weight: 600;">{{ record.studentName }}</div>
+              <div style="font-size: 12px; color: #8c8c8c;">{{ record.studentCode }}</div>
+            </div>
+          </template>
+          
+          <template v-else-if="column.key === 'room'">
+            <div>
+              <div style="font-weight: 600;">{{ record.assignedRoomNumber }}</div>
+              <div style="font-size: 12px; color: #8c8c8c;">{{ record.assignedBuildingName }}</div>
+            </div>
+          </template>
+          
+          <template v-else-if="column.key === 'price'">
+            <span style="font-weight: 700; color: #1890ff;">{{ formatPrice(record.preferredRoomPrice) }}</span>
+          </template>
+          
+          <template v-else-if="column.key === 'actions'">
+            <a-button 
+              type="primary" 
+              size="small"
+              @click="createContractFromApplication(record)"
+              style="background: #16a34a; border-color: #16a34a;"
+            >
+              <template #icon><FileAddOutlined /></template>
+              Tạo hợp đồng
+            </a-button>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
+
+    <!-- Stats Cards (only show in contracts view) -->
+    <a-row v-if="viewMode === 'contracts'" :gutter="[16, 16]" style="margin-bottom: 16px;">
       <a-col :xs="12" :md="6">
         <a-card :bordered="false" style="border: 1px solid #e5e7eb;">
           <a-statistic
@@ -67,8 +122,8 @@
       </a-col>
     </a-row>
 
-    <!-- Filters Card -->
-    <a-card style="margin-bottom: 16px;" :bordered="false">
+    <!-- Filters Card (only show in contracts view) -->
+    <a-card v-if="viewMode === 'contracts'" style="margin-bottom: 16px;" :bordered="false">
       <a-row :gutter="[16, 16]">
         <a-col :xs="24" :sm="12" :md="8">
           <a-input-search
@@ -94,8 +149,8 @@
       </a-row>
     </a-card>
 
-    <!-- Table Card -->
-    <a-card :bordered="false" :loading="loading">
+    <!-- Table Card (only show in contracts view) -->
+    <a-card v-if="viewMode === 'contracts'" :bordered="false" :loading="loading">
       <a-table
         :columns="columns"
         :data-source="filteredContracts"
@@ -283,11 +338,13 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  FileAddOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { contractService } from '@/services/contractService'
+import { roomApplicationService } from '@/services/roomApplicationService'
 
 const columns = [
   { title: 'Mã HĐ', dataIndex: 'code', key: 'code', width: 120 },
@@ -300,6 +357,16 @@ const columns = [
   { title: 'Thao tác', key: 'actions', width: 140, align: 'center', fixed: 'right' }
 ]
 
+const applicationColumns = [
+  { title: 'Sinh viên', key: 'studentName', width: 200 },
+  { title: 'Phòng được phân', key: 'room', width: 150 },
+  { title: 'Loại phòng', dataIndex: 'preferredRoomTypeName', key: 'roomType', width: 150 },
+  { title: 'Giá thuê', key: 'price', width: 140, align: 'right' },
+  { title: 'Ngày bắt đầu', dataIndex: 'requestedStartDate', key: 'startDate', width: 120, align: 'center' },
+  { title: 'Ngày kết thúc', dataIndex: 'requestedEndDate', key: 'endDate', width: 120, align: 'center' },
+  { title: 'Thao tác', key: 'actions', width: 150, align: 'center' }
+]
+
 const statusOptions = [
   { label: 'Hiệu lực', value: 'Active' },
   { label: 'Hết hạn', value: 'Expired' },
@@ -308,7 +375,9 @@ const statusOptions = [
 ]
 
 const contracts = ref([])
+const approvedApplications = ref([])
 const loading = ref(false)
+const loadingApplications = ref(false)
 const saving = ref(false)
 const error = ref(null)
 const dialog = ref(false)
@@ -318,6 +387,7 @@ const deleteTarget = ref(null)
 const formErrors = ref({})
 const search = ref('')
 const statusFilter = ref(undefined)
+const viewMode = ref('contracts') // 'contracts' or 'applications'
 
 const form = ref({
   code: '',
@@ -358,16 +428,64 @@ async function loadContracts() {
     const data = await contractService.getAll()
     contracts.value = data.map((item) => ({
       ...item,
+      code: item.contractCode, // Map contractCode to code
+      price: item.monthlyRent, // Map monthlyRent to price
       startDate: formatDate(item.startDate),
       endDate: formatDate(item.endDate),
       displayStatus: displayStatus(item)
     }))
+    console.log('Loaded contracts:', contracts.value)
   } catch (err) {
     error.value = err.message || 'Không thể tải danh sách hợp đồng'
     message.error(error.value)
   } finally {
     loading.value = false
   }
+}
+
+async function loadApprovedApplications() {
+  loadingApplications.value = true
+  try {
+    const allApps = await roomApplicationService.getByStatus('Approved')
+    // Filter out applications that already have contracts
+    const contracts = await contractService.getAll()
+    const contractStudentIds = new Set(contracts.map(c => c.studentId))
+    
+    approvedApplications.value = allApps
+      .filter(app => !contractStudentIds.has(app.studentId))
+      .map(app => ({
+        ...app,
+        requestedStartDate: formatDate(app.requestedStartDate),
+        requestedEndDate: formatDate(app.requestedEndDate)
+      }))
+  } catch (err) {
+    message.error('Không thể tải danh sách đơn đã duyệt')
+  } finally {
+    loadingApplications.value = false
+  }
+}
+
+function showApprovedApplications() {
+  viewMode.value = 'applications'
+  loadApprovedApplications()
+}
+
+function createContractFromApplication(application) {
+  editTarget.value = null
+  form.value = {
+    code: `HD-${Date.now()}`,
+    studentId: application.studentId,
+    studentCode: application.studentCode,
+    studentName: application.studentName,
+    roomId: application.assignedRoomId,
+    roomNumber: application.assignedRoomNumber,
+    price: application.preferredRoomPrice,
+    startDate: application.requestedStartDate ? dayjs(application.requestedStartDate, 'DD/MM/YYYY') : null,
+    endDate: application.requestedEndDate ? dayjs(application.requestedEndDate, 'DD/MM/YYYY') : null,
+    status: 'Active'
+  }
+  formErrors.value = {}
+  dialog.value = true
 }
 
 function displayStatus(item) {
@@ -517,7 +635,10 @@ async function deleteContract() {
   }
 }
 
-onMounted(loadContracts)
+onMounted(() => {
+  loadContracts()
+  loadApprovedApplications()
+})
 </script>
 
 <style scoped>
