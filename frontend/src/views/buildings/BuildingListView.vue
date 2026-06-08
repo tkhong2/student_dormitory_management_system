@@ -24,9 +24,12 @@
           <span style="color: #8b5cf6">{{ countByGender("Mixed") }} Hỗn hợp</span>
         </p>
       </div>
-      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+      <a-button v-if="!isReadOnly" type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
         + Thêm tòa nhà
       </a-button>
+      <a-tag v-else color="blue" style="padding: 8px 16px; font-size: 13px;">
+        <EyeOutlined /> Chỉ xem
+      </a-tag>
     </div>
 
     <!-- Filter Card -->
@@ -293,7 +296,7 @@
               </p>
 
               <!-- Actions -->
-              <div style="display: flex; gap: 8px">
+              <div v-if="!isReadOnly" style="display: flex; gap: 8px">
                 <a-button
                   type="primary"
                   size="middle"
@@ -312,6 +315,9 @@
                   <DeleteOutlined />
                   Xóa
                 </a-button>
+              </div>
+              <div v-else style="text-align: center; padding: 8px; color: #8c8c8c; font-size: 12px;">
+                <EyeOutlined /> Nhấp để xem chi tiết
               </div>
             </div>
           </a-card>
@@ -516,6 +522,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { message } from "ant-design-vue";
+import { useRoute } from "vue-router";
 import {
   SearchOutlined,
   VerticalAlignTopOutlined,
@@ -525,9 +532,13 @@ import {
   ApartmentOutlined,
   EditOutlined,
   DeleteOutlined,
+  EyeOutlined,
 } from "@ant-design/icons-vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import { buildingService } from "@/services/buildingService";
+
+const route = useRoute();
+const isReadOnly = computed(() => route.meta.readonly === true);
 
 // ─── State ───────────────────────────────────────────────────────────────────
 const buildings = ref([]);

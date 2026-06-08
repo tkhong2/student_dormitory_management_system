@@ -1,23 +1,45 @@
-import { billingMaintenanceApi } from './api';
+import api from "./api";
 
-export default {
-  // Payment CRUD
+export const paymentService = {
+  /**
+   * Get all payments
+   */
   getAll() {
-    return billingMaintenanceApi.get('/payments');
+    return api.get("/payments");
   },
+
+  /**
+   * Get by ID
+   */
   getById(id) {
-    return billingMaintenanceApi.get(`/payments/${id}`);
+    return api.get(`/payments/${id}`);
   },
+
+  /**
+   * Get by invoice ID
+   */
   getByInvoiceId(invoiceId) {
-    return billingMaintenanceApi.get(`/payments/invoice/${invoiceId}`);
+    return api.get(`/payments/invoice/${invoiceId}`);
   },
+
+  /**
+   * Create new payment (Record payment)
+   */
   create(data) {
-    return billingMaintenanceApi.post('/payments', data);
+    return api.post("/payments", data);
   },
+
+  /**
+   * Update payment
+   */
   update(id, data) {
-    return billingMaintenanceApi.put(`/payments/${id}`, data);
+    return api.put(`/payments/${id}`, data);
   },
+
+  /**
+   * Delete payment
+   */
   delete(id) {
-    return billingMaintenanceApi.delete(`/payments/${id}`);
-  }
+    return api.delete(`/payments/${id}`);
+  },
 };

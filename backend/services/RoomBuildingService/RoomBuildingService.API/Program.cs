@@ -7,6 +7,11 @@ using RoomBuildingService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -87,6 +92,23 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 // app.UseHttpsRedirection();
+
+// Log all incoming requests để debug
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("🔵 Incoming request: {Method} {Path}", context.Request.Method, context.Request.Path);
+    try
+    {
+        await next();
+        logger.LogInformation("✅ Response: {StatusCode} for {Method} {Path}", context.Response.StatusCode, context.Request.Method, context.Request.Path);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error processing {Method} {Path}", context.Request.Method, context.Request.Path);
+        throw;
+    }
+});
 
 app.UseCors("AllowAll");
 

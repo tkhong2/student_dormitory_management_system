@@ -3,6 +3,11 @@ using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 // Add Ocelot configuration
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
@@ -20,6 +25,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddOcelot();
 
 var app = builder.Build();
+
+// Log incoming requests
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("🌐 API Gateway: {Method} {Path}", context.Request.Method, context.Request.Path);
+    await next();
+});
 
 app.UseCors("AllowAll");
 

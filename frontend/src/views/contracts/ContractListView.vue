@@ -141,6 +141,7 @@
             allow-clear
             style="width: 100%"
           >
+            <a-select-option value="Chờ ký">Chờ ký</a-select-option>
             <a-select-option value="Hiệu lực">Hiệu lực</a-select-option>
             <a-select-option value="Sắp hết hạn">Sắp hết hạn</a-select-option>
             <a-select-option value="Đã chấm dứt">Đã chấm dứt</a-select-option>
@@ -368,6 +369,7 @@ const applicationColumns = [
 ]
 
 const statusOptions = [
+  { label: 'Chờ ký', value: 'Pending' },
   { label: 'Hiệu lực', value: 'Active' },
   { label: 'Hết hạn', value: 'Expired' },
   { label: 'Đã chấm dứt', value: 'Terminated' },
@@ -489,6 +491,7 @@ function createContractFromApplication(application) {
 }
 
 function displayStatus(item) {
+  if (item.status === 'Pending') return 'Chờ ký'
   if (item.status === 'Terminated') return 'Đã chấm dứt'
   if (item.status === 'Expired') return 'Hết hạn'
   if (item.status === 'Renewed') return 'Đã gia hạn'
@@ -502,6 +505,7 @@ function countStatus(status) {
 
 function getStatusColor(status) {
   return {
+    'Chờ ký': 'processing',
     'Hiệu lực': 'success',
     'Sắp hết hạn': 'warning',
     'Đã gia hạn': 'cyan',
@@ -570,13 +574,27 @@ function validate() {
 
 function payload(item = form.value) {
   return {
-    code: item.code.trim(),
-    studentId: item.studentId || crypto.randomUUID(),
-    studentCode: item.studentCode.trim(),
-    studentName: item.studentName.trim(),
-    roomId: item.roomId || crypto.randomUUID(),
-    roomNumber: item.roomNumber.trim(),
+    // Giữ nguyên các trường cũ để tương thích ngược
+    code: item.code ? item.code.trim() : '',
     price: Number(item.price),
+    studentId: item.studentId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 1),
+    studentCode: item.studentCode ? item.studentCode.trim() : '',
+    studentName: item.studentName ? item.studentName.trim() : '',
+    roomId: item.roomId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 1),
+    roomNumber: item.roomNumber ? item.roomNumber.trim() : '',
+
+    // Ánh xạ sang các trường của DTO Backend
+    contractCode: item.code ? item.code.trim() : '',
+    monthlyRent: Number(item.price),
+    depositAmount: item.depositAmount !== undefined ? Number(item.depositAmount) : Number(item.price),
+    electricityRate: item.electricityRate !== undefined ? Number(item.electricityRate) : 3500,
+    waterRate: item.waterRate !== undefined ? Number(item.waterRate) : 15000,
+    paymentDueDay: item.paymentDueDay !== undefined ? Number(item.paymentDueDay) : 5,
+    witnessName: item.witnessName || null,
+    witnessTitle: item.witnessTitle || null,
+    signedAt: item.signedAt || null,
+    signedImageUrl: item.signedImageUrl || null,
+    notes: item.notes || null,
     startDate: item.startDate ? item.startDate.format('YYYY-MM-DD') : null,
     endDate: item.endDate ? item.endDate.format('YYYY-MM-DD') : null,
     status: item.status

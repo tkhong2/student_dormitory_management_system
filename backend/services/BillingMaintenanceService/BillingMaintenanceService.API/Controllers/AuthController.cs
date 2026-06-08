@@ -127,11 +127,57 @@ public class AuthController : ControllerBase
                 Email = request.Email,
                 Phone = request.Phone ?? "",
                 Role = request.Role ?? "Student", // Default to Student
+                StudentCode = request.StudentCode,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.CreateAsync(user);
+
+            // If role is Student, create Student record in ContractStudentService
+            if (user.Role == "Student" && !string.IsNullOrWhiteSpace(request.StudentCode))
+            {
+                try
+                {
+                    using var httpClient = new HttpClient();
+                    httpClient.BaseAddress = new Uri("http://localhost:5059"); // ContractStudentService port
+                    
+                    var studentDto = new
+                    {
+                        studentCode = request.StudentCode,
+                        fullName = request.FullName,
+                        gender = request.Gender ?? "Male",
+                        dateOfBirth = request.DateOfBirth?.ToString("yyyy-MM-dd") ?? DateTime.Now.AddYears(-20).ToString("yyyy-MM-dd"),
+                        phone = request.Phone ?? "",
+                        email = request.Email,
+                        identityCard = request.IdentificationCard ?? "",
+                        identityCardIssuedDate = DateTime.Now.AddYears(-5).ToString("yyyy-MM-dd"),
+                        identityCardIssuedPlace = "Chưa cập nhật",
+                        permanentAddress = "Chưa cập nhật",
+                        emergencyContactName = "Chưa cập nhật",
+                        emergencyContactPhone = "0000000000",
+                        emergencyContactRelation = "Gia đình",
+                        faculty = "Chưa cập nhật",
+                        major = "Chưa cập nhật",
+                        academicYear = DateTime.Now.Year,
+                        isActive = true,
+                        userId = user.Id
+                    };
+
+                    var response = await httpClient.PostAsJsonAsync("/api/students", studentDto);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        // Log error but don't fail registration
+                        Console.WriteLine($"Failed to create student record: {await response.Content.ReadAsStringAsync()}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail registration
+                    Console.WriteLine($"Error creating student record: {ex.Message}");
+                }
+            }
 
             return Ok(new { message = "Đăng ký thành công", userId = user.Id });
         }
@@ -219,12 +265,19 @@ public class LoginResponse
 
 public class RegisterRequest
 {
+    // Account info
     public string Username { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public string? Role { get; set; }
+    
+    // Student info
+    public string? StudentCode { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
+    public string? IdentificationCard { get; set; }
 }
 
 public class RefreshTokenRequest

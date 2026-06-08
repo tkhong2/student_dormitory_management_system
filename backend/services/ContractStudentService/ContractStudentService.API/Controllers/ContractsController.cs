@@ -115,7 +115,8 @@ namespace ContractStudentService.API.Controllers
                 WitnessTitle = dto.WitnessTitle,
                 CreatedByUserId = dto.CreatedByUserId,
                 Notes = dto.Notes,
-                Status = "Pending"
+                Status = "PendingDeposit",  // Chờ đóng cọc (thay vì Pending)
+                IsDepositPaid = false
             };
 
             await _contractRepository.AddAsync(contract);
@@ -142,6 +143,10 @@ namespace ContractStudentService.API.Controllers
             contract.SignedAt = dto.SignedAt;
             contract.SignedImageUrl = dto.SignedImageUrl;
             contract.Notes = dto.Notes;
+            if (!string.IsNullOrEmpty(dto.Status))
+            {
+                contract.Status = dto.Status;
+            }
 
             await _contractRepository.UpdateAsync(contract);
 
@@ -161,6 +166,33 @@ namespace ContractStudentService.API.Controllers
             await _contractRepository.UpdateAsync(contract);
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Staff xác nhận sinh viên đã đóng tiền cọc (PendingDeposit → Active)
+        /// </summary>
+        [HttpPost("{id}/confirm-deposit")]
+        public async Task<ActionResult> ConfirmDeposit(int id, [FromBody] ConfirmDepositRequest request)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Không tìm thấy hợp đồng" });
+
+            // Kiểm tra trạng thái: Chỉ confirm được hợp đồng PendingDeposit
+            if (contract.Status != "PendingDeposit")
+                return BadRequest(new { message = "Hợp đồng không ở trạng thái chờ đóng cọc" });
+
+            // Cập nhật trạng thái
+            contract.Status = "Active";
+            contract.IsDepositPaid = true;
+            contract.DepositPaidAt = DateTime.UtcNow;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return Ok(new { 
+                message = "Đã xác nhận đóng cọc thành công. Hợp đồng đã được kích hoạt.",
+                contract = MapToDto(contract)
+            });
         }
 
         /// <summary>
@@ -289,6 +321,7 @@ namespace ContractStudentService.API.Controllers
         public DateTime? SignedAt { get; set; }
         public string? SignedImageUrl { get; set; }
         public string? Notes { get; set; }
+        public string? Status { get; set; }
     }
 
     public class TerminateContractRequest
@@ -302,5 +335,11 @@ namespace ContractStudentService.API.Controllers
     public class AcceptContractRequest
     {
         public int UserId { get; set; }
+    }
+
+    public class ConfirmDepositRequest
+    {
+        public int ConfirmedByUserId { get; set; }
+        public string? ConfirmedByName { get; set; }
     }
 }

@@ -21,7 +21,10 @@
       >
         <div style="height: 100%; display: flex; flex-direction: column;">
           <div class="logo-container">
-            <AppLogo :collapsed="collapsed" subtitle="Quản trị viên" />
+            <AppLogo 
+              :collapsed="collapsed" 
+              :subtitle="currentUser.role === 'Staff' ? 'Nhân viên' : 'Quản trị viên'" 
+            />
           </div>
 
           <div style="flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;">
@@ -161,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, h, watch } from "vue";
+import { ref, h, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { message } from "ant-design-vue";
 import {
@@ -207,150 +210,273 @@ watch(
   },
 );
 
-const menuItems = [
-  {
-    key: "overview",
-    label: "TỔNG QUAN",
-    type: "group",
-    children: [
+const menuItems = computed(() => {
+  const isStaff = currentUser.role === 'Staff';
+  
+  // Menu cho Staff
+  if (isStaff) {
+    return [
       {
-        key: "/admin",
-        icon: () => h(DashboardOutlined),
-        label: "Dashboard",
-      },
-    ],
-  },
-  {
-    key: "facility",
-    label: "CƠ SỞ VẬT CHẤT",
-    type: "group",
-    children: [
-      {
-        key: "/admin/buildings",
-        icon: () => h(HomeOutlined),
-        label: "Tòa nhà",
+        key: "overview",
+        label: "TỔNG QUAN",
+        type: "group",
+        children: [
+          {
+            key: "/staff/dashboard",
+            icon: () => h(DashboardOutlined),
+            label: "Dashboard",
+          },
+        ],
       },
       {
-        key: "/admin/room-types",
-        icon: () => h(FileTextOutlined),
-        label: "Loại phòng",
+        key: "operations",
+        label: "VẬN HÀNH",
+        type: "group",
+        children: [
+          {
+            key: "/staff/room-applications",
+            icon: () => h(FileTextOutlined),
+            label: "Đơn đăng ký phòng",
+          },
+          {
+            key: "/staff/contracts",
+            icon: () => h(FileTextOutlined),
+            label: "Hợp đồng",
+          },
+          {
+            key: "/staff/pending-deposits",
+            icon: () => h(DollarOutlined),
+            label: "Xác nhận đóng cọc",
+          },
+          {
+            key: "/staff/room-transfers",
+            icon: () => h(FileTextOutlined),
+            label: "Chuyển phòng",
+          },
+          {
+            key: "/staff/checkin-checkout",
+            icon: () => h(SafetyOutlined),
+            label: "Check-in/Check-out",
+          },
+          {
+            key: "/staff/room-inspections",
+            icon: () => h(SafetyOutlined),
+            label: "Kiểm tra phòng",
+          },
+        ],
       },
       {
-        key: "/admin/rooms",
-        icon: () => h(HomeOutlined),
-        label: "Phòng ở",
+        key: "finance",
+        label: "TÀI CHÍNH",
+        type: "group",
+        children: [
+          {
+            key: "/staff/payment-processing",
+            icon: () => h(DollarOutlined),
+            label: "Ghi nhận thanh toán",
+          },
+          {
+            key: "/staff/invoices",
+            icon: () => h(FileTextOutlined),
+            label: "Hóa đơn",
+          },
+          {
+            key: "/staff/payments",
+            icon: () => h(DollarOutlined),
+            label: "Lịch sử thanh toán",
+          },
+          {
+            key: "/staff/debt",
+            icon: () => h(DollarOutlined),
+            label: "Công nợ",
+          },
+        ],
       },
       {
-        key: "/admin/amenities",
-        icon: () => h(AppstoreOutlined),
-        label: "Tiện nghi",
+        key: "maintenance",
+        label: "BẢO TRÌ",
+        type: "group",
+        children: [
+          {
+            key: "/staff/maintenance-requests",
+            icon: () => h(ToolOutlined),
+            label: "Yêu cầu bảo trì",
+          },
+        ],
       },
       {
-        key: "/admin/room-inspections",
-        icon: () => h(SafetyOutlined),
-        label: "Kiểm tra phòng",
-      },
-    ],
-  },
-  {
-    key: "student",
-    label: "SINH VIÊN",
-    type: "group",
-    children: [
-      {
-        key: "/admin/students",
-        icon: () => h(TeamOutlined),
-        label: "Quản lý Sinh viên",
+        key: "student",
+        label: "SINH VIÊN",
+        type: "group",
+        children: [
+          {
+            key: "/staff/students",
+            icon: () => h(TeamOutlined),
+            label: "Danh sách sinh viên",
+          },
+        ],
       },
       {
-        key: "/admin/student-documents",
-        icon: () => h(FileTextOutlined),
-        label: "Tài liệu sinh viên",
+        key: "reports",
+        label: "BÁO CÁO",
+        type: "group",
+        children: [
+          {
+            key: "/staff/reports",
+            icon: () => h(FileTextOutlined),
+            label: "Báo cáo",
+          },
+        ],
       },
-      {
-        key: "/admin/room-applications",
-        icon: () => h(FileTextOutlined),
-        label: "Đơn đăng ký phòng",
-      },
-      {
-        key: "/admin/contracts",
-        icon: () => h(FileTextOutlined),
-        label: "Hợp đồng thuê",
-      },
-      {
-        key: "/admin/contract-extensions",
-        icon: () => h(FileTextOutlined),
-        label: "Gia hạn hợp đồng",
-      },
-      {
-        key: "/admin/room-transfers",
-        icon: () => h(FileTextOutlined),
-        label: "Chuyển phòng",
-      },
-    ],
-  },
-  {
-    key: "finance",
-    label: "TÀI CHÍNH",
-    type: "group",
-    children: [
-      {
-        key: "/admin/invoices",
-        icon: () => h(FileTextOutlined),
-        label: "Phiếu thu",
-      },
-      {
-        key: "/admin/payments",
-        icon: () => h(DollarOutlined),
-        label: "Thanh toán",
-      },
-      {
-        key: "/admin/billing",
-        icon: () => h(DollarOutlined),
-        label: "Hóa đơn (cũ)",
-      },
-      {
-        key: "/admin/debt",
-        icon: () => h(DollarOutlined),
-        label: "Công nợ",
-      },
-    ],
-  },
-  {
-    key: "maintenance",
-    label: "BẢO TRÌ & SỬA CHỮA",
-    type: "group",
-    children: [
-      {
-        key: "/admin/maintenance-requests",
-        icon: () => h(ToolOutlined),
-        label: "Yêu cầu sửa chữa",
-      },
-      {
-        key: "/admin/maintenance",
-        icon: () => h(ToolOutlined),
-        label: "Bảo trì (cũ)",
-      },
-    ],
-  },
-  {
-    key: "system",
-    label: "HỆ THỐNG",
-    type: "group",
-    children: [
-      {
-        key: "/admin/announcements",
-        icon: () => h(NotificationOutlined),
-        label: "Thông báo",
-      },
-      {
-        key: "/admin/users",
-        icon: () => h(TeamOutlined),
-        label: "Người dùng",
-      },
-    ],
-  },
-];
+    ];
+  }
+  
+  // Menu cho Admin (giữ nguyên như cũ)
+  return [
+    {
+      key: "overview",
+      label: "TỔNG QUAN",
+      type: "group",
+      children: [
+        {
+          key: "/admin",
+          icon: () => h(DashboardOutlined),
+          label: "Dashboard",
+        },
+      ],
+    },
+    {
+      key: "facility",
+      label: "CƠ SỞ VẬT CHẤT",
+      type: "group",
+      children: [
+        {
+          key: "/admin/buildings",
+          icon: () => h(HomeOutlined),
+          label: "Tòa nhà",
+        },
+        {
+          key: "/admin/room-types",
+          icon: () => h(FileTextOutlined),
+          label: "Loại phòng",
+        },
+        {
+          key: "/admin/rooms",
+          icon: () => h(HomeOutlined),
+          label: "Phòng ở",
+        },
+        {
+          key: "/admin/amenities",
+          icon: () => h(AppstoreOutlined),
+          label: "Tiện nghi",
+        },
+        {
+          key: "/admin/room-inspections",
+          icon: () => h(SafetyOutlined),
+          label: "Kiểm tra phòng",
+        },
+      ],
+    },
+    {
+      key: "student",
+      label: "SINH VIÊN",
+      type: "group",
+      children: [
+        {
+          key: "/admin/students",
+          icon: () => h(TeamOutlined),
+          label: "Quản lý Sinh viên",
+        },
+        {
+          key: "/admin/student-documents",
+          icon: () => h(FileTextOutlined),
+          label: "Tài liệu sinh viên",
+        },
+        {
+          key: "/admin/room-applications",
+          icon: () => h(FileTextOutlined),
+          label: "Đơn đăng ký phòng",
+        },
+        {
+          key: "/admin/contracts",
+          icon: () => h(FileTextOutlined),
+          label: "Hợp đồng thuê",
+        },
+        {
+          key: "/admin/contract-extensions",
+          icon: () => h(FileTextOutlined),
+          label: "Gia hạn hợp đồng",
+        },
+        {
+          key: "/admin/room-transfers",
+          icon: () => h(FileTextOutlined),
+          label: "Chuyển phòng",
+        },
+      ],
+    },
+    {
+      key: "finance",
+      label: "TÀI CHÍNH",
+      type: "group",
+      children: [
+        {
+          key: "/admin/invoices",
+          icon: () => h(FileTextOutlined),
+          label: "Phiếu thu",
+        },
+        {
+          key: "/admin/payments",
+          icon: () => h(DollarOutlined),
+          label: "Thanh toán",
+        },
+        {
+          key: "/admin/billing",
+          icon: () => h(DollarOutlined),
+          label: "Hóa đơn (cũ)",
+        },
+        {
+          key: "/admin/debt",
+          icon: () => h(DollarOutlined),
+          label: "Công nợ",
+        },
+      ],
+    },
+    {
+      key: "maintenance",
+      label: "BẢO TRÌ & SỬA CHỮA",
+      type: "group",
+      children: [
+        {
+          key: "/admin/maintenance-requests",
+          icon: () => h(ToolOutlined),
+          label: "Yêu cầu sửa chữa",
+        },
+        {
+          key: "/admin/maintenance",
+          icon: () => h(ToolOutlined),
+          label: "Bảo trì (cũ)",
+        },
+      ],
+    },
+    {
+      key: "system",
+      label: "HỆ THỐNG",
+      type: "group",
+      children: [
+        {
+          key: "/admin/announcements",
+          icon: () => h(NotificationOutlined),
+          label: "Thông báo",
+        },
+        {
+          key: "/admin/users",
+          icon: () => h(TeamOutlined),
+          label: "Người dùng",
+        },
+      ],
+    },
+  ];
+});
 
 const handleMenuClick = ({ key }) => {
   selectedKeys.value = [key];

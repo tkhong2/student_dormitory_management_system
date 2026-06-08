@@ -42,18 +42,22 @@ namespace RoomBuildingService.Infrastructure.Repositories
             .FirstOrDefaultAsync(r => r.Id == id);
 
         public async Task<IEnumerable<Room>> GetAllAsync() => await _context.Rooms
+            .AsNoTracking() // Tối ưu performance khi chỉ đọc dữ liệu
             .Include(r => r.RoomType)
             .Include(r => r.Floor)
                 .ThenInclude(f => f.Building)
             .Include(r => r.Images)
+            .AsSplitQuery() // Tránh cartesian explosion với nhiều includes
             .ToListAsync();
 
         public async Task<IEnumerable<Room>> GetByBuildingIdAsync(int buildingId) => await _context.Rooms
+            .AsNoTracking()
             .Include(r => r.RoomType)
             .Include(r => r.Floor)
                 .ThenInclude(f => f.Building)
             .Include(r => r.Images)
             .Where(r => r.Floor.BuildingId == buildingId)
+            .AsSplitQuery()
             .ToListAsync();
 
         public async Task AddAsync(Room room) { await _context.Rooms.AddAsync(room); await _context.SaveChangesAsync(); }

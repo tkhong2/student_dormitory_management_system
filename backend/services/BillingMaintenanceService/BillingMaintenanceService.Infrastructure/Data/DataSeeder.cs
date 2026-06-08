@@ -9,23 +9,9 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(AppDbContext context)
     {
-        // TEMPORARY: Force reset to update passwords to "123"
-        var existingUsers = await context.Users.ToListAsync();
-        if (existingUsers.Any())
-        {
-            Console.WriteLine("🔄 FORCE RESET: Deleting existing users to update passwords...");
-            context.Users.RemoveRange(existingUsers);
-            await context.SaveChangesAsync();
-            
-            // Clear change tracker to avoid conflicts
-            context.ChangeTracker.Clear();
-            
-            Console.WriteLine($"✅ Deleted {existingUsers.Count} existing users");
-        }
-
         Console.WriteLine("🌱 Seeding initial users...");
 
-        var users = new List<User>
+        var usersToSeed = new List<User>
         {
             // Admin user
             new User
@@ -37,7 +23,8 @@ public static class DataSeeder
                 Phone = "0901234567",
                 Role = "Admin",
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                IsDeleted = false,
+                DeletedAt = null
             },
             // Staff user
             new User
@@ -49,7 +36,8 @@ public static class DataSeeder
                 Phone = "0902345678",
                 Role = "Staff",
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                IsDeleted = false,
+                DeletedAt = null
             },
             // Student user
             new User
@@ -62,16 +50,42 @@ public static class DataSeeder
                 Role = "Student",
                 StudentCode = "SV001",
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                IsDeleted = false,
+                DeletedAt = null
             }
         };
 
-        await context.Users.AddRangeAsync(users);
+        foreach (var seedUser in usersToSeed)
+        {
+            // Query including soft-deleted users
+            var existingUser = await context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Username == seedUser.Username);
+
+            if (existingUser != null)
+            {
+                Console.WriteLine($"🔄 User '{seedUser.Username}' already exists. Updating properties, password, and resetting IsDeleted...");
+                existingUser.PasswordHash = seedUser.PasswordHash;
+                existingUser.FullName = seedUser.FullName;
+                existingUser.Email = seedUser.Email;
+                existingUser.Phone = seedUser.Phone;
+                existingUser.Role = seedUser.Role;
+                existingUser.StudentCode = seedUser.StudentCode;
+                existingUser.IsActive = seedUser.IsActive;
+                existingUser.IsDeleted = false;
+                existingUser.DeletedAt = null;
+                existingUser.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                Console.WriteLine($"🆕 User '{seedUser.Username}' does not exist. Adding user...");
+                seedUser.CreatedAt = DateTime.UtcNow;
+                await context.Users.AddAsync(seedUser);
+            }
+        }
+
         await context.SaveChangesAsync();
 
-        Console.WriteLine("✅ Seeded 3 initial users:");
-        Console.WriteLine("   - Admin: username='admin', password='Admin@123'");
-        Console.WriteLine("   - Staff: username='staff01', password='Staff@123'");
-        Console.WriteLine("   - Student: username='student01', password='Student@123'");
+        Console.WriteLine("✅ Seeded/Updated 3 initial users successfully.");
     }
 }

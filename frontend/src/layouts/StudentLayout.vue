@@ -12,15 +12,34 @@
     >
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
-        <router-link to="/student" class="d-flex align-center ga-2 pa-8 text-decoration-none border-b">
-          <div class="uni-logo-sm">
-            <img src="/images/logo.png" style="width: 100%; height: 100%; object-fit: contain;" alt="DNU Logo" />
-          </div>
-          <div>
-            <div class="text-h6 font-weight-black text-primary leading-tight">DNU KTX</div>
-            <div class="text-caption font-weight-bold opacity-60 uppercase tracking-widest">Cổng sinh viên</div>
-          </div>
-        </router-link>
+        <div style="
+          background: #ffffff;
+          border-bottom: 2px solid #ff6b00;
+          flex-shrink: 0;
+        ">
+          <router-link
+            to="/student"
+            style="display:flex;align-items:center;gap:14px;padding:20px 24px;text-decoration:none;"
+          >
+            <!-- Logo box -->
+            <div style="
+              width:48px;height:48px;flex-shrink:0;
+              background:#fff7f0;
+              border:2px solid #ff6b00;
+              border-radius:10px;
+              display:flex;align-items:center;justify-content:center;
+              padding:6px;
+              box-shadow:0 2px 8px rgba(255,107,0,0.2);
+            ">
+              <img src="/images/logo.png" style="width:100%;height:100%;object-fit:contain;" alt="DNU Logo" />
+            </div>
+            <!-- Text -->
+            <div>
+              <div style="font-size:17px;font-weight:900;color:#1e293b;letter-spacing:0.3px;line-height:1.2;">DNU KTX</div>
+              <div style="font-size:10px;font-weight:600;color:#ff6b00;text-transform:uppercase;letter-spacing:2px;margin-top:2px;">Cổng sinh viên</div>
+            </div>
+          </router-link>
+        </div>
 
         <!-- Navigation Menu -->
         <div class="flex-grow-1 overflow-y-auto pa-4 scrollbar-hide">
@@ -56,36 +75,57 @@
     </v-navigation-drawer>
 
     <!-- Top bar -->
-    <v-app-bar flat color="transparent" height="80">
-      <div class="d-flex align-center w-100 px-6">
-        <!-- Remove menu toggle button since drawer is permanent -->
-        
+    <v-app-bar flat height="72" style="
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    ">
+      <div class="d-flex align-center w-100 px-6" style="height: 100%;">
+
+        <!-- Breadcrumb -->
         <div class="d-none d-sm-flex align-center ga-2">
-          <span class="text-caption font-weight-bold opacity-60 uppercase">Cổng SV</span>
-          <v-icon size="14" class="opacity-30">mdi-chevron-right</v-icon>
-          <span class="text-caption font-weight-black uppercase">{{ $route.meta?.title || 'Trang chủ' }}</span>
+          <v-icon size="16" color="indigo-darken-2" style="opacity:0.7">mdi-home-variant</v-icon>
+          <span style="font-size:12px; font-weight:600; color:#6366f1; opacity:0.75; text-transform:uppercase; letter-spacing:0.8px;">Cổng SV</span>
+          <v-icon size="14" style="opacity:0.3">mdi-chevron-right</v-icon>
+          <span style="font-size:12px; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.8px;">{{ $route.meta?.title || 'Trang chủ' }}</span>
         </div>
 
         <v-spacer />
 
-        <div class="d-none d-md-flex align-center mr-6">
-          <v-chip color="success" variant="flat" size="small" class="font-weight-bold">
-            <v-icon start size="14">mdi-circle</v-icon>
-            Phòng: 101-A1
+        <!-- Room chip -->
+        <div class="d-none d-md-flex align-center mr-4">
+          <v-chip
+            variant="flat"
+            size="small"
+            :style="roomLabel === 'Chưa xếp phòng' 
+              ? { background: '#64748b', color: 'white', fontWeight: '700', fontSize: '12px' } 
+              : { background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: '700', fontSize: '12px', boxShadow: '0 2px 8px rgba(16,185,129,0.4)' }"
+          >
+            <v-icon start size="10" style="color:white">mdi-circle</v-icon>
+            Phòng: {{ roomLabel }}
           </v-chip>
         </div>
 
-        <v-btn icon variant="text" class="mr-2">
+        <!-- Notification bell -->
+        <v-btn icon variant="text" class="mr-1" style="color:#475569;">
           <v-badge dot color="error">
             <v-icon>mdi-bell-outline</v-icon>
           </v-badge>
         </v-btn>
 
-        <v-avatar size="40" class="cursor-pointer border">
+        <!-- Avatar -->
+        <v-avatar
+          size="38"
+          class="cursor-pointer"
+          style="border: 2px solid #6366f1; box-shadow: 0 2px 10px rgba(99,102,241,0.3);"
+        >
           <v-img src="https://i.pravatar.cc/150?u=student1" />
         </v-avatar>
       </div>
     </v-app-bar>
+
 
     <!-- Main Content -->
     <v-main>
@@ -101,11 +141,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { contractService } from '@/services/contractService'
+import { roomApplicationService } from '@/services/roomApplicationService'
 
 const drawer = ref(true) // Always keep drawer open
 const router = useRouter()
+const roomLabel = ref('Chưa xếp phòng')
 
 const menu = [
   { title: 'Trang chủ', icon: 'mdi-home-outline', to: '/student' },
@@ -123,6 +166,41 @@ const logout = () => { localStorage.clear(); router.push('/login') }
 const toggleDrawer = () => {
   // Do nothing - keep drawer always open
 }
+
+const fetchRoomNumber = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id
+    if (!userId) return
+
+    // 1. Kiểm tra hợp đồng hoạt động (Active/Pending)
+    const contracts = await contractService.getByUserId(userId)
+    const activeContract = contracts.find(c => c.status === 'Active' || c.status === 'Pending')
+    if (activeContract) {
+      roomLabel.value = `${activeContract.roomNumber}-${activeContract.buildingName}`
+      return
+    }
+
+    // 2. Nếu không có hợp đồng, kiểm tra các đơn đăng ký đã gửi
+    const applications = await roomApplicationService.getByUserId(userId)
+    const appWithRoom = applications.find(app => 
+      app.status === 'Pending' || app.status === 'UnderReview' || app.status === 'Approved'
+    )
+    if (appWithRoom) {
+      const roomNumber = appWithRoom.assignedRoomNumber || appWithRoom.preferredRoomNumber
+      const buildingName = appWithRoom.assignedBuildingName || appWithRoom.preferredBuildingName
+      if (roomNumber && buildingName) {
+        roomLabel.value = `${roomNumber}-${buildingName}`
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy số phòng cho top bar:', error)
+  }
+}
+
+onMounted(() => {
+  fetchRoomNumber()
+})
 </script>
 
 <style scoped>

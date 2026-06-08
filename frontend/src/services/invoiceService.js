@@ -1,29 +1,59 @@
-import { billingMaintenanceApi } from './api';
+import api from "./api";
 
-export default {
-  // Invoice CRUD
+export const invoiceService = {
+  /**
+   * Get all invoices
+   */
   getAll() {
-    return billingMaintenanceApi.get('/invoices');
+    return api.get("/invoices");
   },
+
+  /**
+   * Get by ID
+   */
   getById(id) {
-    return billingMaintenanceApi.get(`/invoices/${id}`);
+    return api.get(`/invoices/${id}`);
   },
+
+  /**
+   * Get by student ID
+   */
   getByStudentId(studentId) {
-    return billingMaintenanceApi.get(`/invoices/student/${studentId}`);
+    return api.get(`/invoices/student/${studentId}`);
   },
+
+  /**
+   * Get by contract ID
+   */
   getByContractId(contractId) {
-    return billingMaintenanceApi.get(`/invoices/contract/${contractId}`);
+    return api.get(`/invoices/contract/${contractId}`);
   },
-  getByInvoiceCode(invoiceCode) {
-    return billingMaintenanceApi.get(`/invoices/code/${invoiceCode}`);
+
+  /**
+   * Get by status
+   */
+  getByStatus(status) {
+    return api.get(`/invoices/status/${status}`);
   },
+
+  /**
+   * Create new invoice
+   */
   create(data) {
-    return billingMaintenanceApi.post('/invoices', data);
+    return api.post("/invoices", data);
   },
+
+  /**
+   * Update invoice
+   */
   update(id, data) {
-    return billingMaintenanceApi.put(`/invoices/${id}`, data);
+    return api.put(`/invoices/${id}`, data);
   },
+
+  /**
+   * Delete invoice
+   */
   delete(id) {
-    return billingMaintenanceApi.delete(`/invoices/${id}`);
-  }
+    return api.delete(`/invoices/${id}`);
+  },
 };

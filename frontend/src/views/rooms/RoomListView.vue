@@ -10,9 +10,12 @@
           Quản lý phòng, trạng thái và phân bổ sinh viên
         </p>
       </div>
-      <a-button type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+      <a-button v-if="!isReadOnly" type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
         + Thêm phòng
       </a-button>
+      <a-tag v-else color="blue" style="padding: 8px 16px; font-size: 13px;">
+        <EyeOutlined /> Chỉ xem
+      </a-tag>
     </div>
     
     <!-- Statistics and Table Card -->
@@ -70,10 +73,13 @@
           </template>
           
           <template v-else-if="column.key === 'actions'">
-            <a-space>
+            <a-space v-if="!isReadOnly">
               <a-button size="small" @click="openEdit(record)">Sửa</a-button>
               <a-button size="small" danger @click="confirmDelete(record)">Xóa</a-button>
             </a-space>
+            <a-tag v-else color="default">
+              <EyeOutlined /> Chi tiết
+            </a-tag>
           </template>
         </template>
       </a-table>
@@ -155,12 +161,16 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
 import { floorService } from '@/services/floorService'
 import ImageUpload from '@/components/common/ImageUpload.vue'
+
+const route = useRoute()
+const isReadOnly = computed(() => route.meta.readonly === true)
 
 const rooms = ref([])
 const buildings = ref([])

@@ -18,6 +18,7 @@ const props = defineProps({
       'Bảo trì': 'warning',
       'Đang ở': 'info',
       'Chờ duyệt': 'warning',
+      'Chờ ký': 'warning',
       'Hiệu lực': 'success',
       'Sắp hết hạn': 'warning',
       'Đã chấm dứt': 'error',

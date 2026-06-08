@@ -1,47 +1,134 @@
-import { contractStudentApi as api } from './api'
+import api from "./api";
 
 export const roomApplicationService = {
-  getAll() {
-    return api.get('/roomapplications')
+  /**
+   * Get all room applications
+   */
+  async getAll() {
+    try {
+      const response = await api.get("/roomapplications");
+      return response;
+    } catch (error) {
+      console.warn('API error, returning mock data:', error);
+      // Mock data fallback
+      return [];
+    }
   },
 
-  getById(id) {
-    return api.get(`/roomapplications/${id}`)
+  /**
+   * Get by ID
+   */
+  async getById(id) {
+    try {
+      const response = await api.get(`/roomapplications/${id}`);
+      return response;
+    } catch (error) {
+      console.warn('API error:', error);
+      return null;
+    }
   },
 
-  getByStudentId(studentId) {
-    return api.get(`/roomapplications/student/${studentId}`)
+  /**
+   * Get by student ID
+   */
+  async getByStudentId(studentId) {
+    try {
+      const response = await api.get(`/roomapplications/student/${studentId}`);
+      return response;
+    } catch (error) {
+      console.warn('API error:', error);
+      return [];
+    }
   },
 
-  getByUserId(userId) {
-    return api.get(`/roomapplications/user/${userId}`)
+  /**
+   * Get by user ID
+   */
+  async getByUserId(userId) {
+    try {
+      const response = await api.get(`/roomapplications/user/${userId}`);
+      return response;
+    } catch (error) {
+      console.warn('API error:', error);
+      return [];
+    }
   },
 
-  getByStatus(status) {
-    return api.get(`/roomapplications/status/${status}`)
+  /**
+   * Get by status
+   */
+  async getByStatus(status) {
+    try {
+      const response = await api.get(`/roomapplications/status/${status}`);
+      return response;
+    } catch (error) {
+      console.warn('API error:', error);
+      return [];
+    }
   },
 
-  create(data) {
-    return api.post('/roomapplications', data)
+  /**
+   * Create new application
+   */
+  async create(data) {
+    try {
+      const response = await api.post("/roomapplications", data);
+      return response;
+    } catch (error) {
+      console.error('Create failed:', error);
+      throw error;
+    }
   },
 
-  update(id, data) {
-    return api.put(`/roomapplications/${id}`, data)
+  /**
+   * Update application
+   */
+  async update(id, data) {
+    try {
+      const response = await api.put(`/roomapplications/${id}`, data);
+      return response;
+    } catch (error) {
+      console.error('Update failed:', error);
+      throw error;
+    }
   },
 
-  approve(id, data) {
-    return api.put(`/roomapplications/${id}/approve`, data)
+  /**
+   * Approve application (Staff/Admin)
+   */
+  async approve(id, reviewData) {
+    try {
+      const response = await api.put(`/roomapplications/${id}/approve`, reviewData);
+      return response;
+    } catch (error) {
+      console.error('Approve failed:', error);
+      throw error;
+    }
   },
 
-  reject(id, data) {
-    return api.put(`/roomapplications/${id}/reject`, data)
+  /**
+   * Reject application (Staff/Admin)
+   */
+  async reject(id, reviewData) {
+    try {
+      const response = await api.put(`/roomapplications/${id}/reject`, reviewData);
+      return response;
+    } catch (error) {
+      console.error('Reject failed:', error);
+      throw error;
+    }
   },
 
-  accept(id, data) {
-    return api.post(`/roomapplications/${id}/accept`, data)
+  /**
+   * Delete application
+   */
+  async delete(id) {
+    try {
+      const response = await api.delete(`/roomapplications/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete failed:', error);
+      throw error;
+    }
   },
-
-  delete(id) {
-    return api.delete(`/roomapplications/${id}`)
-  },
-}
+};

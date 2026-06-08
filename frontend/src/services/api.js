@@ -3,14 +3,20 @@ import axios from 'axios'
 function createApi(baseURL) {
   const api = axios.create({
     baseURL,
-    timeout: 10000,
+    timeout: 30000, // Tăng timeout lên 30 giây để xử lý các request phức tạp
     headers: {
       'Content-Type': 'application/json',
     },
   })
 
   api.interceptors.request.use(
-    (config) => config,
+    (config) => {
+      const token = localStorage.getItem('token')
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      return config
+    },
     (error) => Promise.reject(error)
   )
 

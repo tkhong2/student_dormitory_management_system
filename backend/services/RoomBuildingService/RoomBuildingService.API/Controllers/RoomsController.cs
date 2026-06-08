@@ -38,31 +38,38 @@ namespace RoomBuildingService.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomDto>>> GetAll()
         {
-            var rooms = await _roomRepository.GetAllAsync();
-            var roomDtos = rooms.Select(r => new RoomDto
+            try
             {
-                Id = r.Id,
-                RoomNumber = r.RoomNumber,
-                FloorId = r.FloorId,
-                RoomTypeId = r.RoomTypeId,
-                BuildingId = r.Floor.BuildingId,
-                FloorNumber = r.Floor.FloorNumber,
-                BuildingName = r.Floor.Building.Name,
-                RoomTypeName = r.RoomType.Name,
-                Status = r.Status,
-                CurrentOccupants = r.CurrentOccupants,
-                MaxOccupants = r.MaxOccupants,
-                Orientation = r.Orientation,
-                Notes = r.Notes,
-                IsLocked = r.IsLocked,
-                LockReason = r.LockReason,
-                QRCode = r.QRCode,
-                ImageUrl = GetCoverImageUrl(r),
-                LastInspectedAt = r.LastInspectedAt,
-                AvailableFrom = r.AvailableFrom
-            });
+                var rooms = await _roomRepository.GetAllAsync();
+                var roomDtos = rooms.Select(r => new RoomDto
+                {
+                    Id = r.Id,
+                    RoomNumber = r.RoomNumber,
+                    FloorId = r.FloorId,
+                    RoomTypeId = r.RoomTypeId,
+                    BuildingId = r.Floor?.BuildingId ?? 0,
+                    FloorNumber = r.Floor?.FloorNumber ?? 0,
+                    BuildingName = r.Floor?.Building?.Name ?? "",
+                    RoomTypeName = r.RoomType?.Name ?? "",
+                    Status = r.Status,
+                    CurrentOccupants = r.CurrentOccupants,
+                    MaxOccupants = r.MaxOccupants,
+                    Orientation = r.Orientation,
+                    Notes = r.Notes,
+                    IsLocked = r.IsLocked,
+                    LockReason = r.LockReason,
+                    QRCode = r.QRCode,
+                    ImageUrl = GetCoverImageUrl(r),
+                    LastInspectedAt = r.LastInspectedAt,
+                    AvailableFrom = r.AvailableFrom
+                }).ToList();
 
-            return Ok(roomDtos);
+                return Ok(roomDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi lấy danh sách phòng: {ex.Message}" });
+            }
         }
 
         [HttpGet("{id}")]
