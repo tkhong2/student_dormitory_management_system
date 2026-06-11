@@ -157,16 +157,22 @@ namespace ContractStudentService.Infrastructure.Repositories
                 .Include(c => c.Application)
                 .Include(c => c.Extensions)
                 .Include(c => c.RoomTransfers)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
         public async Task<IEnumerable<Contract>> GetAllAsync() => 
             await _context.Contracts
                 .Include(c => c.Student)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
         public async Task<IEnumerable<Contract>> GetByStudentIdAsync(int studentId) => 
             await _context.Contracts
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .Where(c => c.StudentId == studentId)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
@@ -174,28 +180,39 @@ namespace ContractStudentService.Infrastructure.Repositories
         public async Task<IEnumerable<Contract>> GetByUserIdAsync(int userId) =>
             await _context.Contracts
                 .Include(c => c.Student)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .Where(c => c.Student.UserId == userId)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
         public async Task<Contract?> GetByContractCodeAsync(string contractCode) => 
-            await _context.Contracts.FirstOrDefaultAsync(c => c.ContractCode == contractCode);
+            await _context.Contracts
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
+                .FirstOrDefaultAsync(c => c.ContractCode == contractCode);
 
         public async Task<IEnumerable<Contract>> GetByStatusAsync(string status) => 
             await _context.Contracts
                 .Include(c => c.Student)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .Where(c => c.Status == status)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
         public async Task<IEnumerable<Contract>> GetActiveContractsByStudentAsync(int studentId) =>
             await _context.Contracts
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .Where(c => c.StudentId == studentId && c.Status == "Active")
                 .ToListAsync();
 
         public async Task<IEnumerable<Contract>> GetActiveContractsByUserIdAsync(int userId) =>
             await _context.Contracts
                 .Include(c => c.Student)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
                 .Where(c => c.Student.UserId == userId && c.Status == "Active")
                 .ToListAsync();
 
@@ -326,6 +343,94 @@ namespace ContractStudentService.Infrastructure.Repositories
         public async Task DeleteAsync(RoomTransfer transfer) 
         { 
             _context.RoomTransfers.Remove(transfer); 
+            await _context.SaveChangesAsync(); 
+        }
+    }
+
+    public class ContractTemplateRepository : IContractTemplateRepository
+    {
+        private readonly AppDbContext _context;
+        public ContractTemplateRepository(AppDbContext context) => _context = context;
+
+        public async Task<ContractTemplate?> GetByIdAsync(int id) => 
+            await _context.ContractTemplates
+                .Include(t => t.Terms.OrderBy(term => term.OrderIndex))
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+        public async Task<IEnumerable<ContractTemplate>> GetAllAsync() => 
+            await _context.ContractTemplates
+                .Include(t => t.Terms.OrderBy(term => term.OrderIndex))
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+
+        public async Task<ContractTemplate?> GetByCodeAsync(string code) => 
+            await _context.ContractTemplates
+                .Include(t => t.Terms.OrderBy(term => term.OrderIndex))
+                .FirstOrDefaultAsync(t => t.Code == code);
+
+        public async Task<ContractTemplate?> GetDefaultAsync() => 
+            await _context.ContractTemplates
+                .Include(t => t.Terms.OrderBy(term => term.OrderIndex))
+                .FirstOrDefaultAsync(t => t.IsDefault && t.IsActive);
+
+        public async Task<IEnumerable<ContractTemplate>> GetActiveAsync() => 
+            await _context.ContractTemplates
+                .Include(t => t.Terms.OrderBy(term => term.OrderIndex))
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+
+        public async Task AddAsync(ContractTemplate template) 
+        { 
+            await _context.ContractTemplates.AddAsync(template); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task UpdateAsync(ContractTemplate template) 
+        { 
+            _context.ContractTemplates.Update(template); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task DeleteAsync(ContractTemplate template) 
+        { 
+            _context.ContractTemplates.Remove(template); 
+            await _context.SaveChangesAsync(); 
+        }
+    }
+
+    public class ContractTermRepository : IContractTermRepository
+    {
+        private readonly AppDbContext _context;
+        public ContractTermRepository(AppDbContext context) => _context = context;
+
+        public async Task<ContractTerm?> GetByIdAsync(int id) => 
+            await _context.ContractTerms.FindAsync(id);
+
+        public async Task<IEnumerable<ContractTerm>> GetAllAsync() => 
+            await _context.ContractTerms.ToListAsync();
+
+        public async Task<IEnumerable<ContractTerm>> GetByTemplateIdAsync(int templateId) => 
+            await _context.ContractTerms
+                .Where(t => t.ContractTemplateId == templateId)
+                .OrderBy(t => t.OrderIndex)
+                .ToListAsync();
+
+        public async Task AddAsync(ContractTerm term) 
+        { 
+            await _context.ContractTerms.AddAsync(term); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task UpdateAsync(ContractTerm term) 
+        { 
+            _context.ContractTerms.Update(term); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task DeleteAsync(ContractTerm term) 
+        { 
+            _context.ContractTerms.Remove(term); 
             await _context.SaveChangesAsync(); 
         }
     }

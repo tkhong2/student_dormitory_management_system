@@ -111,7 +111,153 @@ public static class DataSeeder
             Console.WriteLine($"ℹ️  All room types already exist, using existing {roomTypes.Count} room types");
         }
 
-        // 3. Seed Floors for each building (only add if not exists)
+        // 3. Seed Amenities (only add if not exists)
+        var existingAmenityNames = context.Amenities.Select(a => a.Name).ToList();
+        var amenities = new List<Amenity>();
+
+        var amenitiesToAdd = new[]
+        {
+            new { Name = "Điều hòa", Category = "Electric", IconUrl = "❄️" },
+            new { Name = "Nóng lạnh", Category = "Electric", IconUrl = "🚿" },
+            new { Name = "WC riêng", Category = "Sanitary", IconUrl = "🚽" },
+            new { Name = "Tủ lạnh", Category = "Electric", IconUrl = "🧊" },
+            new { Name = "Giường tầng", Category = "Furniture", IconUrl = "🛏️" },
+            new { Name = "Tủ quần áo", Category = "Furniture", IconUrl = "👔" },
+            new { Name = "Bàn học", Category = "Furniture", IconUrl = "📚" },
+            new { Name = "Kệ sách", Category = "Furniture", IconUrl = "📖" },
+            new { Name = "Quạt trần", Category = "Electric", IconUrl = "💨" },
+            new { Name = "Ban công", Category = "Other", IconUrl = "🪟" },
+            new { Name = "Cửa sổ lớn", Category = "Other", IconUrl = "🪟" },
+            new { Name = "TV", Category = "Electric", IconUrl = "📺" }
+        };
+
+        foreach (var a in amenitiesToAdd)
+        {
+            if (!existingAmenityNames.Contains(a.Name))
+            {
+                var amenity = new Amenity
+                {
+                    Name = a.Name,
+                    Category = a.Category,
+                    IconUrl = a.IconUrl,
+                    IsActive = true
+                };
+                amenities.Add(amenity);
+                await context.Amenities.AddAsync(amenity);
+            }
+        }
+
+        if (amenities.Any())
+        {
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✅ Added {amenities.Count} new amenities");
+        }
+        else
+        {
+            // Load existing amenities
+            amenities = await context.Amenities.ToListAsync();
+            Console.WriteLine($"ℹ️  All amenities already exist, using existing {amenities.Count} amenities");
+        }
+
+        // 4. Seed RoomTypeAmenities (only add if not exists)
+        var existingRoomTypeAmenities = await context.RoomTypeAmenities
+            .Select(rta => new { rta.RoomTypeId, rta.AmenityId })
+            .ToListAsync();
+
+        var roomTypeAmenities = new List<RoomTypeAmenity>();
+
+        // Phòng 2 người: Điều hòa, Nóng lạnh, Tủ quần áo, Bàn học, Kệ sách, Cửa sổ lớn
+        var roomType2P = roomTypes.FirstOrDefault(rt => rt.Code == "2P");
+        if (roomType2P != null)
+        {
+            var amenitiesFor2P = new[] { "Điều hòa", "Nóng lạnh", "Tủ quần áo", "Bàn học", "Kệ sách", "Cửa sổ lớn" };
+            foreach (var amenityName in amenitiesFor2P)
+            {
+                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
+                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType2P.Id && rta.AmenityId == amenity.Id))
+                {
+                    roomTypeAmenities.Add(new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType2P.Id,
+                        AmenityId = amenity.Id,
+                        Quantity = amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 2 : 1
+                    });
+                }
+            }
+        }
+
+        // Phòng 4 người: Điều hòa, Giường tầng, Tủ quần áo, Bàn học, Quạt trần
+        var roomType4P = roomTypes.FirstOrDefault(rt => rt.Code == "4P");
+        if (roomType4P != null)
+        {
+            var amenitiesFor4P = new[] { "Điều hòa", "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" };
+            foreach (var amenityName in amenitiesFor4P)
+            {
+                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
+                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType4P.Id && rta.AmenityId == amenity.Id))
+                {
+                    roomTypeAmenities.Add(new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType4P.Id,
+                        AmenityId = amenity.Id,
+                        Quantity = amenityName == "Giường tầng" ? 2 : amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 4 : 1
+                    });
+                }
+            }
+        }
+
+        // Phòng 6 người: Giường tầng, Tủ quần áo, Bàn học, Quạt trần
+        var roomType6P = roomTypes.FirstOrDefault(rt => rt.Code == "6P");
+        if (roomType6P != null)
+        {
+            var amenitiesFor6P = new[] { "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" };
+            foreach (var amenityName in amenitiesFor6P)
+            {
+                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
+                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType6P.Id && rta.AmenityId == amenity.Id))
+                {
+                    roomTypeAmenities.Add(new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType6P.Id,
+                        AmenityId = amenity.Id,
+                        Quantity = amenityName == "Giường tầng" ? 3 : amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 6 : 1
+                    });
+                }
+            }
+        }
+
+        // Phòng 4 người VIP: Điều hòa, Nóng lạnh, WC riêng, Tủ lạnh, Tủ quần áo, Bàn học, TV, Ban công
+        var roomType4PVIP = roomTypes.FirstOrDefault(rt => rt.Code == "4P-VIP");
+        if (roomType4PVIP != null)
+        {
+            var amenitiesFor4PVIP = new[] { "Điều hòa", "Nóng lạnh", "WC riêng", "Tủ lạnh", "Tủ quần áo", "Bàn học", "TV", "Ban công" };
+            foreach (var amenityName in amenitiesFor4PVIP)
+            {
+                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
+                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType4PVIP.Id && rta.AmenityId == amenity.Id))
+                {
+                    roomTypeAmenities.Add(new RoomTypeAmenity
+                    {
+                        RoomTypeId = roomType4PVIP.Id,
+                        AmenityId = amenity.Id,
+                        Quantity = amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 4 : 1
+                    });
+                }
+            }
+        }
+
+        if (roomTypeAmenities.Any())
+        {
+            await context.RoomTypeAmenities.AddRangeAsync(roomTypeAmenities);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✅ Added {roomTypeAmenities.Count} room type amenities");
+        }
+        else
+        {
+            Console.WriteLine($"ℹ️  Room type amenities already exist");
+        }
+
+        // 5. Seed Floors for each building (only add if not exists)
         var existingFloorCount = await context.Floors.CountAsync();
         var floors = new List<Floor>();
         
@@ -143,7 +289,7 @@ public static class DataSeeder
             Console.WriteLine($"ℹ️  Floors already exist, using existing {floors.Count} floors");
         }
 
-        // 4. Seed Rooms (only add if not exists)
+        // 6. Seed Rooms (only add if not exists)
         var existingRoomNumbers = context.Rooms.Select(r => r.RoomNumber).ToList();
         var rooms = new List<Room>();
         var roomStatuses = new[] { "Available", "Available", "Available", "Full", "Maintenance" };

@@ -201,7 +201,19 @@ const currentUser = authStore.user || {
   avatarUrl: null
 };
 
-const userAvatarUrl = currentUser.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser.username || 'default'}`;
+// Computed avatar URL - use real avatar if available, otherwise use placeholder
+const userAvatarUrl = computed(() => {
+  if (currentUser.avatarUrl) {
+    // If avatarUrl starts with http, use it directly
+    if (currentUser.avatarUrl.startsWith('http')) {
+      return currentUser.avatarUrl;
+    }
+    // If it's a relative path, prepend the RoomBuildingService base URL
+    return `http://localhost:5003${currentUser.avatarUrl}`;
+  }
+  // Fallback to placeholder
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName || 'User')}&background=ff6b00&color=fff&size=128`;
+});
 
 watch(
   () => route.path,
@@ -242,11 +254,6 @@ const menuItems = computed(() => {
             key: "/staff/contracts",
             icon: () => h(FileTextOutlined),
             label: "Hợp đồng",
-          },
-          {
-            key: "/staff/pending-deposits",
-            icon: () => h(DollarOutlined),
-            label: "Xác nhận đóng cọc",
           },
           {
             key: "/staff/room-transfers",

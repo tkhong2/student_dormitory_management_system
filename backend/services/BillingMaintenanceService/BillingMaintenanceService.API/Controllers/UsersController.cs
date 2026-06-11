@@ -76,6 +76,9 @@ namespace BillingMaintenanceService.API.Controllers
                 Role = dto.Role,
                 StudentId = dto.StudentId,
                 StudentCode = dto.StudentCode,
+                Gender = dto.Gender,
+                DateOfBirth = dto.DateOfBirth,
+                Address = dto.Address,
                 IsActive = true
             };
 
@@ -94,6 +97,10 @@ namespace BillingMaintenanceService.API.Controllers
             user.Phone = dto.Phone;
             user.Role = dto.Role;
             user.AvatarUrl = dto.AvatarUrl;
+            user.StudentCode = dto.StudentCode;
+            user.Gender = dto.Gender;
+            user.DateOfBirth = dto.DateOfBirth;
+            user.Address = dto.Address;
             user.IsActive = dto.IsActive;
 
             await _userRepository.UpdateAsync(user);
@@ -134,6 +141,9 @@ namespace BillingMaintenanceService.API.Controllers
                 AvatarUrl = user.AvatarUrl,
                 StudentId = user.StudentId,
                 StudentCode = user.StudentCode,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
+                Address = user.Address,
                 IsActive = user.IsActive,
                 LastLoginAt = user.LastLoginAt,
                 CreatedAt = user.CreatedAt

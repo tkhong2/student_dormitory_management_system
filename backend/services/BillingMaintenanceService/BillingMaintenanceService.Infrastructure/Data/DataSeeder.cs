@@ -22,6 +22,9 @@ public static class DataSeeder
                 Email = "admin@dormitory.com",
                 Phone = "0901234567",
                 Role = "Admin",
+                Gender = "Male",
+                DateOfBirth = new DateOnly(1985, 5, 15),
+                Address = "123 Đường Nguyễn Huệ, Quận 1, TP.HCM",
                 IsActive = true,
                 IsDeleted = false,
                 DeletedAt = null
@@ -35,6 +38,9 @@ public static class DataSeeder
                 Email = "staff01@dormitory.com",
                 Phone = "0902345678",
                 Role = "Staff",
+                Gender = "Male",
+                DateOfBirth = new DateOnly(1990, 8, 20),
+                Address = "456 Đường Lê Lợi, Quận 3, TP.HCM",
                 IsActive = true,
                 IsDeleted = false,
                 DeletedAt = null
@@ -49,6 +55,9 @@ public static class DataSeeder
                 Phone = "0903456789",
                 Role = "Student",
                 StudentCode = "SV001",
+                Gender = "Female",
+                DateOfBirth = new DateOnly(2003, 3, 10),
+                Address = "789 Đường Võ Văn Tần, Quận 3, TP.HCM",
                 IsActive = true,
                 IsDeleted = false,
                 DeletedAt = null
@@ -71,6 +80,9 @@ public static class DataSeeder
                 existingUser.Phone = seedUser.Phone;
                 existingUser.Role = seedUser.Role;
                 existingUser.StudentCode = seedUser.StudentCode;
+                existingUser.Gender = seedUser.Gender;
+                existingUser.DateOfBirth = seedUser.DateOfBirth;
+                existingUser.Address = seedUser.Address;
                 existingUser.IsActive = seedUser.IsActive;
                 existingUser.IsDeleted = false;
                 existingUser.DeletedAt = null;

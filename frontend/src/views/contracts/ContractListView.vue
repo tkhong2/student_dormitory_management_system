@@ -179,6 +179,11 @@
           
           <template v-else-if="column.key === 'actions'">
             <a-space>
+              <a-tooltip title="Xem chi tiết">
+                <a-button type="text" size="small" @click="viewDetail(record)">
+                  <template #icon><EyeOutlined /></template>
+                </a-button>
+              </a-tooltip>
               <a-tooltip title="Sửa">
                 <a-button type="text" size="small" @click="openEdit(record)">
                   <template #icon><EditOutlined /></template>
@@ -326,6 +331,107 @@
     >
       <p>Bạn có chắc muốn xóa hợp đồng <strong>{{ deleteTarget?.code }}</strong>?</p>
     </a-modal>
+
+    <!-- Detail Modal -->
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết hợp đồng"
+      width="900px"
+      :footer="null"
+    >
+      <a-descriptions v-if="detailTarget" bordered :column="2" size="small">
+        <a-descriptions-item label="Mã hợp đồng" :span="1">
+          <strong>{{ detailTarget.code }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Trạng thái" :span="1">
+          <a-tag :color="getStatusColor(detailTarget.displayStatus)">
+            {{ detailTarget.displayStatus }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Sinh viên" :span="2">
+          <strong>{{ detailTarget.studentName }}</strong> ({{ detailTarget.studentCode }})
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Phòng">
+          {{ detailTarget.roomNumber }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Tòa nhà">
+          {{ detailTarget.buildingName }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Loại phòng">
+          {{ detailTarget.roomTypeName }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Giá thuê">
+          <strong style="color: #1890ff;">{{ formatPrice(detailTarget.price) }}/tháng</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Tiền cọc">
+          {{ formatPrice(detailTarget.depositAmount || detailTarget.price) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Đã đóng cọc">
+          <a-tag :color="detailTarget.isDepositPaid ? 'success' : 'warning'">
+            {{ detailTarget.isDepositPaid ? 'Đã đóng' : 'Chưa đóng' }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Ngày bắt đầu">
+          {{ detailTarget.startDate }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Ngày kết thúc">
+          {{ detailTarget.endDate }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Giá điện">
+          {{ formatPrice(detailTarget.electricityRate || 3500) }}/kWh
+        </a-descriptions-item>
+        <a-descriptions-item label="Giá nước">
+          {{ formatPrice(detailTarget.waterRate || 15000) }}/m³
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Ngày thanh toán">
+          Ngày {{ detailTarget.paymentDueDay || 5 }} hàng tháng
+        </a-descriptions-item>
+        <a-descriptions-item label="Ngày ký">
+          {{ detailTarget.signedAt ? formatDate(detailTarget.signedAt) : 'Chưa ký' }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.notes" label="Ghi chú" :span="2">
+          {{ detailTarget.notes }}
+        </a-descriptions-item>
+      </a-descriptions>
+
+      <a-divider />
+
+      <h4 style="font-weight: 600; margin-bottom: 12px;">Điều khoản hợp đồng</h4>
+      <a-list v-if="detailTarget?.terms && detailTarget.terms.length > 0" size="small" :data-source="detailTarget.terms">
+        <template #renderItem="{ item, index }">
+          <a-list-item>
+            <a-list-item-meta>
+              <template #avatar>
+                <a-avatar :style="{ backgroundColor: '#1890ff' }">{{ index + 1 }}</a-avatar>
+              </template>
+              <template #title>
+                <strong>{{ item.title }}</strong>
+              </template>
+              <template #description>
+                {{ item.content }}
+              </template>
+            </a-list-item-meta>
+          </a-list-item>
+        </template>
+      </a-list>
+      <a-empty v-else description="Không có điều khoản" />
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <a-button @click="detailDialog = false">Đóng</a-button>
+        <a-button type="primary" @click="openEdit(detailTarget)">
+          <template #icon><EditOutlined /></template>
+          Chỉnh sửa
+        </a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -340,7 +446,8 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  FileAddOutlined
+  FileAddOutlined,
+  EyeOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
@@ -384,8 +491,10 @@ const saving = ref(false)
 const error = ref(null)
 const dialog = ref(false)
 const deleteDialog = ref(false)
+const detailDialog = ref(false)
 const editTarget = ref(null)
 const deleteTarget = ref(null)
+const detailTarget = ref(null)
 const formErrors = ref({})
 const search = ref('')
 const statusFilter = ref(undefined)
@@ -434,7 +543,8 @@ async function loadContracts() {
       price: item.monthlyRent, // Map monthlyRent to price
       startDate: formatDate(item.startDate),
       endDate: formatDate(item.endDate),
-      displayStatus: displayStatus(item)
+      displayStatus: displayStatus(item),
+      terms: item.terms || [] // Ensure terms is always an array
     }))
     console.log('Loaded contracts:', contracts.value)
   } catch (err) {
@@ -548,7 +658,13 @@ function openEdit(item) {
     endDate: item.endDate ? dayjs(item.endDate, 'DD/MM/YYYY') : null
   }
   formErrors.value = {}
+  detailDialog.value = false // Close detail dialog if open
   dialog.value = true
+}
+
+function viewDetail(item) {
+  detailTarget.value = item
+  detailDialog.value = true
 }
 
 function closeDialog() {

@@ -61,14 +61,18 @@
         <!-- Student Info Bottom -->
         <div class="pa-6">
           <v-card flat color="indigo-darken-4" class="pa-4 rounded-xl d-flex align-center ga-3">
-            <v-avatar size="40">
-              <v-img src="https://i.pravatar.cc/150?u=student1" />
+            <v-avatar size="40" style="flex-shrink: 0;">
+              <v-img :src="userAvatarUrl" />
             </v-avatar>
-            <div class="min-w-0 flex-grow-1">
-              <div class="text-body-2 font-weight-black text-white text-truncate">Nguyễn Văn An</div>
-              <div class="text-caption text-white opacity-50">SV001 · K65-CNTT</div>
+            <div style="flex: 1; min-width: 0; overflow: hidden;">
+              <div class="text-body-2 font-weight-black text-white" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ currentUser.fullName }}
+              </div>
+              <div class="text-caption text-white opacity-50" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ studentInfo }}
+              </div>
             </div>
-            <v-btn icon="mdi-logout" size="x-small" variant="text" color="white" @click="logout" />
+            <v-btn icon="mdi-logout" size="x-small" variant="text" color="white" @click="logout" style="flex-shrink: 0;" />
           </v-card>
         </div>
       </div>
@@ -121,7 +125,7 @@
           class="cursor-pointer"
           style="border: 2px solid #6366f1; box-shadow: 0 2px 10px rgba(99,102,241,0.3);"
         >
-          <v-img src="https://i.pravatar.cc/150?u=student1" />
+          <v-img :src="userAvatarUrl" />
         </v-avatar>
       </div>
     </v-app-bar>
@@ -141,14 +145,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { contractService } from '@/services/contractService'
 import { roomApplicationService } from '@/services/roomApplicationService'
 
 const drawer = ref(true) // Always keep drawer open
 const router = useRouter()
+const authStore = useAuthStore()
 const roomLabel = ref('Chưa xếp phòng')
+
+// Get current user from auth store
+const currentUser = computed(() => authStore.user || {
+  fullName: 'Sinh viên',
+  studentCode: 'SV???',
+  avatarUrl: null
+})
+
+// Process avatar URL
+const userAvatarUrl = computed(() => {
+  if (currentUser.value.avatarUrl) {
+    if (currentUser.value.avatarUrl.startsWith('http')) {
+      return currentUser.value.avatarUrl
+    }
+    return `http://localhost:5003${currentUser.value.avatarUrl}`
+  }
+  // Fallback to placeholder with user's name
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=6366f1&color=fff&size=128`
+})
+
+// Get student info text (StudentCode · Class)
+const studentInfo = computed(() => {
+  const code = currentUser.value.studentCode || 'SV???'
+  // Try to get class from user or default
+  return `${code}`
+})
 
 const menu = [
   { title: 'Trang chủ', icon: 'mdi-home-outline', to: '/student' },
@@ -160,7 +192,10 @@ const menu = [
   { title: 'Hồ sơ cá nhân', icon: 'mdi-account-outline', to: '/student/profile' },
 ]
 
-const logout = () => { localStorage.clear(); router.push('/login') }
+const logout = () => { 
+  authStore.logout()
+  router.push('/login') 
+}
 
 // Prevent drawer toggle
 const toggleDrawer = () => {
@@ -169,7 +204,7 @@ const toggleDrawer = () => {
 
 const fetchRoomNumber = async () => {
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const user = currentUser.value
     const userId = user.id
     if (!userId) return
 

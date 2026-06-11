@@ -8,6 +8,7 @@ public class Contract : BaseEntity
 {
     public int StudentId { get; set; }
     public int ApplicationId { get; set; }
+    public int? ContractTemplateId { get; set; }            // Mẫu hợp đồng sử dụng
 
     // Ref IDs sang RoomService (không FK cứng)
     public int RoomId { get; set; }                         // ref → RoomService.Rooms
@@ -54,6 +55,7 @@ public class Contract : BaseEntity
     // Navigation
     public Student Student { get; set; } = null!;
     public RoomApplication Application { get; set; } = null!;
+    public ContractTemplate? ContractTemplate { get; set; }
     public ICollection<ContractExtension> Extensions { get; set; } = new List<ContractExtension>();
     public ICollection<RoomTransfer> RoomTransfers { get; set; } = new List<RoomTransfer>();
 }

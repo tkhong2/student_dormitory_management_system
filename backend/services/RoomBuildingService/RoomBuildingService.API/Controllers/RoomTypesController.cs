@@ -13,17 +13,20 @@ namespace RoomBuildingService.API.Controllers
         private readonly IRoomRepository _roomRepository;
         private readonly IBuildingRepository _buildingRepository;
         private readonly IRoomTypeAmenityRepository _roomTypeAmenityRepository;
+        private readonly IAmenityRepository _amenityRepository;
 
         public RoomTypesController(
             IRoomTypeRepository roomTypeRepository,
             IRoomRepository roomRepository,
             IBuildingRepository buildingRepository,
-            IRoomTypeAmenityRepository roomTypeAmenityRepository)
+            IRoomTypeAmenityRepository roomTypeAmenityRepository,
+            IAmenityRepository amenityRepository)
         {
             _roomTypeRepository = roomTypeRepository;
             _roomRepository = roomRepository;
             _buildingRepository = buildingRepository;
             _roomTypeAmenityRepository = roomTypeAmenityRepository;
+            _amenityRepository = amenityRepository;
         }
 
         [HttpGet]
@@ -98,6 +101,45 @@ namespace RoomBuildingService.API.Controllers
             };
 
             return Ok(roomTypeDto);
+        }
+
+        [HttpGet("{id}/amenities")]
+        public async Task<ActionResult<IEnumerable<AmenityWithQuantityDto>>> GetRoomTypeAmenities(int id)
+        {
+            try
+            {
+                var roomType = await _roomTypeRepository.GetByIdAsync(id);
+                if (roomType == null)
+                    return NotFound(new { message = "Không tìm thấy loại phòng" });
+
+                var roomTypeAmenities = await _roomTypeAmenityRepository.GetByRoomTypeIdAsync(id);
+                var amenityDtos = new List<AmenityWithQuantityDto>();
+
+                foreach (var rta in roomTypeAmenities)
+                {
+                    var amenity = await _amenityRepository.GetByIdAsync(rta.AmenityId);
+                    if (amenity != null)
+                    {
+                        amenityDtos.Add(new AmenityWithQuantityDto
+                        {
+                            Id = amenity.Id,
+                            Name = amenity.Name,
+                            Category = amenity.Category,
+                            IconUrl = amenity.IconUrl,
+                            Quantity = rta.Quantity,
+                            Note = rta.Note
+                        });
+                    }
+                }
+
+                return Ok(amenityDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting amenities for room type {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { message = "Lỗi khi lấy danh sách tiện nghi", error = ex.Message });
+            }
         }
 
         [HttpPost]
@@ -264,5 +306,15 @@ namespace RoomBuildingService.API.Controllers
         public string? ThumbnailUrl { get; set; }
         public bool IsActive { get; set; } = true;
         public List<int> AmenityIds { get; set; } = new List<int>();
+    }
+
+    public class AmenityWithQuantityDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string? IconUrl { get; set; }
+        public int Quantity { get; set; }
+        public string? Note { get; set; }
     }
 }

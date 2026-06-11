@@ -11,18 +11,30 @@
       <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Phòng đã chọn</h3>
       <a-row :gutter="16">
         <a-col :xs="24" :md="8">
-          <a-image :src="selectedRoom.image" :alt="selectedRoom.name" style="border-radius: 8px; width: 100%;" />
+          <a-image :src="selectedRoom.image" :alt="`Phòng ${selectedRoom.name}`" style="border-radius: 8px; width: 100%;" />
         </a-col>
         <a-col :xs="24" :md="16">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">{{ selectedRoom.name }}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">Phòng {{ selectedRoom.name }}</h3>
             <a-tag color="blue">{{ selectedRoom.building }}</a-tag>
           </div>
           <a-descriptions :column="2" size="small">
-            <a-descriptions-item label="Sức chứa">{{ selectedRoom.capacity }} người</a-descriptions-item>
+            <a-descriptions-item label="Loại phòng">
+              <a-tag color="orange">{{ selectedRoom.roomTypeName || 'N/A' }}</a-tag>
+            </a-descriptions-item>
             <a-descriptions-item label="Diện tích">{{ selectedRoom.area }} m²</a-descriptions-item>
-            <a-descriptions-item label="Tiện nghi">{{ selectedRoom.facilities }}</a-descriptions-item>
+            <a-descriptions-item label="Sức chứa">{{ selectedRoom.capacity }} người</a-descriptions-item>
             <a-descriptions-item label="Chỗ trống">{{ selectedRoom.available }} chỗ</a-descriptions-item>
+            <a-descriptions-item label="Tiện nghi" :span="2">
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <a-tag v-for="(amenity, index) in roomAmenities" :key="index" color="green" size="small">
+                  {{ amenity }}
+                </a-tag>
+                <span v-if="!roomAmenities || roomAmenities.length === 0" style="color: #999;">
+                  Tiện nghi cơ bản
+                </span>
+              </div>
+            </a-descriptions-item>
             <a-descriptions-item label="Giá thuê/tháng" :span="2">
               <span style="font-size: 18px; font-weight: 700; color: #ff6b00;">{{ formatPrice(selectedRoom.price) }}</span>
             </a-descriptions-item>
@@ -35,73 +47,70 @@
     <a-card :bordered="false" :loading="loading">
       <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Thông tin đăng ký</h3>
       <a-form layout="vertical" :model="form">
+        
+        <!-- Thông tin cá nhân (auto-filled, read-only) -->
+        <a-divider orientation="left">Thông tin cá nhân</a-divider>
         <a-row :gutter="16">
           <a-col :xs="24" :md="12">
-            <a-form-item label="Họ và tên *" :validate-status="errors.fullName ? 'error' : ''" :help="errors.fullName">
-              <a-input v-model:value="form.fullName" placeholder="Nhập họ và tên" />
+            <a-form-item label="Họ và tên">
+              <a-input v-model:value="form.fullName" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="Mã sinh viên *" :validate-status="errors.studentCode ? 'error' : ''" :help="errors.studentCode">
-              <a-input v-model:value="form.studentCode" placeholder="Nhập mã sinh viên" />
+            <a-form-item label="Mã sinh viên">
+              <a-input v-model:value="form.studentCode" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="Email *" :validate-status="errors.email ? 'error' : ''" :help="errors.email">
-              <a-input v-model:value="form.email" type="email" placeholder="Nhập email" />
+            <a-form-item label="Email">
+              <a-input v-model:value="form.email" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="Số điện thoại *" :validate-status="errors.phone ? 'error' : ''" :help="errors.phone">
-              <a-input v-model:value="form.phone" placeholder="Nhập số điện thoại" />
+            <a-form-item label="Số điện thoại">
+              <a-input v-model:value="form.phone" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="Giới tính *" :validate-status="errors.gender ? 'error' : ''" :help="errors.gender">
-              <a-select v-model:value="form.gender" placeholder="Chọn giới tính">
-                <a-select-option value="Nam">Nam</a-select-option>
-                <a-select-option value="Nữ">Nữ</a-select-option>
-              </a-select>
+            <a-form-item label="Giới tính">
+              <a-input v-model:value="form.gender" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="Ngày sinh *" :validate-status="errors.dateOfBirth ? 'error' : ''" :help="errors.dateOfBirth">
-              <a-date-picker 
-                v-model:value="form.dateOfBirth" 
-                placeholder="Chọn ngày sinh" 
-                style="width: 100%;"
-                format="DD/MM/YYYY"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-form-item label="Ngày bắt đầu *" :validate-status="errors.startDate ? 'error' : ''" :help="errors.startDate">
-              <a-date-picker 
-                v-model:value="form.startDate" 
-                placeholder="Chọn ngày bắt đầu ở" 
-                style="width: 100%;"
-                format="DD/MM/YYYY"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-form-item label="Ngày kết thúc *" :validate-status="errors.endDate ? 'error' : ''" :help="errors.endDate">
-              <a-date-picker 
-                v-model:value="form.endDate" 
-                placeholder="Chọn ngày kết thúc" 
-                style="width: 100%;"
-                format="DD/MM/YYYY"
-              />
+            <a-form-item label="Ngày sinh">
+              <a-input v-model:value="form.dateOfBirth" disabled />
             </a-form-item>
           </a-col>
           <a-col :xs="24">
             <a-form-item label="Địa chỉ thường trú">
-              <a-textarea v-model:value="form.address" :rows="2" placeholder="Nhập địa chỉ thường trú" />
+              <a-textarea v-model:value="form.address" :rows="2" disabled />
             </a-form-item>
           </a-col>
+        </a-row>
+
+        <!-- Thời gian thuê -->
+        <a-divider orientation="left">Thời gian thuê</a-divider>
+        <a-row :gutter="16">
+          <a-col :xs="24" :md="12">
+            <a-form-item label="Thời hạn thuê *" :validate-status="errors.duration ? 'error' : ''" :help="errors.duration">
+              <a-select v-model:value="form.duration" placeholder="Chọn thời hạn thuê">
+                <a-select-option :value="3">3 tháng</a-select-option>
+                <a-select-option :value="6">6 tháng</a-select-option>
+                <a-select-option :value="12">1 năm</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="12">
+            <a-checkbox v-model:checked="form.isLocalStudent">Sinh viên nội tỉnh</a-checkbox>
+          </a-col>
+        </a-row>
+
+        <!-- Nguyện vọng -->
+        <a-divider orientation="left">Nguyện vọng</a-divider>
+        <a-row :gutter="16">
           <a-col :xs="24">
-            <a-form-item label="Yêu cầu đặc biệt">
-              <a-textarea v-model:value="form.specialRequirements" :rows="2" placeholder="Yêu cầu về bạn cùng phòng, vị trí phòng..." />
+            <a-form-item label="Nguyện vọng">
+              <a-textarea v-model:value="form.preferences" :rows="3" placeholder="Nguyện vọng về bạn cùng phòng, vị trí phòng, tầng lầu..." />
             </a-form-item>
           </a-col>
           <a-col :xs="24">
@@ -109,8 +118,53 @@
               <a-textarea v-model:value="form.note" :rows="2" placeholder="Ghi chú thêm..." />
             </a-form-item>
           </a-col>
+        </a-row>
+
+        <!-- Liên hệ khẩn cấp -->
+        <a-divider orientation="left">Người liên hệ khẩn cấp</a-divider>
+        <a-row :gutter="16">
+          <a-col :xs="24" :md="12">
+            <a-form-item label="Họ tên *" :validate-status="errors.emergencyContactName ? 'error' : ''" :help="errors.emergencyContactName">
+              <a-input v-model:value="form.emergencyContactName" placeholder="Nhập họ tên người liên hệ khẩn cấp" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="Số điện thoại *" :validate-status="errors.emergencyContactPhone ? 'error' : ''" :help="errors.emergencyContactPhone">
+              <a-input v-model:value="form.emergencyContactPhone" placeholder="Nhập số điện thoại" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="Mối quan hệ *" :validate-status="errors.emergencyContactRelationship ? 'error' : ''" :help="errors.emergencyContactRelationship">
+              <a-select v-model:value="form.emergencyContactRelationship" placeholder="Chọn mối quan hệ">
+                <a-select-option value="Bố">Bố</a-select-option>
+                <a-select-option value="Mẹ">Mẹ</a-select-option>
+                <a-select-option value="Anh">Anh trai</a-select-option>
+                <a-select-option value="Chị">Chị gái</a-select-option>
+                <a-select-option value="Em">Em</a-select-option>
+                <a-select-option value="Ông">Ông</a-select-option>
+                <a-select-option value="Bà">Bà</a-select-option>
+                <a-select-option value="Khác">Khác</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <!-- Cam kết -->
+        <a-divider orientation="left">Cam kết</a-divider>
+        <a-row :gutter="16">
           <a-col :xs="24">
-            <a-checkbox v-model:checked="form.isLocalStudent">Sinh viên nội tỉnh</a-checkbox>
+            <a-form-item :validate-status="errors.agreedToRegulations ? 'error' : ''" :help="errors.agreedToRegulations">
+              <a-checkbox v-model:checked="form.agreedToRegulations">
+                Tôi đã đọc và đồng ý với <a href="#" @click.prevent="showRegulations">quy định ký túc xá</a>
+              </a-checkbox>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24">
+            <a-form-item :validate-status="errors.confirmedInformationAccuracy ? 'error' : ''" :help="errors.confirmedInformationAccuracy">
+              <a-checkbox v-model:checked="form.confirmedInformationAccuracy">
+                Tôi xác nhận các thông tin cung cấp là chính xác
+              </a-checkbox>
+            </a-form-item>
           </a-col>
         </a-row>
 
@@ -149,36 +203,78 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { SendOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { roomApplicationService } from '@/services/roomApplicationService'
+import { useAuthStore } from '@/stores/auth'
 import dayjs from 'dayjs'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(false)
 const submitting = ref(false)
 const selectedRoom = ref(null)
 
+// Parse amenities from selectedRoom
+const roomAmenities = computed(() => {
+  if (!selectedRoom.value) return []
+  
+  // If amenities is a string, parse it
+  if (typeof selectedRoom.value.amenities === 'string') {
+    // Try to parse as JSON array or comma-separated
+    try {
+      const parsed = JSON.parse(selectedRoom.value.amenities)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      // If not JSON, try comma-separated
+      return selectedRoom.value.amenities.split(',').map(a => a.trim()).filter(a => a)
+    }
+  }
+  
+  // If already an array
+  if (Array.isArray(selectedRoom.value.amenities)) {
+    return selectedRoom.value.amenities
+  }
+  
+  // Fallback: try facilities field
+  if (selectedRoom.value.facilities) {
+    if (typeof selectedRoom.value.facilities === 'string') {
+      return selectedRoom.value.facilities.split(',').map(a => a.trim()).filter(a => a)
+    }
+    if (Array.isArray(selectedRoom.value.facilities)) {
+      return selectedRoom.value.facilities
+    }
+  }
+  
+  return []
+})
+
 const form = ref({
+  // Auto-filled from user data (read-only)
   fullName: '',
   studentCode: '',
   email: '',
   phone: '',
-  gender: undefined,
-  dateOfBirth: null,
-  startDate: null,
-  endDate: null,
+  gender: '',
+  dateOfBirth: '',
   address: '',
-  specialRequirements: '',
+  // User input fields
+  duration: undefined,
+  isLocalStudent: false,
+  preferences: '',
   note: '',
-  isLocalStudent: false
+  emergencyContactName: '',
+  emergencyContactPhone: '',
+  emergencyContactRelationship: undefined,
+  agreedToRegulations: false,
+  confirmedInformationAccuracy: false
 })
 
 const errors = ref({})
 
-onMounted(() => {
+onMounted(async () => {
   // Lấy thông tin phòng đã chọn từ localStorage
   const roomData = localStorage.getItem('selectedRoom')
   if (roomData) {
@@ -186,14 +282,35 @@ onMounted(() => {
   } else {
     message.warning('Vui lòng chọn phòng trước khi đăng ký')
     router.push('/rooms')
+    return
   }
 
-  // Lấy thông tin user từ localStorage để tự động điền form
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  if (user) {
-    form.value.fullName = user.fullName || ''
-    form.value.email = user.email || ''
-    form.value.phone = user.phone || ''
+  // Refresh user data from API to get latest info
+  await authStore.refreshUserData()
+
+  // Auto-fill user data from auth store (User table now has gender, DOB, address)
+  if (authStore.user) {
+    form.value.fullName = authStore.user.fullName || ''
+    form.value.email = authStore.user.email || ''
+    form.value.phone = authStore.user.phone || ''
+    form.value.studentCode = authStore.user.studentCode || authStore.user.username || ''
+    
+    // Format gender
+    if (authStore.user.gender) {
+      form.value.gender = authStore.user.gender === 'Male' ? 'Nam' : authStore.user.gender === 'Female' ? 'Nữ' : authStore.user.gender
+    } else {
+      form.value.gender = 'Chưa cập nhật'
+    }
+    
+    // Format date of birth
+    if (authStore.user.dateOfBirth) {
+      const date = new Date(authStore.user.dateOfBirth)
+      form.value.dateOfBirth = date.toLocaleDateString('vi-VN')
+    } else {
+      form.value.dateOfBirth = 'Chưa cập nhật'
+    }
+    
+    form.value.address = authStore.user.address || 'Chưa cập nhật'
   }
 })
 
@@ -201,24 +318,32 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
+const showRegulations = () => {
+  message.info('Tính năng xem quy định sẽ được bổ sung sau')
+}
+
 const validateForm = () => {
   errors.value = {}
   
-  if (!form.value.fullName) errors.value.fullName = 'Vui lòng nhập họ tên'
-  if (!form.value.studentCode) errors.value.studentCode = 'Vui lòng nhập mã sinh viên'
-  if (!form.value.email) errors.value.email = 'Vui lòng nhập email'
-  if (!form.value.phone) errors.value.phone = 'Vui lòng nhập số điện thoại'
-  if (!form.value.gender) errors.value.gender = 'Vui lòng chọn giới tính'
-  if (!form.value.dateOfBirth) errors.value.dateOfBirth = 'Vui lòng chọn ngày sinh'
-  if (!form.value.startDate) errors.value.startDate = 'Vui lòng chọn ngày bắt đầu'
-  if (!form.value.endDate) errors.value.endDate = 'Vui lòng chọn ngày kết thúc'
+  if (!form.value.duration) errors.value.duration = 'Vui lòng chọn thời hạn thuê'
+  if (!form.value.emergencyContactName) errors.value.emergencyContactName = 'Vui lòng nhập họ tên người liên hệ khẩn cấp'
+  if (!form.value.emergencyContactPhone) errors.value.emergencyContactPhone = 'Vui lòng nhập số điện thoại'
+  if (!form.value.emergencyContactRelationship) errors.value.emergencyContactRelationship = 'Vui lòng chọn mối quan hệ'
+  
+  if (!form.value.agreedToRegulations) {
+    errors.value.agreedToRegulations = 'Bạn phải đồng ý với quy định ký túc xá'
+  }
+  
+  if (!form.value.confirmedInformationAccuracy) {
+    errors.value.confirmedInformationAccuracy = 'Bạn phải xác nhận thông tin chính xác'
+  }
   
   return Object.keys(errors.value).length === 0
 }
 
 const submitRegistration = async () => {
   if (!validateForm()) {
-    message.error('Vui lòng điền đầy đủ thông tin')
+    message.error('Vui lòng điền đầy đủ thông tin và hoàn tất cam kết')
     return
   }
 
@@ -230,9 +355,7 @@ const submitRegistration = async () => {
   submitting.value = true
 
   try {
-    // Lấy thông tin user từ localStorage (user đã login)
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const userId = user.id
+    const userId = authStore.user.id
 
     if (!userId) {
       message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.')
@@ -240,36 +363,43 @@ const submitRegistration = async () => {
       return
     }
 
-    // Sử dụng userId làm studentId (vì chưa có bảng Students riêng)
-    const studentId = userId
+    // Calculate start and end dates based on duration
+    const startDate = dayjs()
+    const endDate = startDate.add(form.value.duration, 'month')
 
     const applicationData = {
-      studentId: studentId,
+      studentId: userId,
       preferredBuildingId: selectedRoom.value.buildingId,
       preferredBuildingName: selectedRoom.value.building,
       preferredRoomTypeId: selectedRoom.value.roomTypeId,
       preferredRoomTypeName: selectedRoom.value.roomTypeName,
       preferredRoomPrice: selectedRoom.value.price,
-      requestedStartDate: dayjs(form.value.startDate).format('YYYY-MM-DD'),
-      requestedEndDate: dayjs(form.value.endDate).format('YYYY-MM-DD'),
-      specialRequirements: form.value.specialRequirements,
+      requestedStartDate: startDate.format('YYYY-MM-DD'),
+      requestedEndDate: endDate.format('YYYY-MM-DD'),
+      durationMonths: form.value.duration,
+      preferences: form.value.preferences,
       note: form.value.note,
       isLocalStudent: form.value.isLocalStudent,
-      // *** Thông tin phòng đã chọn (KEY CHANGE) ***
+      emergencyContactName: form.value.emergencyContactName,
+      emergencyContactPhone: form.value.emergencyContactPhone,
+      emergencyContactRelationship: form.value.emergencyContactRelationship,
+      agreedToRegulations: form.value.agreedToRegulations,
+      confirmedInformationAccuracy: form.value.confirmedInformationAccuracy,
+      // Assigned room info
       assignedRoomId: selectedRoom.value.id,
       assignedRoomNumber: selectedRoom.value.name,
       assignedBuildingName: selectedRoom.value.building,
-      // *** Thông tin user để tạo Student record ***
-      userFullName: user.fullName,
-      userEmail: user.email,
-      userPhone: user.phone
+      // User info for Student record creation
+      userFullName: authStore.user.fullName,
+      userEmail: authStore.user.email,
+      userPhone: authStore.user.phone
     }
 
     console.log('Sending application data:', applicationData)
 
     await roomApplicationService.create(applicationData)
 
-    message.success('Gửi đơn đăng ký thành công! Vui lòng đợi admin duyệt.')
+    message.success('Gửi đơn đăng ký thành công! Vui lòng đợi nhân viên duyệt.')
     
     // Xóa selectedRoom khỏi localStorage
     localStorage.removeItem('selectedRoom')

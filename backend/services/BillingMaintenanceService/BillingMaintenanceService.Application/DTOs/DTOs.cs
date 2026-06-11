@@ -12,6 +12,9 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? AvatarUrl { get; set; }
         public int? StudentId { get; set; }
         public string? StudentCode { get; set; }
+        public string? Gender { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public string? Address { get; set; }
         public bool IsActive { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -27,6 +30,9 @@ namespace BillingMaintenanceService.Application.DTOs
         public string Role { get; set; } = string.Empty;
         public int? StudentId { get; set; }
         public string? StudentCode { get; set; }
+        public string? Gender { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public string? Address { get; set; }
     }
 
     // ===== Invoice DTOs =====
@@ -67,6 +73,30 @@ namespace BillingMaintenanceService.Application.DTOs
         public string InvoiceCode { get; set; } = string.Empty;
         public string InvoiceType { get; set; } = "Monthly";
         public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string StudentCode { get; set; } = string.Empty;
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public int BillingMonth { get; set; }
+        public int BillingYear { get; set; }
+        public decimal RentAmount { get; set; }
+        public decimal ElectricityAmount { get; set; }
+        public decimal WaterAmount { get; set; }
+        public decimal ServiceAmount { get; set; }
+        public decimal PreviousDebt { get; set; }
+        public decimal Discount { get; set; }
+        public DateOnly DueDate { get; set; }
+        public int CreatedByUserId { get; set; }
+        public string? Notes { get; set; }
+        public List<CreateInvoiceItemDto> Items { get; set; } = new();
+    }
+
+    public class GenerateInvoiceFromContractDto
+    {
+        public string InvoiceCode { get; set; } = string.Empty;
+        public string? InvoiceType { get; set; } = "Monthly";
         public int StudentId { get; set; }
         public string StudentName { get; set; } = string.Empty;
         public string StudentCode { get; set; } = string.Empty;

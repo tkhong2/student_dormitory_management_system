@@ -61,28 +61,38 @@ Ocelot API Gateway - Single entry point
 
 ### ⚡ Cách nhanh nhất: Chạy tất cả services cùng lúc
 
-#### Windows:
+#### Cách 1: Batch Script (Đơn giản nhất) ⭐
 ```bash
-# Sử dụng Batch file (Recommended)
 cd backend
-start-all-services.bat
+
+# Chạy tất cả services
+start-all.bat
+
+# Dừng tất cả services  
+stop-all.bat
 ```
 
-#### PowerShell:
+#### Cách 2: PowerShell Script (Khuyên dùng)
 ```powershell
 cd backend
-.\start-all-services.ps1
+
+# Chạy tất cả services
+.\start-all.ps1
+
+# Dừng tất cả services
+.\stop-all.ps1
+
+# Script đa năng với nhiều tùy chọn
+.\run.ps1 start    # Chạy tất cả
+.\run.ps1 stop     # Dừng tất cả  
+.\run.ps1 restart  # Khởi động lại
+.\run.ps1 status   # Kiểm tra trạng thái
 ```
 
-Services sẽ tự động khởi động trong các terminal riêng:
-- **RoomBuildingService**: http://localhost:5001
-- **ContractStudentService**: http://localhost:5059  
-- **BillingMaintenanceService**: http://localhost:5002
-- **API Gateway**: http://localhost:5052
-
-### Cách 1: Docker Compose (Future)
-
+#### Cách 3: Docker Compose (Production)
 ```bash
+cd backend
+
 # Build và chạy tất cả services
 docker-compose up --build
 
@@ -96,7 +106,15 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Cách 2: Chạy từng service local
+**Services sẽ tự động khởi động:**
+- 🟢 **RoomBuildingService**: http://localhost:5003 (swagger: /swagger)
+- 🟢 **ContractStudentService**: http://localhost:5001 (swagger: /swagger)
+- 🟢 **BillingMaintenanceService**: http://localhost:5002 (swagger: /swagger)
+- 🟡 **API Gateway**: http://localhost:5000 (swagger: /swagger)
+
+---
+
+### 🔧 Chạy từng service riêng lẻ (Development)
 
 #### Yêu cầu:
 - .NET 9.0 SDK

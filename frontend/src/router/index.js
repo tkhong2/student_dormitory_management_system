@@ -50,7 +50,6 @@ const routes = [
       
       // Quản lý hợp đồng & Chuyển phòng
       { path: 'contracts', name: 'staff-contracts', meta: { title: 'Hợp đồng' }, component: () => import('../views/contracts/ContractListView.vue') },
-      { path: 'pending-deposits', name: 'staff-pending-deposits', meta: { title: 'Xác nhận đóng cọc' }, component: () => import('../views/staff/StaffPendingDepositView.vue') },
       { path: 'room-transfers', name: 'staff-room-transfers', meta: { title: 'Chuyển phòng' }, component: () => import('../views/contracts/RoomTransfersView.vue') },
       
       // Check-in / Check-out
@@ -121,16 +120,11 @@ const routes = [
     ],
   },
 
-  // ══ LOGIN & REGISTER ═══════════════════════════════════
+  // ══ LOGIN ═══════════════════════════════════
   {
     path: '/login',
     name: 'login',
     component: () => import('../views/auth/LoginView.vue'),
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: () => import('../views/auth/RegisterView.vue'),
   },
 ]
 
@@ -152,7 +146,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // Public routes that don't require authentication
-  const publicPaths = ['/', '/about', '/rooms', '/news', '/rules', '/contact', '/login', '/register']
+  const publicPaths = ['/', '/about', '/rooms', '/news', '/rules', '/contact', '/login']
   const isPublicRoute = publicPaths.includes(to.path) || to.path.startsWith('/public')
   
   // Allow access to public routes

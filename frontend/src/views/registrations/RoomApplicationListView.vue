@@ -79,16 +79,33 @@
             </template>
             <template v-else-if="column.key === 'actions'">
               <a-space size="small">
-                <a-button v-if="record.status === 'Pending'" type="link" @click="openApprove(record)">
-                  Duyệt
-                </a-button>
-                <a-button v-if="record.status === 'Pending'" type="text" danger @click="openReject(record)">
-                  Từ chối
-                </a-button>
-                <a-button v-if="record.status === 'Approved'" type="link" @click="createContract(record)">
-                  Tạo hợp đồng
-                </a-button>
-                <a-button type="link" @click="viewDetail(record)">Chi tiết</a-button>
+                <a-tooltip title="Xem chi tiết">
+                  <a-button type="text" size="small" @click="viewDetail(record)">
+                    <template #icon><EyeOutlined /></template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip title="Duyệt">
+                  <a-button v-if="record.status === 'Pending'" type="text" size="small" @click="openApprove(record)" style="color: #52c41a;">
+                    <template #icon><CheckOutlined /></template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip title="Từ chối">
+                  <a-button v-if="record.status === 'Pending'" type="text" size="small" danger @click="openReject(record)">
+                    <template #icon><CloseOutlined /></template>
+                  </a-button>
+                </a-tooltip>
+                <a-popconfirm
+                  title="Bạn có chắc muốn xóa đơn này?"
+                  ok-text="Xóa"
+                  cancel-text="Hủy"
+                  @confirm="deleteApplication(record)"
+                >
+                  <a-tooltip title="Xóa">
+                    <a-button type="text" size="small" danger>
+                      <template #icon><DeleteOutlined /></template>
+                    </a-button>
+                  </a-tooltip>
+                </a-popconfirm>
               </a-space>
             </template>
           </template>
@@ -156,12 +173,106 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- Detail Modal -->
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết đơn đăng ký"
+      width="800px"
+      :footer="null"
+    >
+      <a-descriptions v-if="detailTarget" bordered :column="2" size="small">
+        <a-descriptions-item label="Sinh viên" :span="2">
+          <strong>{{ detailTarget.studentName }}</strong> ({{ detailTarget.studentCode }})
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Phòng đã chọn" :span="2">
+          <a-tag color="blue">{{ detailTarget.assignedRoomNumber || 'Chưa chọn' }}</a-tag>
+          {{ detailTarget.assignedBuildingName || detailTarget.preferredBuildingName }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Loại phòng">
+          {{ detailTarget.preferredRoomTypeName }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Giá thuê">
+          <strong style="color: #1890ff;">{{ formatCurrency(detailTarget.preferredRoomPrice) }}</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Ngày bắt đầu">
+          {{ formatDate(detailTarget.requestedStartDate) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Ngày kết thúc">
+          {{ formatDate(detailTarget.requestedEndDate) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Thời hạn">
+          {{ detailTarget.durationMonths }} tháng
+        </a-descriptions-item>
+        <a-descriptions-item label="Loại sinh viên">
+          <a-tag :color="detailTarget.isLocalStudent ? 'default' : 'orange'">
+            {{ detailTarget.isLocalStudent ? 'Nội tỉnh' : 'Ngoại tỉnh' }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Trạng thái" :span="2">
+          <a-tag :color="statusColor(detailTarget.status)">
+            {{ statusLabel(detailTarget.status) }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.preferences" label="Yêu cầu đặc biệt" :span="2">
+          {{ detailTarget.preferences }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.note" label="Ghi chú" :span="2">
+          {{ detailTarget.note }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Liên hệ khẩn cấp" :span="2">
+          {{ detailTarget.emergencyContactName }} - {{ detailTarget.emergencyContactPhone }}
+          ({{ detailTarget.emergencyContactRelationship }})
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.reviewedByName" label="Người xử lý" :span="2">
+          {{ detailTarget.reviewedByName }} - {{ formatDate(detailTarget.reviewedAt) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.rejectReason" label="Lý do từ chối" :span="2">
+          <a-alert type="error" :message="detailTarget.rejectReason" show-icon />
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Ngày tạo đơn" :span="2">
+          {{ formatDate(detailTarget.createdAt) }}
+        </a-descriptions-item>
+      </a-descriptions>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <a-button @click="detailDialog = false">Đóng</a-button>
+        <a-button 
+          v-if="detailTarget?.status === 'Pending'" 
+          type="primary" 
+          @click="openApprove(detailTarget)"
+        >
+          <template #icon><CheckOutlined /></template>
+          Duyệt đơn
+        </a-button>
+        <a-button 
+          v-if="detailTarget?.status === 'Pending'" 
+          danger 
+          @click="openReject(detailTarget)"
+        >
+          <template #icon><CloseOutlined /></template>
+          Từ chối
+        </a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { EyeOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { roomApplicationService } from '@/services/roomApplicationService'
 import { useRouter } from 'vue-router'
 
@@ -192,8 +303,10 @@ const loading = ref(false)
 const saving = ref(false)
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
+const detailDialog = ref(false)
 const approveTarget = ref(null)
 const rejectTarget = ref(null)
+const detailTarget = ref(null)
 const rejectForm = ref({ rejectReason: '' })
 const rejectErrors = ref({})
 
@@ -289,8 +402,19 @@ function createContract(item) {
   router.push({ name: 'contracts', query: { applicationId: item.id } })
 }
 
+async function deleteApplication(item) {
+  try {
+    await roomApplicationService.delete(item.id)
+    message.success('Đã xóa đơn đăng ký thành công')
+    await loadApplications()
+  } catch (err) {
+    message.error(err.message || 'Không thể xóa đơn đăng ký')
+  }
+}
+
 function viewDetail(item) {
-  router.push({ name: 'room-application-detail', params: { id: item.id } })
+  detailTarget.value = item
+  detailDialog.value = true
 }
 
 function statusLabel(status) {

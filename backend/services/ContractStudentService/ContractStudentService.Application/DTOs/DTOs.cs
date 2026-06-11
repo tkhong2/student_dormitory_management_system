@@ -115,10 +115,16 @@ namespace ContractStudentService.Application.DTOs
         public decimal PreferredRoomPrice { get; set; }
         public DateOnly RequestedStartDate { get; set; }
         public DateOnly RequestedEndDate { get; set; }
-        public string? SpecialRequirements { get; set; }
+        public int DurationMonths { get; set; }
+        public string? Preferences { get; set; }
         public string? Note { get; set; }
         public bool IsLocalStudent { get; set; }
         public int Priority { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? EmergencyContactRelationship { get; set; }
+        public bool AgreedToRegulations { get; set; }
+        public bool ConfirmedInformationAccuracy { get; set; }
         public string? AttachedDocumentUrls { get; set; }
         public string Status { get; set; } = string.Empty;
         public int? ReviewedByUserId { get; set; }
@@ -144,9 +150,15 @@ namespace ContractStudentService.Application.DTOs
         public decimal PreferredRoomPrice { get; set; }
         public DateOnly RequestedStartDate { get; set; }
         public DateOnly RequestedEndDate { get; set; }
-        public string? SpecialRequirements { get; set; }
+        public int DurationMonths { get; set; }
+        public string? Preferences { get; set; }
         public string? Note { get; set; }
         public bool IsLocalStudent { get; set; } = false;
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? EmergencyContactRelationship { get; set; }
+        public bool AgreedToRegulations { get; set; }
+        public bool ConfirmedInformationAccuracy { get; set; }
         public string? AttachedDocumentUrls { get; set; }
         
         // Phòng sinh viên đã chọn (bắt buộc)
@@ -168,6 +180,7 @@ namespace ContractStudentService.Application.DTOs
         public string? StudentName { get; set; }
         public string? StudentCode { get; set; }
         public int ApplicationId { get; set; }
+        public int? ContractTemplateId { get; set; }
         public int RoomId { get; set; }
         public string RoomNumber { get; set; } = string.Empty;
         public int BuildingId { get; set; }
@@ -198,6 +211,7 @@ namespace ContractStudentService.Application.DTOs
         public int CreatedByUserId { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<ContractTermDto> Terms { get; set; } = new();
     }
 
     public class CreateContractDto
@@ -286,5 +300,55 @@ namespace ContractStudentService.Application.DTOs
         public int? RequestedBuildingId { get; set; }
         public string? RequestedBuildingName { get; set; }
         public string Reason { get; set; } = string.Empty;
+    }
+
+    // ===== ContractTemplate DTOs =====
+    public class ContractTemplateDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsActive { get; set; }
+        public int? MinDurationMonths { get; set; }
+        public int? MaxDurationMonths { get; set; }
+        public string? TemplateContent { get; set; }
+        public List<ContractTermDto> Terms { get; set; } = new();
+    }
+
+    public class ContractTermDto
+    {
+        public int Id { get; set; }
+        public int ContractTemplateId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public int OrderIndex { get; set; }
+        public bool IsRequired { get; set; }
+        public bool IsHighlighted { get; set; }
+        public string? Icon { get; set; }
+    }
+
+    public class CreateContractTemplateDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsDefault { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+        public int? MinDurationMonths { get; set; }
+        public int? MaxDurationMonths { get; set; }
+        public string? TemplateContent { get; set; }
+        public List<CreateContractTermDto> Terms { get; set; } = new();
+    }
+
+    public class CreateContractTermDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public int OrderIndex { get; set; }
+        public bool IsRequired { get; set; } = true;
+        public bool IsHighlighted { get; set; } = false;
+        public string? Icon { get; set; }
     }
 }

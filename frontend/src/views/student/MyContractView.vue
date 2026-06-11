@@ -70,12 +70,18 @@
       <v-divider class="my-4" />
 
       <h4 class="text-subtitle-2 font-weight-bold mb-3">Điều khoản quan trọng</h4>
-      <v-list density="compact">
-        <v-list-item title="Thanh toán tiền phòng trước ngày 5 hàng tháng" prepend-icon="mdi-numeric-1-circle" />
-        <v-list-item title="Giữ gìn tài sản chung, bồi thường nếu hư hỏng" prepend-icon="mdi-numeric-2-circle" />
-        <v-list-item title="Chấm dứt hợp đồng phải báo trước 30 ngày" prepend-icon="mdi-numeric-3-circle" />
-        <v-list-item title="Tuân thủ nội quy KTX do Ban Quản lý ban hành" prepend-icon="mdi-numeric-4-circle" />
+      <v-list v-if="contract.terms && contract.terms.length > 0" density="compact">
+        <v-list-item 
+          v-for="(term, index) in contract.terms" 
+          :key="term.id"
+          :title="term.title"
+          :subtitle="term.content"
+          :prepend-icon="term.icon || `mdi-numeric-${index + 1}-circle`"
+        />
       </v-list>
+      <v-alert v-else type="info" variant="tonal" density="compact">
+        Không có điều khoản nào được áp dụng cho hợp đồng này.
+      </v-alert>
 
       <div class="d-flex ga-3 mt-6">
         <v-btn 
@@ -94,7 +100,7 @@
     </v-card>
 
     <!-- Active Contracts -->
-    <v-card v-for="contract in contracts" :key="contract.id" class="pa-6 mb-4" style="border:1px solid #e5e7eb">
+    <v-card v-for="contract in activeContracts" :key="contract.id" class="pa-6 mb-4" style="border:1px solid #e5e7eb">
       <div class="d-flex align-center ga-4 mb-6">
         <v-avatar color="#dcfce7" size="52" rounded="lg">
           <v-icon color="success" size="26">mdi-file-sign</v-icon>
@@ -143,12 +149,18 @@
       <v-divider class="my-5" />
 
       <h4 class="text-subtitle-2 font-weight-bold mb-3">Điều khoản quan trọng</h4>
-      <v-list density="compact">
-        <v-list-item title="Thanh toán tiền phòng trước ngày 5 hàng tháng" prepend-icon="mdi-numeric-1-circle" />
-        <v-list-item title="Giữ gìn tài sản chung, bồi thường nếu hư hỏng" prepend-icon="mdi-numeric-2-circle" />
-        <v-list-item title="Chấm dứt hợp đồng phải báo trước 30 ngày" prepend-icon="mdi-numeric-3-circle" />
-        <v-list-item title="Tuân thủ nội quy KTX do Ban Quản lý ban hành" prepend-icon="mdi-numeric-4-circle" />
+      <v-list v-if="contract.terms && contract.terms.length > 0" density="compact">
+        <v-list-item 
+          v-for="(term, index) in contract.terms" 
+          :key="term.id"
+          :title="term.title"
+          :subtitle="term.content"
+          :prepend-icon="term.icon || `mdi-numeric-${index + 1}-circle`"
+        />
       </v-list>
+      <v-alert v-else type="info" variant="tonal" density="compact">
+        Không có điều khoản nào được áp dụng cho hợp đồng này.
+      </v-alert>
 
       <div class="d-flex ga-3 mt-6">
         <v-btn prepend-icon="mdi-download" variant="tonal" color="primary" disabled>Tải hợp đồng PDF</v-btn>

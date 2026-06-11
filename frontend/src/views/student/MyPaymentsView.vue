@@ -1,68 +1,453 @@
 <template>
   <div>
-    <h1 class="text-h4 font-weight-bold mb-1">Thanh toán</h1>
-    <p class="text-body-2 text-medium-emphasis mb-6">Lịch sử và trạng thái thanh toán lệ phí KTX</p>
+    <div class="d-flex justify-space-between align-center mb-4">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; margin: 0">Thanh toán của tôi</h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">
+          Lịch sử và trạng thái thanh toán lệ phí KTX
+        </p>
+      </div>
+    </div>
 
-    <!-- Summary -->
-    <v-row class="mb-6">
-      <v-col cols="12" sm="4">
-        <v-card class="pa-5 gradient-primary">
-          <div class="text-body-2 mb-1" style="opacity:.7">Tổng đã thanh toán</div>
-          <div class="text-h4 font-weight-bold">3.200.000₫</div>
-          <div class="text-caption mt-1" style="opacity:.7">4 tháng</div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="4">
-        <v-card class="pa-5" style="border:2px solid #f59e0b">
-          <div class="text-body-2 text-medium-emphasis mb-1">Cần thanh toán</div>
-          <div class="text-h4 font-weight-bold text-warning">800.000₫</div>
-          <div class="text-caption text-medium-emphasis mt-1">Hạn: 20/05/2026</div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="4">
-        <v-card class="pa-5 d-flex align-center justify-center" style="border:1px solid #e5e7eb">
-          <v-btn color="primary" size="large" prepend-icon="mdi-credit-card-outline" class="px-8">Thanh toán ngay</v-btn>
-        </v-card>
-      </v-col>
-    </v-row>
+    <!-- Summary Cards -->
+    <a-row :gutter="16" style="margin-bottom: 24px">
+      <a-col :xs="24" :sm="8">
+        <a-card :bordered="false" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+          <a-statistic
+            title="Tổng đã thanh toán"
+            :value="totalPaid"
+            :precision="0"
+            suffix="đ"
+            :value-style="{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }"
+          >
+            <template #title>
+              <span style="color: rgba(255,255,255,0.85); font-size: 13px">Tổng đã thanh toán</span>
+            </template>
+          </a-statistic>
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 8px">
+            {{ paidCount }} phiếu thu
+          </div>
+        </a-card>
+      </a-col>
+      
+      <a-col :xs="24" :sm="8">
+        <a-card :bordered="false" style="border: 2px solid #ff9800">
+          <a-statistic
+            title="Cần thanh toán"
+            :value="totalUnpaid"
+            :precision="0"
+            suffix="đ"
+            :value-style="{ color: '#ff9800', fontSize: '24px', fontWeight: 'bold' }"
+          >
+            <template #title>
+              <span style="color: #666; font-size: 13px">Cần thanh toán</span>
+            </template>
+          </a-statistic>
+          <div style="color: #8c8c8c; font-size: 12px; margin-top: 8px">
+            {{ unpaidCount }} phiếu thu chưa thanh toán
+          </div>
+        </a-card>
+      </a-col>
+      
+      <a-col :xs="24" :sm="8">
+        <a-card :bordered="false" style="border: 2px solid #f44336">
+          <a-statistic
+            title="Quá hạn"
+            :value="totalOverdue"
+            :precision="0"
+            suffix="đ"
+            :value-style="{ color: '#f44336', fontSize: '24px', fontWeight: 'bold' }"
+          >
+            <template #title>
+              <span style="color: #666; font-size: 13px">Quá hạn</span>
+            </template>
+          </a-statistic>
+          <div style="color: #8c8c8c; font-size: 12px; margin-top: 8px">
+            {{ overdueCount }} phiếu thu quá hạn
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
 
     <!-- Payment History -->
-    <v-card style="border:1px solid #e5e7eb">
-      <div class="pa-4">
-        <h3 class="text-subtitle-1 font-weight-bold">Lịch sử thanh toán</h3>
+    <a-card :bordered="false" :loading="loading">
+      <template #title>
+        <span style="font-weight: 600">Lịch sử phiếu thu</span>
+      </template>
+      
+      <a-table
+        :columns="columns"
+        :data-source="invoices"
+        :pagination="{ pageSize: 10 }"
+        row-key="id"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'invoiceCode'">
+            <a-typography-text strong copyable>{{ record.invoiceCode }}</a-typography-text>
+          </template>
+          
+          <template v-else-if="column.key === 'period'">
+            <a-tag color="blue">{{ record.billingMonth }}/{{ record.billingYear }}</a-tag>
+          </template>
+          
+          <template v-else-if="column.key === 'totalAmount'">
+            <strong>{{ formatCurrency(record.totalAmount) }}</strong>
+          </template>
+          
+          <template v-else-if="column.key === 'dueDate'">
+            {{ formatDate(record.dueDate) }}
+          </template>
+          
+          <template v-else-if="column.key === 'paidAmount'">
+            <span style="color: #52c41a; font-weight: 500">
+              {{ formatCurrency(record.paidAmount) }}
+            </span>
+          </template>
+          
+          <template v-else-if="column.key === 'debtAmount'">
+            <span :style="{ color: record.debtAmount > 0 ? '#ff4d4f' : '#52c41a', fontWeight: '500' }">
+              {{ formatCurrency(record.debtAmount) }}
+            </span>
+          </template>
+          
+          <template v-else-if="column.key === 'status'">
+            <a-tag :color="getStatusColor(record.status)">
+              {{ getStatusText(record.status) }}
+            </a-tag>
+          </template>
+          
+          <template v-else-if="column.key === 'actions'">
+            <a-space>
+              <a-button
+                v-if="record.status !== 'Paid'"
+                type="primary"
+                size="small"
+                @click="viewInvoiceDetail(record)"
+              >
+                <template #icon><CreditCardOutlined /></template>
+                Thanh toán
+              </a-button>
+              <a-button
+                v-else
+                type="default"
+                size="small"
+                @click="viewInvoiceDetail(record)"
+              >
+                <template #icon><EyeOutlined /></template>
+                Chi tiết
+              </a-button>
+            </a-space>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
+
+    <!-- Invoice Detail Modal -->
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết Phiếu Thu"
+      width="800px"
+      :footer="null"
+    >
+      <a-descriptions v-if="detailTarget" bordered :column="2" size="small">
+        <a-descriptions-item label="Mã Phiếu Thu" :span="2">
+          <a-typography-text strong copyable>{{ detailTarget.invoiceCode }}</a-typography-text>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Kỳ thanh toán">
+          Tháng {{ detailTarget.billingMonth }}/{{ detailTarget.billingYear }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Phòng">
+          <a-tag color="blue">{{ detailTarget.roomNumber }}</a-tag> {{ detailTarget.buildingName }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Trạng thái" :span="2">
+          <a-tag :color="getStatusColor(detailTarget.status)">
+            {{ getStatusText(detailTarget.status) }}
+          </a-tag>
+          <span v-if="detailTarget.overdueDays > 0" style="margin-left: 8px; color: #ff4d4f;">
+            (Quá hạn {{ detailTarget.overdueDays }} ngày)
+          </span>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Chi tiết các khoản" :span="2">
+          <a-list size="small" :data-source="detailTarget.items || getDefaultItems(detailTarget)" bordered>
+            <template #renderItem="{ item }">
+              <a-list-item>
+                <a-list-item-meta>
+                  <template #title>{{ item.itemName }}</template>
+                  <template #description>{{ item.itemDescription }}</template>
+                </a-list-item-meta>
+                <div style="font-weight: 500">{{ formatCurrency(item.amount) }}</div>
+              </a-list-item>
+            </template>
+          </a-list>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Hạn thanh toán">
+          {{ formatDate(detailTarget.dueDate) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Tổng tiền">
+          <strong style="color: #1890ff; font-size: 16px;">{{ formatCurrency(detailTarget.totalAmount) }}</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Đã thanh toán">
+          <strong style="color: #52c41a; font-size: 16px;">{{ formatCurrency(detailTarget.paidAmount) }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Còn nợ">
+          <strong style="color: #ff4d4f; font-size: 16px;">{{ formatCurrency(detailTarget.debtAmount) }}</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.notes" label="Ghi chú" :span="2">
+          {{ detailTarget.notes }}
+        </a-descriptions-item>
+      </a-descriptions>
+
+      <a-alert
+        v-if="detailTarget?.status !== 'Paid'"
+        message="Hướng dẫn thanh toán"
+        type="info"
+        show-icon
+        style="margin-top: 16px"
+      >
+        <template #description>
+          <p>Vui lòng chuyển khoản đến:</p>
+          <p><strong>Ngân hàng:</strong> Vietcombank - Chi nhánh Đà Nẵng</p>
+          <p><strong>Số tài khoản:</strong> 0123456789</p>
+          <p><strong>Chủ tài khoản:</strong> KTX Đại học DNU</p>
+          <p><strong>Nội dung:</strong> {{ detailTarget.invoiceCode }} {{ detailTarget.studentCode }}</p>
+        </template>
+      </a-alert>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+        <a-button @click="detailDialog = false">Đóng</a-button>
       </div>
-      <v-data-table :headers="headers" :items="payments" items-per-page="10">
-        <template #item.amount="{ item }">
-          <span class="font-weight-bold">{{ fmt(item.amount) }}</span>
-        </template>
-        <template #item.status="{ item }">
-          <v-chip :color="item.status==='Đã TT'?'success':'warning'" size="x-small" variant="tonal">{{ item.status }}</v-chip>
-        </template>
-        <template #item.actions="{ item }">
-          <v-btn v-if="item.status==='Đã TT'" icon="mdi-receipt-text-outline" size="small" variant="text" color="primary" title="Xem biên lai" />
-          <v-btn v-else size="small" variant="tonal" color="primary">Thanh toán</v-btn>
-        </template>
-      </v-data-table>
-    </v-card>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-const headers = [
-  { title:'Mã HĐ', key:'code' },
-  { title:'Tháng', key:'month', align:'center' },
-  { title:'Số tiền', key:'amount', align:'end' },
-  { title:'Hạn TT', key:'due', align:'center' },
-  { title:'Ngày TT', key:'paidDate', align:'center' },
-  { title:'Trạng thái', key:'status', align:'center' },
-  { title:'', key:'actions', align:'end', sortable:false },
+import { ref, computed, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
+import { CreditCardOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import billService from '@/services/billService'
+
+const loading = ref(false)
+const invoices = ref([])
+const detailDialog = ref(false)
+const detailTarget = ref(null)
+
+const columns = [
+  { title: 'Mã Phiếu Thu', key: 'invoiceCode', width: 140 },
+  { title: 'Kỳ', key: 'period', align: 'center', width: 100 },
+  { title: 'Tổng Tiền', key: 'totalAmount', align: 'right', width: 130 },
+  { title: 'Hạn TT', key: 'dueDate', align: 'center', width: 110 },
+  { title: 'Đã Trả', key: 'paidAmount', align: 'right', width: 130 },
+  { title: 'Còn Nợ', key: 'debtAmount', align: 'right', width: 130 },
+  { title: 'Trạng thái', key: 'status', align: 'center', width: 120 },
+  { title: 'Thao tác', key: 'actions', align: 'center', width: 150 }
 ]
-const payments = [
-  { code:'INV-05-001',month:'Tháng 5/2026',amount:800000,due:'20/05/2026',paidDate:'—',status:'Chưa TT' },
-  { code:'INV-04-001',month:'Tháng 4/2026',amount:800000,due:'20/04/2026',paidDate:'18/04/2026',status:'Đã TT' },
-  { code:'INV-03-001',month:'Tháng 3/2026',amount:800000,due:'20/03/2026',paidDate:'15/03/2026',status:'Đã TT' },
-  { code:'INV-02-001',month:'Tháng 2/2026',amount:800000,due:'20/02/2026',paidDate:'19/02/2026',status:'Đã TT' },
-  { code:'INV-01-001',month:'Tháng 1/2026',amount:800000,due:'20/01/2026',paidDate:'10/01/2026',status:'Đã TT' },
-]
-const fmt = v => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(v)
+
+const totalPaid = computed(() => {
+  return invoices.value
+    .filter(inv => inv.status === 'Paid')
+    .reduce((sum, inv) => sum + inv.paidAmount, 0)
+})
+
+const totalUnpaid = computed(() => {
+  return invoices.value
+    .filter(inv => inv.status === 'Unpaid' || inv.status === 'PartialPaid')
+    .reduce((sum, inv) => sum + inv.debtAmount, 0)
+})
+
+const totalOverdue = computed(() => {
+  return invoices.value
+    .filter(inv => inv.status === 'Overdue')
+    .reduce((sum, inv) => sum + inv.debtAmount, 0)
+})
+
+const paidCount = computed(() => {
+  return invoices.value.filter(inv => inv.status === 'Paid').length
+})
+
+const unpaidCount = computed(() => {
+  return invoices.value.filter(inv => inv.status === 'Unpaid' || inv.status === 'PartialPaid').length
+})
+
+const overdueCount = computed(() => {
+  return invoices.value.filter(inv => inv.status === 'Overdue').length
+})
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value)
+}
+
+const formatDate = (value) => {
+  if (!value) return '---'
+  return new Date(value).toLocaleDateString('vi-VN')
+}
+
+const getStatusColor = (status) => {
+  const colors = {
+    'Unpaid': 'orange',
+    'PartialPaid': 'cyan',
+    'Paid': 'green',
+    'Overdue': 'red',
+    'Cancelled': 'default'
+  }
+  return colors[status] || 'default'
+}
+
+const getStatusText = (status) => {
+  const texts = {
+    'Unpaid': 'Chưa thanh toán',
+    'PartialPaid': 'Thanh toán 1 phần',
+    'Paid': 'Đã thanh toán',
+    'Overdue': 'Quá hạn',
+    'Cancelled': 'Đã hủy'
+  }
+  return texts[status] || status
+}
+
+const getDefaultItems = (invoice) => {
+  const items = []
+  if (invoice.rentAmount > 0) {
+    items.push({ itemName: 'Tiền phòng', itemDescription: '', amount: invoice.rentAmount })
+  }
+  if (invoice.electricityAmount > 0) {
+    items.push({ itemName: 'Tiền điện', itemDescription: '', amount: invoice.electricityAmount })
+  }
+  if (invoice.waterAmount > 0) {
+    items.push({ itemName: 'Tiền nước', itemDescription: '', amount: invoice.waterAmount })
+  }
+  if (invoice.serviceAmount > 0) {
+    items.push({ itemName: 'Phí dịch vụ', itemDescription: '', amount: invoice.serviceAmount })
+  }
+  if (invoice.previousDebt > 0) {
+    items.push({ itemName: 'Nợ kỳ trước', itemDescription: '', amount: invoice.previousDebt })
+  }
+  if (invoice.discount > 0) {
+    items.push({ itemName: 'Giảm giá', itemDescription: '', amount: -invoice.discount })
+  }
+  return items
+}
+
+const fetchInvoices = async () => {
+  loading.value = true
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    console.log('User info:', user)
+    
+    // Always show demo data for now until backend is ready
+    console.log('Loading demo data for testing UI')
+    invoices.value = [
+      {
+        id: 1,
+        invoiceCode: 'PTT202406001',
+        billingMonth: 6,
+        billingYear: 2024,
+        roomNumber: '101-A',
+        buildingName: 'Tòa A',
+        totalAmount: 800000,
+        paidAmount: 800000,
+        debtAmount: 0,
+        status: 'Paid',
+        dueDate: '2024-06-20',
+        rentAmount: 600000,
+        electricityAmount: 100000,
+        waterAmount: 50000,
+        serviceAmount: 50000,
+        previousDebt: 0,
+        discount: 0,
+        overdueDays: 0,
+        notes: 'Đã thanh toán đầy đủ',
+        items: []
+      },
+      {
+        id: 2,
+        invoiceCode: 'PTT202405001',
+        billingMonth: 5,
+        billingYear: 2024,
+        roomNumber: '101-A',
+        buildingName: 'Tòa A',
+        totalAmount: 850000,
+        paidAmount: 0,
+        debtAmount: 850000,
+        status: 'Overdue',
+        dueDate: '2024-05-20',
+        rentAmount: 600000,
+        electricityAmount: 120000,
+        waterAmount: 60000,
+        serviceAmount: 70000,
+        previousDebt: 0,
+        discount: 0,
+        overdueDays: 22,
+        notes: 'Vui lòng thanh toán sớm',
+        items: []
+      },
+      {
+        id: 3,
+        invoiceCode: 'PTT202404001',
+        billingMonth: 4,
+        billingYear: 2024,
+        roomNumber: '101-A',
+        buildingName: 'Tòa A',
+        totalAmount: 800000,
+        paidAmount: 400000,
+        debtAmount: 400000,
+        status: 'PartialPaid',
+        dueDate: '2024-04-20',
+        rentAmount: 600000,
+        electricityAmount: 100000,
+        waterAmount: 50000,
+        serviceAmount: 50000,
+        previousDebt: 0,
+        discount: 0,
+        overdueDays: 0,
+        notes: 'Đã thanh toán một phần',
+        items: []
+      }
+    ]
+    
+    /* Uncomment when backend is ready
+    if (user.studentId) {
+      const data = await billService.getByStudentId(user.studentId)
+      console.log('Invoices loaded from API:', data)
+      invoices.value = data || []
+      
+      if (invoices.value.length === 0) {
+        message.info('Bạn chưa có phiếu thu nào')
+      }
+    }
+    */
+  } catch (error) {
+    console.error('Error loading invoices:', error)
+    message.error(error.message || 'Lỗi tải dữ liệu')
+  } finally {
+    loading.value = false
+  }
+}
+
+const viewInvoiceDetail = async (record) => {
+  try {
+    const data = await billService.getById(record.id)
+    detailTarget.value = data
+    detailDialog.value = true
+  } catch (error) {
+    message.error('Không thể tải chi tiết phiếu thu')
+  }
+}
+
+onMounted(() => {
+  fetchInvoices()
+})
 </script>
+
+<style scoped>
+:deep(.ant-statistic-content) {
+  font-size: 24px;
+}
+</style>

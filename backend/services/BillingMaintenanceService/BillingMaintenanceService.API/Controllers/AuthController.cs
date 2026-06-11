@@ -89,7 +89,10 @@ public class AuthController : ControllerBase
                     Phone = user.Phone,
                     Role = user.Role,
                     AvatarUrl = user.AvatarUrl,
-                    StudentCode = user.StudentCode
+                    StudentCode = user.StudentCode,
+                    Gender = user.Gender,
+                    DateOfBirth = user.DateOfBirth,
+                    Address = user.Address
                 }
             });
         }

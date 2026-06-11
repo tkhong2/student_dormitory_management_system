@@ -100,8 +100,17 @@
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'fullName'">
               <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
-                <a-avatar size="32" style="background: #e6f7ff; color: #1890ff">
-                  {{ record.fullName.charAt(0) }}
+                <a-avatar 
+                  :src="record.avatarUrl" 
+                  :size="32" 
+                  :style="{ 
+                    background: record.avatarUrl ? 'transparent' : '#e6f7ff', 
+                    color: '#1890ff' 
+                  }"
+                >
+                  <template v-if="!record.avatarUrl">
+                    {{ record.fullName.charAt(0) }}
+                  </template>
                 </a-avatar>
                 <div style="font-weight: 600">{{ record.fullName }}</div>
               </div>
@@ -346,7 +355,22 @@ function defaultForm() {
 async function loadStudents() {
   loading.value = true;
   try {
-    students.value = await studentService.getAll();
+    const data = await studentService.getAll();
+    
+    // Process avatar URLs
+    students.value = data.map(student => {
+      let avatarUrl = null;
+      if (student.avatarUrl) {
+        avatarUrl = student.avatarUrl.startsWith('http')
+          ? student.avatarUrl
+          : `http://localhost:5003${student.avatarUrl}`;
+      }
+      
+      return {
+        ...student,
+        avatarUrl
+      };
+    });
   } catch (err) {
     message.error(err.message || "Không thể tải danh sách sinh viên");
   } finally {

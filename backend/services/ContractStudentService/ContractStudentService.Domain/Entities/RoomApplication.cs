@@ -18,12 +18,22 @@ public class RoomApplication : BaseEntity
     // Thời gian ở
     public DateOnly RequestedStartDate { get; set; }
     public DateOnly RequestedEndDate { get; set; }
+    public int DurationMonths { get; set; }                     // Thời hạn thuê: 3, 6, hoặc 12 tháng
 
-    // Yêu cầu đặc biệt
-    public string? SpecialRequirements { get; set; }            // Yêu cầu về phòng, bạn cùng phòng...
+    // Nguyện vọng
+    public string? Preferences { get; set; }                    // Nguyện vọng về phòng, bạn cùng phòng...
     public string? Note { get; set; }                           // Ghi chú thêm
     public bool IsLocalStudent { get; set; } = false;           // SV nội tỉnh
     public int Priority { get; set; } = 0;                      // Độ ưu tiên (SV năm 1, SV ngoại tỉnh...)
+
+    // Liên hệ khẩn cấp
+    public string? EmergencyContactName { get; set; }           // Họ tên người liên hệ khẩn cấp
+    public string? EmergencyContactPhone { get; set; }          // SĐT người liên hệ khẩn cấp
+    public string? EmergencyContactRelationship { get; set; }   // Quan hệ: Bố/Mẹ/Anh/Chị/...
+
+    // Cam kết
+    public bool AgreedToRegulations { get; set; } = false;      // Đồng ý với quy định KTX
+    public bool ConfirmedInformationAccuracy { get; set; } = false; // Xác nhận thông tin chính xác
 
     // Giấy tờ đính kèm đơn
     public string? AttachedDocumentUrls { get; set; }           // JSON array URL giấy tờ kèm đơn

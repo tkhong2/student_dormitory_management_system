@@ -25,5 +25,17 @@ export default {
   },
   delete(id) {
     return billingMaintenanceApi.delete(`/invoices/${id}`);
+  },
+  // Generate invoice from contract
+  generateFromContract(contractId, data) {
+    return billingMaintenanceApi.post(`/invoices/generate-from-contract/${contractId}`, data);
+  },
+  // Send reminder
+  sendReminder(id) {
+    return billingMaintenanceApi.post(`/invoices/${id}/send-reminder`);
+  },
+  // Update overdue status
+  updateOverdueStatus() {
+    return billingMaintenanceApi.post('/invoices/update-overdue-status');
   }
 };

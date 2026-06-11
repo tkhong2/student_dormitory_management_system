@@ -1,336 +1,330 @@
-# 🏢 Hệ thống Quản lý Ký túc xá
+# 🏢 Dormitory Management System
 
-<div align="center">
+Hệ thống quản lý ký túc xá với kiến trúc Microservices + API Gateway + Vue 3 Frontend.
 
-![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=.net&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+## 🚀 Quick Start - Khởi động siêu nhanh!
 
-Hệ thống quản lý ký túc xá toàn diện với kiến trúc Microservices
+### ⚡ Cách 1: Script tự động (Khuyên dùng) ⭐
 
-[Tài liệu](#-tài-liệu) •
-[Cài đặt](#-cài-đặt-nhanh) •
-[Demo](#-demo) •
-[API Docs](#-api-documentation)
-
-</div>
-
----
-
-## ✨ Tính năng chính
-
-### 🎯 Quản trị viên (Admin)
-- 📊 **Dashboard** - Tổng quan thống kê realtime
-- 🏢 **Quản lý Tòa nhà** - CRUD tòa nhà, tầng, sơ đồ mặt bằng
-- 🚪 **Quản lý Phòng** - Loại phòng, phòng trống, đang ở, bảo trì
-- 🛋️ **Quản lý Tiện nghi** - Điều hòa, tủ lạnh, giường, bàn...
-- 📋 **Biên bản kiểm tra** - Check-in/out, định kỳ, sự cố
-- 📢 **Thông báo** - Thông báo tòa nhà hoặc toàn KTX
-- 🎓 **Quản lý Sinh viên** - Hồ sơ, phòng ở, lịch sử
-- 📝 **Quản lý Hợp đồng** - Tạo, gia hạn, chấm dứt
-- 💰 **Hóa đơn & Thanh toán** - Tự động tính phí, tracking
-- 🔧 **Bảo trì** - Tiếp nhận, xử lý yêu cầu sửa chữa
-
-### 👨‍🎓 Sinh viên (Student Portal)
-- 🏠 **Phòng của tôi** - Thông tin phòng, bạn cùng phòng
-- 📋 **Hợp đồng** - Xem chi tiết hợp đồng đang ở
-- 💳 **Thanh toán** - Xem hóa đơn, thanh toán online
-- 🔧 **Yêu cầu sửa chữa** - Báo hỏng hóc ngay trên app
-- 📢 **Thông báo** - Nhận thông báo từ BQL
-- 👤 **Hồ sơ** - Cập nhật thông tin cá nhân
-
-### 🌐 Trang công khai
-- 🏡 **Trang chủ** - Giới thiệu KTX, tiện ích
-- 📋 **Đăng ký phòng** - Form đăng ký online
-- 📰 **Tin tức** - Thông báo, sự kiện
-- 📖 **Nội quy** - Quy định KTX
-- 📞 **Liên hệ** - Thông tin liên hệ BQL
-
----
-
-## 🏗️ Kiến trúc hệ thống
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend (Vue 3)                      │
-│                     Port: 5173 (Vite Dev)                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    API Gateway (Ocelot)                      │
-│                         Port: 5000                           │
-└──────────────┬─────────────┬────────────────┬───────────────┘
-               │             │                │
-       ┌───────▼───────┐ ┌───▼───────┐  ┌────▼──────────┐
-       │ RoomBuilding  │ │  Billing  │  │   Contract    │
-       │   Service     │ │   Service │  │   Service     │
-       │  Port: 5001   │ │Port: 5002 │  │  Port: 5059   │
-       └───────┬───────┘ └─────┬─────┘  └────┬──────────┘
-               │               │              │
-       ┌───────▼───────────────▼──────────────▼───────────┐
-       │            SQL Server (3 Databases)              │
-       │    - RoomBuildingDB                              │
-       │    - BillingMaintenanceDB                        │
-       │    - ContractStudentDB                           │
-       └──────────────────────────────────────────────────┘
-```
-
----
-
-## 🚀 Cài đặt nhanh
-
-### Yêu cầu hệ thống
-- .NET 9 SDK
-- Node.js 18+
-- SQL Server 2022
-- Docker Desktop (khuyến nghị)
-
-### Chạy với Docker Compose
-
+#### Batch Script (Windows)
 ```bash
-# Clone repository
-git clone <repo-url>
-cd repo
+# Chạy toàn bộ ứng dụng (Backend + Frontend)
+start-dev.bat
 
-# Chạy toàn bộ hệ thống
-docker-compose up -d
-
-# Xem logs
-docker-compose logs -f
-
-# Truy cập
-# - Frontend: http://localhost:5173
-# - API Gateway: http://localhost:5000
-# - Swagger RoomBuilding: http://localhost:5001/swagger
+# Dừng tất cả
+stop-dev.bat
 ```
 
-### Chạy Manual
+#### PowerShell
+```powershell
+# Chạy toàn bộ ứng dụng (Backend + Frontend)
+.\start-dev.ps1
 
-```bash
-# Backend
-cd backend/services/RoomBuildingService/RoomBuildingService.API
-dotnet run
-
-# Frontend
-cd frontend
-npm install
-npm run dev
+# Dừng tất cả
+.\stop-dev.ps1
 ```
 
-📖 **Xem hướng dẫn chi tiết**: [SETUP_GUIDE.md](SETUP_GUIDE.md)
+Các script sẽ tự động:
+- ✅ Khởi động 3 microservices (BillingMaintenance, ContractStudent, RoomBuilding)
+- ✅ Khởi động API Gateway
+- ✅ Khởi động Frontend Vue 3 với Vite
+- ✅ Mở tất cả trong các terminal riêng biệt
+
+### 🌐 Sau khi chạy, truy cập:
+
+| Service | URL | Mô tả |
+|---------|-----|-------|
+| **Frontend** | http://localhost:5173 | Giao diện người dùng |
+| **API Gateway** | http://localhost:5000 | Cổng API chính |
+| BillingMaintenanceService | http://localhost:5002 | Thanh toán & Bảo trì |
+| ContractStudentService | http://localhost:5001 | Hợp đồng & Sinh viên |
+| RoomBuildingService | http://localhost:5003 | Phòng & Tòa nhà |
+
+### 🔐 Tài khoản đăng nhập mặc định:
+
+| Username | Password | Role | Quyền |
+|----------|----------|------|-------|
+| `admin` | `Admin@123` | Admin | Full quyền quản trị |
+| `staff01` | `Staff@123` | Staff | Nhân viên (limited) |
+| `student01` | `Student@123` | Student | Sinh viên |
 
 ---
 
-## 📂 Cấu trúc thư mục
+## 📁 Cấu trúc Project
 
 ```
 repo/
-├── backend/
-│   ├── APIGateway/                    # Ocelot API Gateway
-│   └── services/
-│       ├── RoomBuildingService/       # Service quản lý tòa nhà, phòng
-│       │   ├── RoomBuildingService.API
-│       │   ├── RoomBuildingService.Application
-│       │   ├── RoomBuildingService.Domain
-│       │   └── RoomBuildingService.Infrastructure
-│       ├── BillingMaintenanceService/ # Service hóa đơn, bảo trì
-│       └── ContractStudentService/    # Service sinh viên, hợp đồng
-├── frontend/                          # Vue 3 + Ant Design Vue
+├── 🎨 frontend/              # Vue 3 + Vite + Ant Design Vue
 │   ├── src/
-│   │   ├── components/               # Reusable components
-│   │   ├── views/                    # Page views
-│   │   ├── layouts/                  # Layout wrappers
-│   │   ├── router/                   # Vue Router config
-│   │   ├── services/                 # API services
-│   │   └── stores/                   # Pinia stores
+│   │   ├── views/           # Trang giao diện
+│   │   ├── stores/          # Pinia stores
+│   │   ├── router/          # Vue Router
+│   │   └── assets/          # CSS, images
 │   └── package.json
-├── docker-compose.yml                 # Docker Compose config
-├── README.md                          # File này
-└── SETUP_GUIDE.md                     # Hướng dẫn chi tiết
+│
+├── 🔧 backend/               # .NET 9 Microservices
+│   ├── APIGateway/          # Ocelot Gateway (Port 5000)
+│   ├── services/
+│   │   ├── BillingMaintenanceService/    (Port 5002)
+│   │   ├── ContractStudentService/       (Port 5001)
+│   │   └── RoomBuildingService/          (Port 5003)
+│   │
+│   ├── start-all.bat        # Chạy tất cả backend services
+│   ├── stop-all.bat         # Dừng tất cả backend services
+│   ├── start-all.ps1        # PowerShell version
+│   ├── run.ps1              # Script đa năng
+│   └── docker-compose.yml   # Docker setup
+│
+├── start-dev.bat            # 🚀 Chạy toàn bộ app
+├── stop-dev.bat             # ⛔ Dừng toàn bộ app
+├── start-dev.ps1            # PowerShell version
+└── stop-dev.ps1             # PowerShell version
 ```
 
 ---
 
-## 🎨 Screenshots
+## 🛠️ Chạy thủ công (Development)
 
-### Dashboard Admin
-Dashboard tổng quan với biểu đồ thống kê realtime
+### Yêu cầu:
+- ✅ .NET 9.0 SDK
+- ✅ Node.js 18+ & npm
+- ✅ SQL Server (hoặc SQL Server Express)
 
-![Dashboard](docs/screenshots/dashboard.png)
+### 1️⃣ Chạy Backend
 
-### Quản lý Tòa nhà
-Danh sách tòa nhà với filter và search
+#### Cách A: Script tự động (Nhanh)
+```bash
+cd backend
+start-all.bat          # Windows Batch
+# hoặc
+.\start-all.ps1        # PowerShell
+```
 
-![Buildings](docs/screenshots/buildings.png)
+#### Cách B: Chạy từng service
+```bash
+# Terminal 1 - BillingMaintenanceService
+cd backend/services/BillingMaintenanceService/BillingMaintenanceService.API
+dotnet run
 
-### Quản lý Phòng
-Xem và quản lý phòng theo tòa nhà, tầng
+# Terminal 2 - ContractStudentService  
+cd backend/services/ContractStudentService/ContractStudentService.API
+dotnet run
 
-![Rooms](docs/screenshots/rooms.png)
+# Terminal 3 - RoomBuildingService
+cd backend/services/RoomBuildingService/RoomBuildingService.API
+dotnet run
 
-### Student Portal
-Giao diện sinh viên xem phòng và thanh toán
+# Terminal 4 - API Gateway
+cd backend/APIGateway
+dotnet run
+```
 
-![Student](docs/screenshots/student.png)
-
----
-
-## 🔌 API Endpoints
-
-### RoomBuildingService (Port 5001)
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/buildings` | Lấy danh sách tòa nhà |
-| POST | `/api/buildings` | Tạo tòa nhà mới |
-| GET | `/api/roomtypes` | Lấy danh sách loại phòng |
-| GET | `/api/rooms` | Lấy danh sách phòng |
-| GET | `/api/amenities` | Lấy danh sách tiện nghi |
-| GET | `/api/roominspections` | Lấy biên bản kiểm tra |
-| GET | `/api/buildingannouncemets` | Lấy thông báo |
-
-### BillingMaintenanceService (Port 5002)
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/bills` | Lấy danh sách hóa đơn |
-| POST | `/api/payments` | Tạo thanh toán mới |
-| GET | `/api/maintenancerequests` | Lấy yêu cầu bảo trì |
-
-### ContractStudentService (Port 5059)
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/students` | Lấy danh sách sinh viên |
-| GET | `/api/contracts` | Lấy danh sách hợp đồng |
-| POST | `/api/contracts` | Tạo hợp đồng mới |
-
-📝 **Xem API docs đầy đủ**: Swagger UI tại `/swagger` của từng service
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Framework**: .NET 9
-- **Database**: SQL Server 2022
-- **ORM**: Entity Framework Core 9
-- **API Gateway**: Ocelot
-- **Architecture**: Clean Architecture + Microservices
-
-### Frontend
-- **Framework**: Vue 3 (Composition API)
-- **UI Library**: Ant Design Vue 4
-- **State Management**: Pinia
-- **Routing**: Vue Router 4
-- **HTTP Client**: Axios
-- **Build Tool**: Vite
-- **Charts**: Chart.js + vue-chartjs
-
-### DevOps
-- **Container**: Docker + Docker Compose
-- **CI/CD**: GitHub Actions (coming soon)
-
----
-
-## 📊 Database Schema
-
-### RoomBuildingDB
-- Building (Tòa nhà)
-- Floor (Tầng)
-- RoomType (Loại phòng)
-- Room (Phòng)
-- Amenity (Tiện nghi)
-- RoomTypeAmenity (Liên kết)
-- BuildingAnnouncement (Thông báo)
-- RoomInspection (Biên bản kiểm tra)
-- RoomReservation (Đặt chỗ tạm)
-- RoomStatusLog (Log trạng thái)
-- RoomImage (Ảnh phòng)
-
-### BillingMaintenanceDB
-- Bill (Hóa đơn)
-- Payment (Thanh toán)
-- MaintenanceRequest (Yêu cầu bảo trì)
-
-### ContractStudentDB
-- Student (Sinh viên)
-- RoomApplication (Đơn đăng ký)
-- RoomContract (Hợp đồng)
-
----
-
-## 🧪 Testing
+### 2️⃣ Chạy Frontend
 
 ```bash
-# Run backend tests
-cd backend/services/RoomBuildingService
-dotnet test
-
-# Run frontend tests
 cd frontend
-npm run test
+npm install          # Lần đầu tiên
+npm run dev         # Chạy dev server
 ```
+
+Frontend sẽ chạy tại: http://localhost:5173
+
+---
+
+## 🏗️ Kiến trúc Microservices
+
+```
+┌─────────────┐
+│  Frontend   │
+│  (Vue 3)    │
+└──────┬──────┘
+       │
+       ▼
+┌──────────────────┐
+│   API Gateway    │ Port 5000
+│    (Ocelot)      │
+└────────┬─────────┘
+         │
+         ├──> 🏢 RoomBuildingService (Port 5003)
+         │    └─> RoomBuildingDb
+         │         • Buildings, Rooms
+         │         • File uploads
+         │
+         ├──> 💰 BillingMaintenanceService (Port 5002)
+         │    └─> BillingMaintenanceDb
+         │         • Users, Auth (JWT)
+         │         • Invoices, Payments
+         │         • Maintenance Requests
+         │         • Notifications
+         │
+         └──> 📝 ContractStudentService (Port 5001)
+              └─> ContractStudentDb
+                   • Students, Documents
+                   • Room Applications
+                   • Contracts
+                   • Contract Extensions
+                   • Room Transfers
+```
+
+---
+
+## 🎯 Tính năng chính
+
+### 👨‍💼 Admin Dashboard
+- ✅ Quản lý người dùng (Admin/Staff/Student)
+- ✅ Quản lý tòa nhà & phòng
+- ✅ Quản lý hợp đồng
+- ✅ Quản lý hóa đơn & thanh toán
+- ✅ Quản lý yêu cầu bảo trì
+- ✅ Thống kê & báo cáo
+
+### 👨‍🎓 Student Portal
+- ✅ Đăng ký phòng
+- ✅ Xem hợp đồng & hóa đơn
+- ✅ Thanh toán online
+- ✅ Gửi yêu cầu bảo trì
+- ✅ Chuyển phòng
+- ✅ Gia hạn hợp đồng
+
+---
+
+## 🐳 Docker (Production)
+
+```bash
+# Backend services
+cd backend
+docker-compose up --build -d
+
+# Kiểm tra logs
+docker-compose logs -f
+
+# Dừng tất cả
+docker-compose down
+```
+
+---
+
+## 📚 Tech Stack
+
+### Frontend
+- **Vue 3** - Progressive framework
+- **Vite** - Lightning fast build tool
+- **Ant Design Vue** - UI components
+- **Pinia** - State management
+- **Vue Router** - Routing
+- **Axios** - HTTP client
+- **Chart.js** - Data visualization
+
+### Backend
+- **.NET 9.0** - Framework
+- **ASP.NET Core Web API** - REST APIs
+- **Entity Framework Core 9.0** - ORM
+- **SQL Server** - Database
+- **Ocelot** - API Gateway
+- **BCrypt.Net** - Password hashing
+- **Swagger/OpenAPI** - API documentation
+
+### DevOps
+- **Docker & Docker Compose** - Containerization
+- **PowerShell & Batch** - Automation scripts
+
+---
+
+## 🔧 Cấu hình Database
+
+Sửa `appsettings.Development.json` trong mỗi service:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR_SERVER;Database=DbName;User Id=sa;Password=YourPassword;TrustServerCertificate=True"
+  }
+}
+```
+
+### Chạy Migrations:
+```bash
+# Trong mỗi service
+dotnet ef database update --project Infrastructure --startup-project API
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend không chạy được?
+```bash
+# Kiểm tra .NET SDK
+dotnet --version
+
+# Build lại
+cd backend
+dotnet build
+
+# Xóa cache
+dotnet clean
+```
+
+### Frontend không chạy được?
+```bash
+cd frontend
+
+# Xóa node_modules và cài lại
+rm -rf node_modules
+npm install
+
+# Clear cache
+npm cache clean --force
+```
+
+### Port bị chiếm?
+Sửa port trong:
+- Backend: `launchSettings.json` của mỗi service
+- Frontend: `vite.config.js`
+
+### Không thể dừng services?
+```bash
+# Windows
+taskkill /F /IM dotnet.exe
+taskkill /F /IM node.exe
+
+# PowerShell
+Get-Process dotnet | Stop-Process -Force
+Get-Process node | Stop-Process -Force
+```
+
+---
+
+## 📖 Documentation
+
+- [Backend README](./backend/README.md) - Chi tiết về microservices
+- [Frontend README](./frontend/README.md) - Chi tiết về Vue app
+- API Docs: http://localhost:5000/swagger (sau khi chạy Gateway)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork project
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ---
 
-## 📝 Changelog
+## 📝 License
 
-### Version 1.0.0 (2026-06-03)
-- ✨ Initial release
-- 🏢 Building, Floor, Room management
-- 🚪 RoomType and Amenity management
-- 📋 Room inspection workflow
-- 📢 Building announcements
-- 🎓 Student and contract management
-- 💰 Billing and payment tracking
-- 🔧 Maintenance request system
-- 📱 Responsive frontend with Ant Design Vue
+MIT License - xem file [LICENSE](LICENSE)
 
 ---
 
-## 📄 License
+## 👥 Team
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👥 Authors
-
-- **Backend Team** - Clean Architecture + Microservices
-- **Frontend Team** - Vue 3 + Ant Design Vue
-- **DevOps Team** - Docker + CI/CD
+Developed by DNU Students
 
 ---
 
-## 📞 Support
+## 🎉 Happy Coding!
 
-Nếu bạn gặp vấn đề hoặc có câu hỏi:
-
-- 📧 Email: support@dormitory.edu.vn
-- 💬 GitHub Issues: [Create an issue](https://github.com/your-repo/issues)
-- 📖 Documentation: [Wiki](https://github.com/your-repo/wiki)
-
----
-
-<div align="center">
-
-Made with ❤️ by Dormitory Management Team
-
-⭐ Star us on GitHub if you find this project helpful!
-
-</div>
+Nếu có vấn đề gì, tạo issue hoặc liên hệ team! 🚀

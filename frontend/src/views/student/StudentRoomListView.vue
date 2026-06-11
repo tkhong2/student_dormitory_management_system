@@ -153,6 +153,7 @@ import {
   ThunderboltOutlined 
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import axios from 'axios'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
@@ -229,12 +230,45 @@ async function loadData() {
     buildings.value = buildingsData.map(b => b.name)
     roomTypes.value = roomTypesData.map(rt => rt.name)
     
+    // Fetch amenities for each room type
+    const roomTypeAmenitiesMap = {}
+    for (const roomType of roomTypesData) {
+      try {
+        const amenitiesResponse = await axios.get(
+          `http://localhost:5003/api/roomtypes/${roomType.id}/amenities`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        )
+        roomTypeAmenitiesMap[roomType.id] = amenitiesResponse.data || []
+      } catch (error) {
+        console.error(`Error fetching amenities for room type ${roomType.id}:`, error)
+        // If API fails, use fallback from boolean fields
+        roomTypeAmenitiesMap[roomType.id] = []
+      }
+    }
+    
     rooms.value = roomsData
-      // Tạm bỏ filter để hiển thị tất cả phòng
-      // .filter(r => r.status === 'Available' && r.currentOccupants < r.maxOccupants)
       .map(room => {
         const roomType = roomTypesData.find(rt => rt.id === room.roomTypeId)
         const building = buildingsData.find(b => b.id === room.buildingId)
+        
+        // Get amenities for this room type from the map
+        const roomTypeAmenities = roomTypeAmenitiesMap[room.roomTypeId] || []
+        const amenityNames = roomTypeAmenities.map(a => a.name)
+        
+        // Add basic amenities from roomType boolean fields if not already in list
+        if (roomType?.hasAirConditioner && !amenityNames.includes('Điều hòa')) {
+          amenityNames.push('Điều hòa')
+        }
+        if (roomType?.hasWaterHeater && !amenityNames.includes('Nóng lạnh')) {
+          amenityNames.push('Nóng lạnh')
+        }
+        if (roomType?.hasPrivateBathroom && !amenityNames.includes('WC riêng')) {
+          amenityNames.push('WC riêng')
+        }
         
         return {
           id: room.id,
@@ -245,31 +279,21 @@ async function loadData() {
           area: roomType?.area || 25,
           price: roomType?.pricePerMonth || 0,
           available: Math.max(0, room.maxOccupants - room.currentOccupants),
-          facilities: getFacilities(roomType),
+          facilities: amenityNames.length > 0 ? amenityNames.join(', ') : 'Tiện nghi cơ bản',
+          amenities: amenityNames, // Array of amenity names
           image: roomType?.thumbnailUrl || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
           roomTypeId: room.roomTypeId,
           roomTypeName: roomType?.name || 'N/A',
           status: room.status
         }
       })
-      .sort((a, b) => b.available - a.available) // Ưu tiên phòng có nhiều chỗ trống
+      .sort((a, b) => b.available - a.available)
   } catch (error) {
-    console.error('Error loading data:', error)
+    console.error('Error loading rooms:', error)
     message.error('Không thể tải danh sách phòng')
   } finally {
     loading.value = false
   }
-}
-
-function getFacilities(roomType) {
-  if (!roomType) return 'Tiện nghi cơ bản'
-  
-  const facilities = []
-  if (roomType.hasAirConditioner) facilities.push('Điều hòa')
-  if (roomType.hasWaterHeater) facilities.push('Nóng lạnh')
-  if (roomType.hasPrivateBathroom) facilities.push('WC riêng')
-  
-  return facilities.length > 0 ? facilities.join(', ') : 'Tiện nghi cơ bản'
 }
 
 const filteredRooms = computed(() => {

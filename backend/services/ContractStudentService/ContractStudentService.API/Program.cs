@@ -26,6 +26,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add HttpClient for inter-service communication
+builder.Services.AddHttpClient();
+
 // Register repositories
 builder.Services.AddScoped<IStudentRepository, ContractStudentService.Infrastructure.Repositories.StudentRepository>();
 builder.Services.AddScoped<IStudentDocumentRepository, ContractStudentService.Infrastructure.Repositories.StudentDocumentRepository>();
@@ -33,6 +36,8 @@ builder.Services.AddScoped<IRoomApplicationRepository, ContractStudentService.In
 builder.Services.AddScoped<IContractRepository, ContractStudentService.Infrastructure.Repositories.ContractRepository>();
 builder.Services.AddScoped<IContractExtensionRepository, ContractStudentService.Infrastructure.Repositories.ContractExtensionRepository>();
 builder.Services.AddScoped<IRoomTransferRepository, ContractStudentService.Infrastructure.Repositories.RoomTransferRepository>();
+builder.Services.AddScoped<IContractTemplateRepository, ContractStudentService.Infrastructure.Repositories.ContractTemplateRepository>();
+builder.Services.AddScoped<IContractTermRepository, ContractStudentService.Infrastructure.Repositories.ContractTermRepository>();
 
 builder.Services.AddCors(options =>
 {

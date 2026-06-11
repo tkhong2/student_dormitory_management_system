@@ -46,6 +46,9 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("ContractTemplateId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -158,6 +161,8 @@ namespace ContractStudentService.Infrastructure.Migrations
                     b.HasIndex("ContractCode")
                         .IsUnique();
 
+                    b.HasIndex("ContractTemplateId");
+
                     b.HasIndex("Status");
 
                     b.HasIndex("StudentId");
@@ -215,6 +220,123 @@ namespace ContractStudentService.Infrastructure.Migrations
                     b.ToTable("ContractExtensions", (string)null);
                 });
 
+            modelBuilder.Entity("ContractStudentService.Domain.Entities.ContractTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaxDurationMonths")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinDurationMonths")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TemplateContent")
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.ToTable("ContractTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("ContractStudentService.Domain.Entities.ContractTerm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("ContractTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsHighlighted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractTemplateId");
+
+                    b.HasIndex("OrderIndex");
+
+                    b.ToTable("ContractTerms", (string)null);
+                });
+
             modelBuilder.Entity("ContractStudentService.Domain.Entities.RoomApplication", b =>
                 {
                     b.Property<int>("Id")
@@ -222,6 +344,9 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AgreedToRegulations")
+                        .HasColumnType("bit");
 
                     b.Property<string>("AssignedBuildingName")
                         .HasColumnType("nvarchar(max)");
@@ -244,11 +369,26 @@ namespace ContractStudentService.Infrastructure.Migrations
                     b.Property<string>("CancelledReason")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("ConfirmedInformationAccuracy")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("DurationMonths")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmergencyContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmergencyContactPhone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmergencyContactRelationship")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -257,6 +397,9 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Preferences")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PreferredBuildingId")
@@ -299,9 +442,6 @@ namespace ContractStudentService.Infrastructure.Migrations
 
                     b.Property<int?>("ReviewedByUserId")
                         .HasColumnType("int");
-
-                    b.Property<string>("SpecialRequirements")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -634,6 +774,10 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ContractStudentService.Domain.Entities.ContractTemplate", "ContractTemplate")
+                        .WithMany("Contracts")
+                        .HasForeignKey("ContractTemplateId");
+
                     b.HasOne("ContractStudentService.Domain.Entities.Student", "Student")
                         .WithMany("Contracts")
                         .HasForeignKey("StudentId")
@@ -641,6 +785,8 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Application");
+
+                    b.Navigation("ContractTemplate");
 
                     b.Navigation("Student");
                 });
@@ -654,6 +800,17 @@ namespace ContractStudentService.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Contract");
+                });
+
+            modelBuilder.Entity("ContractStudentService.Domain.Entities.ContractTerm", b =>
+                {
+                    b.HasOne("ContractStudentService.Domain.Entities.ContractTemplate", "ContractTemplate")
+                        .WithMany("Terms")
+                        .HasForeignKey("ContractTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContractTemplate");
                 });
 
             modelBuilder.Entity("ContractStudentService.Domain.Entities.RoomApplication", b =>
@@ -694,6 +851,13 @@ namespace ContractStudentService.Infrastructure.Migrations
                     b.Navigation("Extensions");
 
                     b.Navigation("RoomTransfers");
+                });
+
+            modelBuilder.Entity("ContractStudentService.Domain.Entities.ContractTemplate", b =>
+                {
+                    b.Navigation("Contracts");
+
+                    b.Navigation("Terms");
                 });
 
             modelBuilder.Entity("ContractStudentService.Domain.Entities.RoomApplication", b =>

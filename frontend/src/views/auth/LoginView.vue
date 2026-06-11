@@ -77,7 +77,7 @@
         <div class="divider-text">hoặc</div>
 
         <div class="register-text">
-          Chưa có tài khoản? <router-link to="/register" class="register-link">Đăng ký ngay</router-link>
+          Chưa có tài khoản? <a href="#" class="register-link">Liên hệ quản trị viên</a>
         </div>
       </a-form>
     </div>

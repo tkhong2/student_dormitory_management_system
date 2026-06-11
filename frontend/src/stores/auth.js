@@ -105,6 +105,30 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateUserProfile = (updatedUser) => {
+    // Update user info in store and localStorage
+    user.value = { ...user.value, ...updatedUser }
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
+
+  const refreshUserData = async () => {
+    // Fetch fresh user data from API
+    try {
+      if (!user.value?.id) return
+      
+      const response = await axios.get(`${API_URL}/users/${user.value.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token.value}`
+        }
+      })
+      
+      user.value = response.data
+      localStorage.setItem('user', JSON.stringify(response.data))
+    } catch (error) {
+      console.error('Error refreshing user data:', error)
+    }
+  }
+
   // Initialize axios interceptor for auto token refresh
   const initializeInterceptor = () => {
     axios.interceptors.response.use(
@@ -154,6 +178,8 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     refreshAccessToken,
     changePassword,
+    updateUserProfile,
+    refreshUserData,
     initializeInterceptor
   }
 })

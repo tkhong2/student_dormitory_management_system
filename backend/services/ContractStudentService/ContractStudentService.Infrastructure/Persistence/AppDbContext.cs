@@ -13,6 +13,8 @@ namespace ContractStudentService.Infrastructure.Persistence
         public DbSet<Contract> Contracts => Set<Contract>();
         public DbSet<ContractExtension> ContractExtensions => Set<ContractExtension>();
         public DbSet<RoomTransfer> RoomTransfers => Set<RoomTransfer>();
+        public DbSet<ContractTemplate> ContractTemplates => Set<ContractTemplate>();
+        public DbSet<ContractTerm> ContractTerms => Set<ContractTerm>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -141,6 +143,39 @@ namespace ContractStudentService.Infrastructure.Persistence
                 entity.HasOne(e => e.Contract)
                     .WithMany(c => c.RoomTransfers)
                     .HasForeignKey(e => e.ContractId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ContractTemplate
+            modelBuilder.Entity<ContractTemplate>(entity =>
+            {
+                entity.ToTable("ContractTemplates");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Code).IsUnique();
+                entity.HasIndex(e => e.IsDefault);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.TemplateContent).HasMaxLength(10000);
+            });
+
+            // ContractTerm
+            modelBuilder.Entity<ContractTerm>(entity =>
+            {
+                entity.ToTable("ContractTerms");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ContractTemplateId);
+                entity.HasIndex(e => e.OrderIndex);
+
+                entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
+                entity.Property(e => e.Content).HasMaxLength(2000).IsRequired();
+                entity.Property(e => e.Icon).HasMaxLength(50);
+
+                entity.HasOne(e => e.ContractTemplate)
+                    .WithMany(ct => ct.Terms)
+                    .HasForeignKey(e => e.ContractTemplateId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }

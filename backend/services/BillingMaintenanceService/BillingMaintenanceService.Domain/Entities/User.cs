@@ -13,6 +13,11 @@ public class User : BaseEntity
     public string Phone { get; set; } = null!;
     public string Role { get; set; } = null!;                   // Admin / Staff / Student
     public string? AvatarUrl { get; set; }
+    
+    // Thông tin cá nhân bổ sung
+    public string? Gender { get; set; }                         // Male / Female / Other
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Address { get; set; }                        // Địa chỉ thường trú
 
     // Ref ID sang ContractService (nếu Role = Student)
     public int? StudentId { get; set; }                         // ref → ContractDB.Students

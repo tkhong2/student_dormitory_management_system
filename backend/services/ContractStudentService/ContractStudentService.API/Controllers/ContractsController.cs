@@ -12,15 +12,21 @@ namespace ContractStudentService.API.Controllers
         private readonly IContractRepository _contractRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly IRoomApplicationRepository _applicationRepository;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
         public ContractsController(
             IContractRepository contractRepository,
             IStudentRepository studentRepository,
-            IRoomApplicationRepository applicationRepository)
+            IRoomApplicationRepository applicationRepository,
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration)
         {
             _contractRepository = contractRepository;
             _studentRepository = studentRepository;
             _applicationRepository = applicationRepository;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -189,8 +195,11 @@ namespace ContractStudentService.API.Controllers
 
             await _contractRepository.UpdateAsync(contract);
 
+            // Tự động sinh công nợ tháng đầu tiên khi hợp đồng Active
+            await GenerateMonthlyInvoice(contract);
+
             return Ok(new { 
-                message = "Đã xác nhận đóng cọc thành công. Hợp đồng đã được kích hoạt.",
+                message = "Đã xác nhận đóng cọc thành công. Hợp đồng đã được kích hoạt và sinh công nợ tháng đầu tiên.",
                 contract = MapToDto(contract)
             });
         }
@@ -264,6 +273,77 @@ namespace ContractStudentService.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Tự động sinh công nợ hàng tháng cho hợp đồng Active
+        /// </summary>
+        private async Task GenerateMonthlyInvoice(Contract contract)
+        {
+            try
+            {
+                var student = contract.Student;
+                if (student == null) return;
+
+                var billingServiceUrl = _configuration["Services:BillingService"] ?? "http://localhost:5002";
+                var httpClient = _httpClientFactory.CreateClient();
+
+                // Tính toán kỳ thanh toán (tháng hiện tại)
+                var now = DateTime.Now;
+                var billingMonth = now.Month;
+                var billingYear = now.Year;
+
+                // Tạo mã phiếu thu: PTT<YYYYMM><ContractId>
+                var invoiceCode = $"PTT{billingYear:0000}{billingMonth:00}{contract.Id:000}";
+
+                // Tính hạn thanh toán (ngày PaymentDueDay của tháng hiện tại)
+                var dueDate = new DateOnly(billingYear, billingMonth, contract.PaymentDueDay);
+
+                // Prepare invoice data
+                var invoiceData = new
+                {
+                    invoiceCode = invoiceCode,
+                    invoiceType = "Monthly",
+                    contractId = contract.Id,
+                    studentId = contract.StudentId,
+                    studentName = student.FullName,
+                    studentCode = student.StudentCode,
+                    roomId = contract.RoomId,
+                    roomNumber = contract.RoomNumber,
+                    buildingName = contract.BuildingName,
+                    billingMonth = billingMonth,
+                    billingYear = billingYear,
+                    rentAmount = contract.MonthlyRent,
+                    electricityAmount = 0m, // Sẽ cập nhật sau khi có chỉ số điện
+                    waterAmount = 0m,       // Sẽ cập nhật sau khi có chỉ số nước
+                    serviceAmount = 0m,     // Phí dịch vụ khác (nếu có)
+                    previousDebt = 0m,      // Nợ kỳ trước
+                    discount = 0m,
+                    dueDate = dueDate,
+                    createdByUserId = 1,    // System auto-generate
+                    notes = "Công nợ tháng được sinh tự động từ hợp đồng",
+                    items = new[]
+                    {
+                        new
+                        {
+                            itemName = "Tiền phòng",
+                            itemDescription = $"Tháng {billingMonth}/{billingYear}",
+                            quantity = 1m,
+                            unit = "tháng",
+                            unitPrice = contract.MonthlyRent,
+                            sortOrder = 1
+                        }
+                    }
+                };
+
+                var response = await httpClient.PostAsJsonAsync($"{billingServiceUrl}/api/invoices", invoiceData);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - sinh công nợ thất bại không nên block xác nhận hợp đồng
+                Console.WriteLine($"Error generating invoice: {ex.Message}");
+            }
+        }
+
         private static ContractDto MapToDto(Contract contract)
         {
             return new ContractDto
@@ -273,6 +353,7 @@ namespace ContractStudentService.API.Controllers
                 StudentName = contract.Student?.FullName,
                 StudentCode = contract.Student?.StudentCode,
                 ApplicationId = contract.ApplicationId,
+                ContractTemplateId = contract.ContractTemplateId,
                 RoomId = contract.RoomId,
                 RoomNumber = contract.RoomNumber,
                 BuildingId = contract.BuildingId,
@@ -302,7 +383,20 @@ namespace ContractStudentService.API.Controllers
                 DepositDeductionReason = contract.DepositDeductionReason,
                 CreatedByUserId = contract.CreatedByUserId,
                 Notes = contract.Notes,
-                CreatedAt = contract.CreatedAt
+                CreatedAt = contract.CreatedAt,
+                Terms = contract.ContractTemplate?.Terms?
+                    .OrderBy(t => t.OrderIndex)
+                    .Select(t => new ContractTermDto
+                    {
+                        Id = t.Id,
+                        ContractTemplateId = t.ContractTemplateId,
+                        Title = t.Title,
+                        Content = t.Content,
+                        OrderIndex = t.OrderIndex,
+                        IsRequired = t.IsRequired,
+                        IsHighlighted = t.IsHighlighted,
+                        Icon = t.Icon
+                    }).ToList() ?? new List<ContractTermDto>()
             };
         }
     }

@@ -65,10 +65,12 @@
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'fullName'">
             <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0;">
-              <a-avatar :size="36" :style="{ backgroundColor: getAvatarBg(record.role) }">
-                <template #icon>
-                  <component :is="getRoleIconComponent(record.role)" />
-                </template>
+              <a-avatar 
+                :size="36" 
+                :src="record.avatarUrl" 
+                :style="{ backgroundColor: record.avatarUrl ? 'transparent' : getAvatarBg(record.role) }"
+              >
+                <component v-if="!record.avatarUrl" :is="getRoleIconComponent(record.role)" />
               </a-avatar>
               <div>
                 <div style="font-weight: 600; font-size: 14px;">{{ record.fullName }}</div>
@@ -117,6 +119,50 @@
     >
       <a-form layout="vertical">
         <a-row :gutter="16">
+          <!-- Avatar Upload -->
+          <a-col :span="24" style="text-align: center; margin-bottom: 16px;">
+            <div class="avatar-upload-container">
+              <a-upload
+                name="file"
+                list-type="picture-card"
+                class="avatar-uploader"
+                :show-upload-list="false"
+                action="http://localhost:5003/api/files/upload"
+                :headers="uploadHeaders"
+                :before-upload="beforeAvatarUpload"
+                @change="handleAvatarUpload"
+              >
+                <div v-if="form.avatarUrl" class="avatar-preview">
+                  <img :src="form.avatarUrl" alt="avatar" />
+                  <div class="avatar-overlay">
+                    <CameraOutlined style="font-size: 24px; color: white;" />
+                    <div style="margin-top: 8px; color: white;">Đổi ảnh</div>
+                  </div>
+                </div>
+                <div v-else class="avatar-upload-placeholder">
+                  <LoadingOutlined v-if="uploadingAvatar" style="font-size: 32px; color: #ff9800;" />
+                  <template v-else>
+                    <CameraOutlined style="font-size: 32px; color: #8c8c8c;" />
+                    <div style="margin-top: 8px; color: #8c8c8c;">Tải ảnh lên</div>
+                  </template>
+                </div>
+              </a-upload>
+              <a-button 
+                v-if="form.avatarUrl" 
+                type="text" 
+                danger 
+                size="small" 
+                @click="removeAvatar"
+                style="margin-top: 8px;"
+              >
+                <DeleteOutlined /> Xóa ảnh
+              </a-button>
+            </div>
+            <div style="font-size: 12px; color: #8c8c8c; margin-top: 8px;">
+              Ảnh đại diện (tùy chọn, JPG/PNG, tối đa 2MB)
+            </div>
+          </a-col>
+          
           <a-col :span="12">
             <a-form-item 
               label="Tên đăng nhập" 
@@ -164,6 +210,38 @@
               <a-input 
                 v-model:value="form.phone" 
                 placeholder="Nhập số điện thoại"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Giới tính">
+              <a-select 
+                v-model:value="form.gender" 
+                placeholder="Chọn giới tính"
+                allow-clear
+              >
+                <a-select-option value="Male">Nam</a-select-option>
+                <a-select-option value="Female">Nữ</a-select-option>
+                <a-select-option value="Other">Khác</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Ngày sinh">
+              <a-date-picker 
+                v-model:value="form.dateOfBirth" 
+                placeholder="Chọn ngày sinh"
+                style="width: 100%;"
+                format="DD/MM/YYYY"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="24">
+            <a-form-item label="Địa chỉ">
+              <a-textarea 
+                v-model:value="form.address" 
+                placeholder="Nhập địa chỉ thường trú"
+                :rows="2"
               />
             </a-form-item>
           </a-col>
@@ -274,10 +352,14 @@ import {
   KeyOutlined,
   CrownOutlined,
   SafetyOutlined,
-  UserOutlined
+  UserOutlined,
+  LoadingOutlined,
+  CameraOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import axios from 'axios'
+import dayjs from 'dayjs'
+import { useAuthStore } from '@/stores/auth'
 
 const search = ref('')
 const filterRole = ref('all')
@@ -300,8 +382,18 @@ const form = ref({
   email: '',
   phone: '',
   role: 'Student',
-  studentCode: ''
+  studentCode: '',
+  gender: undefined,
+  dateOfBirth: null,
+  address: '',
+  avatarUrl: null
 })
+
+const uploadingAvatar = ref(false)
+
+const uploadHeaders = computed(() => ({
+  Authorization: `Bearer ${localStorage.getItem('token')}`
+}))
 
 const formErrors = ref({})
 
@@ -326,7 +418,11 @@ const roleStats = computed(() => {
 const antColumns = [
   { title: 'Người dùng', key: 'fullName', width: 280 },
   { title: 'Username', dataIndex: 'username', key: 'username', width: 150, align: 'center' },
+  { title: 'Giới tính', key: 'gender', dataIndex: 'gender', width: 100, align: 'center' },
+  { title: 'Ngày sinh', key: 'dateOfBirth', dataIndex: 'dateOfBirth', width: 120, align: 'center' },
   { title: 'Vai trò', key: 'role', width: 120, align: 'center' },
+  { title: 'Số điện thoại', dataIndex: 'phone', key: 'phone', width: 130, align: 'center' },
+  { title: 'Địa chỉ', dataIndex: 'address', key: 'address', width: 250, ellipsis: true },
   { title: 'Trạng thái', key: 'status', width: 130, align: 'center' },
   { title: 'Ngày tạo', dataIndex: 'created', key: 'created', width: 130, align: 'center' },
   { title: 'Thao tác', key: 'actions', width: 150, align: 'center', fixed: 'right' }
@@ -355,16 +451,32 @@ async function loadUsers() {
       }
     })
     
-    users.value = response.data.map(user => ({
-      id: user.id,
-      username: user.username,
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      active: user.isActive,
-      created: user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'
-    }))
+    users.value = response.data.map(user => {
+      // Process avatar URL
+      let avatarUrl = null
+      if (user.avatarUrl) {
+        avatarUrl = user.avatarUrl.startsWith('http') 
+          ? user.avatarUrl 
+          : `http://localhost:5003${user.avatarUrl}`
+      }
+      
+      return {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        gender: user.gender ? (user.gender === 'Male' ? 'Nam' : user.gender === 'Female' ? 'Nữ' : user.gender) : '-',
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : '-',
+        address: user.address || '-',
+        active: user.isActive,
+        created: user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A',
+        rawGender: user.gender,
+        rawDateOfBirth: user.dateOfBirth,
+        avatarUrl: avatarUrl // Use processed avatar URL
+      }
+    })
   } catch (error) {
     console.error('Error loading users:', error)
     message.error(error.response?.data?.message || 'Không thể tải danh sách người dùng')
@@ -401,7 +513,11 @@ function openCreateDialog() {
     email: '',
     phone: '',
     role: 'Student',
-    studentCode: ''
+    studentCode: '',
+    gender: undefined,
+    dateOfBirth: null,
+    address: '',
+    avatarUrl: null
   }
   formErrors.value = {}
   dialog.value = true
@@ -409,17 +525,34 @@ function openCreateDialog() {
 
 function openEditDialog(user) {
   editMode.value = true
-  form.value = {
-    id: user.id,
-    username: user.username,
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.phone || '',
-    role: user.role,
-    studentCode: user.studentCode || '',
-    password: '',
-    confirmPassword: ''
-  }
+  
+  // Load user data from API to get fresh data
+  axios.get(`http://localhost:5002/api/users/${user.id}`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then(response => {
+    const userData = response.data
+    form.value = {
+      id: userData.id,
+      username: userData.username,
+      fullName: userData.fullName,
+      email: userData.email,
+      phone: userData.phone || '',
+      role: userData.role,
+      studentCode: userData.studentCode || '',
+      gender: userData.gender,
+      dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
+      address: userData.address || '',
+      avatarUrl: userData.avatarUrl,
+      password: '',
+      confirmPassword: ''
+    }
+  }).catch(error => {
+    console.error('Error loading user data:', error)
+    message.error('Không thể tải dữ liệu người dùng')
+  })
+  
   formErrors.value = {}
   dialog.value = true
 }
@@ -476,29 +609,37 @@ async function saveUser() {
   
   saving.value = true
   try {
+    const userData = {
+      fullName: form.value.fullName,
+      email: form.value.email,
+      phone: form.value.phone,
+      role: form.value.role,
+      studentCode: form.value.studentCode,
+      gender: form.value.gender,
+      dateOfBirth: form.value.dateOfBirth ? dayjs(form.value.dateOfBirth).format('YYYY-MM-DD') : null,
+      address: form.value.address,
+      avatarUrl: form.value.avatarUrl,
+      isActive: true
+    }
+    
     if (editMode.value) {
-      await axios.put(`http://localhost:5002/api/users/${form.value.id}`, {
-        fullName: form.value.fullName,
-        email: form.value.email,
-        phone: form.value.phone,
-        role: form.value.role,
-        studentCode: form.value.studentCode,
-        isActive: true
-      }, {
+      await axios.put(`http://localhost:5002/api/users/${form.value.id}`, userData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
       message.success('Cập nhật người dùng thành công')
+      
+      // If editing current user, refresh auth store data
+      const authStore = useAuthStore()
+      if (authStore.user?.id === form.value.id) {
+        await authStore.refreshUserData()
+      }
     } else {
       await axios.post('http://localhost:5002/api/users', {
         username: form.value.username,
         password: form.value.password,
-        fullName: form.value.fullName,
-        email: form.value.email,
-        phone: form.value.phone,
-        role: form.value.role,
-        studentCode: form.value.role === 'Student' ? form.value.studentCode : null
+        ...userData
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -516,6 +657,58 @@ async function saveUser() {
   } finally {
     saving.value = false
   }
+}
+
+async function handleAvatarUpload(info) {
+  const file = info.file
+  
+  if (file.status === 'uploading') {
+    uploadingAvatar.value = true
+    return
+  }
+  
+  if (file.status === 'done') {
+    uploadingAvatar.value = false
+    if (file.response) {
+      // API response has 'Url' field (capital U)
+      const avatarUrl = file.response.url || file.response.Url
+      if (avatarUrl) {
+        // Construct full URL with base URL
+        form.value.avatarUrl = avatarUrl.startsWith('http') 
+          ? avatarUrl 
+          : `http://localhost:5003${avatarUrl}`
+        message.success('Upload ảnh đại diện thành công')
+      } else {
+        message.error('Không nhận được URL ảnh từ server')
+        console.error('Upload response:', file.response)
+      }
+    }
+  } else if (file.status === 'error') {
+    uploadingAvatar.value = false
+    const errorMsg = file.response?.message || file.error?.message || 'Upload ảnh thất bại'
+    message.error(errorMsg)
+  }
+}
+
+function beforeAvatarUpload(file) {
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    message.error('Chỉ được upload file ảnh (JPG, PNG, GIF)!')
+    return false
+  }
+  
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    message.error('Kích thước ảnh phải nhỏ hơn 2MB!')
+    return false
+  }
+  
+  return true
+}
+
+function removeAvatar() {
+  form.value.avatarUrl = null
+  message.info('Đã xóa ảnh đại diện')
 }
 
 function confirmDelete(user) {
@@ -597,5 +790,80 @@ onMounted(() => {
 <style scoped>
 :deep(.ant-table-cell) {
   padding: 12px 8px !important;
+}
+
+/* Avatar Upload Styles */
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+:deep(.avatar-uploader) {
+  display: inline-block;
+}
+
+:deep(.avatar-uploader .ant-upload) {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px dashed #d9d9d9;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+:deep(.avatar-uploader .ant-upload:hover) {
+  border-color: #ff9800;
+}
+
+:deep(.avatar-uploader .ant-upload-select) {
+  width: 140px !important;
+  height: 140px !important;
+  border-radius: 50% !important;
+  margin: 0 !important;
+}
+
+.avatar-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-preview:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 </style>

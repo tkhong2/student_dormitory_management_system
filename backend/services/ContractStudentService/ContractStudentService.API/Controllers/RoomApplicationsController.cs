@@ -12,15 +12,18 @@ namespace ContractStudentService.API.Controllers
         private readonly IRoomApplicationRepository _applicationRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly IContractRepository _contractRepository;
+        private readonly IContractTemplateRepository _templateRepository;
 
         public RoomApplicationsController(
             IRoomApplicationRepository applicationRepository,
             IStudentRepository studentRepository,
-            IContractRepository contractRepository)
+            IContractRepository contractRepository,
+            IContractTemplateRepository templateRepository)
         {
             _applicationRepository = applicationRepository;
             _studentRepository = studentRepository;
             _contractRepository = contractRepository;
+            _templateRepository = templateRepository;
         }
 
         [HttpGet]
@@ -126,10 +129,16 @@ namespace ContractStudentService.API.Controllers
                 PreferredRoomPrice = dto.PreferredRoomPrice,
                 RequestedStartDate = dto.RequestedStartDate,
                 RequestedEndDate = dto.RequestedEndDate,
-                SpecialRequirements = dto.SpecialRequirements,
+                DurationMonths = dto.DurationMonths,
+                Preferences = dto.Preferences,
                 Note = dto.Note,
                 IsLocalStudent = dto.IsLocalStudent,
                 Priority = dto.IsLocalStudent ? 0 : 1, // 0 = local, 1 = non-local
+                EmergencyContactName = dto.EmergencyContactName,
+                EmergencyContactPhone = dto.EmergencyContactPhone,
+                EmergencyContactRelationship = dto.EmergencyContactRelationship,
+                AgreedToRegulations = dto.AgreedToRegulations,
+                ConfirmedInformationAccuracy = dto.ConfirmedInformationAccuracy,
                 AttachedDocumentUrls = dto.AttachedDocumentUrls,
                 Status = "Pending",
                 // Lưu luôn thông tin phòng sinh viên đã chọn
@@ -157,10 +166,16 @@ namespace ContractStudentService.API.Controllers
             application.PreferredRoomPrice = dto.PreferredRoomPrice;
             application.RequestedStartDate = dto.RequestedStartDate;
             application.RequestedEndDate = dto.RequestedEndDate;
-            application.SpecialRequirements = dto.SpecialRequirements;
+            application.DurationMonths = dto.DurationMonths;
+            application.Preferences = dto.Preferences;
             application.Note = dto.Note;
             application.IsLocalStudent = dto.IsLocalStudent;
             application.Priority = dto.IsLocalStudent ? 0 : 1; // Auto-set based on IsLocalStudent
+            application.EmergencyContactName = dto.EmergencyContactName;
+            application.EmergencyContactPhone = dto.EmergencyContactPhone;
+            application.EmergencyContactRelationship = dto.EmergencyContactRelationship;
+            application.AgreedToRegulations = dto.AgreedToRegulations;
+            application.ConfirmedInformationAccuracy = dto.ConfirmedInformationAccuracy;
             application.AttachedDocumentUrls = dto.AttachedDocumentUrls;
 
             await _applicationRepository.UpdateAsync(application);
@@ -190,6 +205,13 @@ namespace ContractStudentService.API.Controllers
 
             await _applicationRepository.UpdateAsync(application);
 
+            // Lấy default contract template
+            var defaultTemplate = await _templateRepository.GetDefaultAsync();
+            if (defaultTemplate == null)
+            {
+                return StatusCode(500, new { message = "Không tìm thấy mẫu hợp đồng mặc định trong hệ thống" });
+            }
+
             // Tự động tạo hợp đồng nháp (Pending) để sinh viên xem và chấp thuận
             var year = DateTime.UtcNow.Year;
             var sequence = await _contractRepository.GetNextSequenceForYearAsync(year);
@@ -199,6 +221,7 @@ namespace ContractStudentService.API.Controllers
             {
                 StudentId = application.StudentId,
                 ApplicationId = application.Id,
+                ContractTemplateId = defaultTemplate.Id,
                 RoomId = application.AssignedRoomId ?? 0,
                 RoomNumber = application.AssignedRoomNumber ?? "",
                 BuildingId = application.PreferredBuildingId,
@@ -251,8 +274,24 @@ namespace ContractStudentService.API.Controllers
             if (application == null)
                 return NotFound(new { message = "Không tìm thấy đơn đăng ký" });
 
-            if (application.Contract != null)
-                return Conflict(new { message = "Không thể xóa đơn đã có hợp đồng" });
+            // Kiểm tra xem đơn đã có hợp đồng chưa
+            var contracts = await _contractRepository.GetAllAsync();
+            var relatedContracts = contracts.Where(c => c.ApplicationId == application.Id).ToList();
+            
+            if (relatedContracts.Any())
+            {
+                // Xóa tất cả hợp đồng liên quan trước
+                foreach (var contract in relatedContracts)
+                {
+                    // Chỉ cho phép xóa hợp đồng Pending hoặc chưa Active
+                    if (contract.Status == "Active")
+                    {
+                        return Conflict(new { message = "Không thể xóa đơn có hợp đồng đang hoạt động. Vui lòng chấm dứt hợp đồng trước." });
+                    }
+                    
+                    await _contractRepository.DeleteAsync(contract);
+                }
+            }
 
             await _applicationRepository.DeleteAsync(application);
 
@@ -283,16 +322,24 @@ namespace ContractStudentService.API.Controllers
             if (existingContracts.Any())
                 return Conflict(new { message = "Sinh viên đã có hợp đồng đang hoạt động" });
 
-            // 5. Tạo mã hợp đồng: HD{YEAR}{SEQUENCE}
+            // 5. Lấy default contract template
+            var defaultTemplate = await _templateRepository.GetDefaultAsync();
+            if (defaultTemplate == null)
+            {
+                return StatusCode(500, new { message = "Không tìm thấy mẫu hợp đồng mặc định trong hệ thống" });
+            }
+
+            // 6. Tạo mã hợp đồng: HD{YEAR}{SEQUENCE}
             var year = DateTime.UtcNow.Year;
             var sequence = await _contractRepository.GetNextSequenceForYearAsync(year);
             var contractCode = $"HD{year}{sequence:D4}";
 
-            // 6. Tạo hợp đồng mới (với default values - có thể lấy từ SystemSettings sau)
+            // 7. Tạo hợp đồng mới (với default values - có thể lấy từ SystemSettings sau)
             var contract = new Contract
             {
                 StudentId = application.StudentId,
                 ApplicationId = application.Id,
+                ContractTemplateId = defaultTemplate.Id,
                 RoomId = application.AssignedRoomId ?? 0,
                 RoomNumber = application.AssignedRoomNumber ?? "",
                 BuildingId = application.PreferredBuildingId,
@@ -314,14 +361,14 @@ namespace ContractStudentService.API.Controllers
 
             try
             {
-                // 7. Lưu hợp đồng
+                // 8. Lưu hợp đồng
                 await _contractRepository.AddAsync(contract);
 
-                // 8. Link hợp đồng vào đơn
+                // 9. Link hợp đồng vào đơn
                 // application.Contract = contract; // EF sẽ tự động link qua ApplicationId
                 await _applicationRepository.UpdateAsync(application);
 
-                // 9. Trả về DTO
+                // 10. Trả về DTO
                 var contractDto = new ContractDto
                 {
                     Id = contract.Id,
@@ -370,10 +417,16 @@ namespace ContractStudentService.API.Controllers
                 PreferredRoomPrice = app.PreferredRoomPrice,
                 RequestedStartDate = app.RequestedStartDate,
                 RequestedEndDate = app.RequestedEndDate,
-                SpecialRequirements = app.SpecialRequirements,
+                DurationMonths = app.DurationMonths,
+                Preferences = app.Preferences,
                 Note = app.Note,
                 IsLocalStudent = app.IsLocalStudent,
                 Priority = app.Priority,
+                EmergencyContactName = app.EmergencyContactName,
+                EmergencyContactPhone = app.EmergencyContactPhone,
+                EmergencyContactRelationship = app.EmergencyContactRelationship,
+                AgreedToRegulations = app.AgreedToRegulations,
+                ConfirmedInformationAccuracy = app.ConfirmedInformationAccuracy,
                 AttachedDocumentUrls = app.AttachedDocumentUrls,
                 Status = app.Status,
                 ReviewedByUserId = app.ReviewedByUserId,

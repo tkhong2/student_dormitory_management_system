@@ -145,9 +145,9 @@
                   <template #icon><EyeOutlined /></template>
                 </a-button>
               </a-tooltip>
-              <a-tooltip title="Sửa">
-                <a-button type="text" size="small" @click="editInvoice(record)">
-                  <template #icon><EditOutlined /></template>
+              <a-tooltip v-if="record.status === 'Unpaid' || record.status === 'PartialPaid' || record.status === 'Overdue'" title="Gửi nhắc nợ">
+                <a-button type="text" size="small" @click="sendReminder(record)" style="color: #ff9800;">
+                  <template #icon><BellOutlined /></template>
                 </a-button>
               </a-tooltip>
               <a-tooltip title="Xóa">
@@ -160,27 +160,201 @@
         </template>
       </a-table>
     </a-card>
+
+    <!-- Create Invoice Modal Component -->
+    <CreateInvoiceModal
+      v-model:open="createDialog"
+      :form="editedItem"
+      :contracts="contracts"
+      :saving="saving"
+      @save="saveInvoice"
+      @contract-change="onContractChange"
+    />
+
+    <!-- Detail Modal -->
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết Phiếu Thu"
+      width="900px"
+      :footer="null"
+    >
+      <a-descriptions v-if="detailTarget" bordered :column="2" size="small">
+        <a-descriptions-item label="Mã Phiếu Thu" :span="2">
+          <a-typography-text strong copyable>{{ detailTarget.invoiceCode }}</a-typography-text>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Sinh Viên">
+          <strong>{{ detailTarget.studentName }}</strong> ({{ detailTarget.studentCode }})
+        </a-descriptions-item>
+        <a-descriptions-item label="Phòng">
+          <a-tag color="blue">{{ detailTarget.roomNumber }}</a-tag> {{ detailTarget.buildingName }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Kỳ thanh toán">
+          Tháng {{ detailTarget.billingMonth }}/{{ detailTarget.billingYear }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Loại phiếu thu">
+          {{ detailTarget.invoiceType }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Trạng thái" :span="2">
+          <a-tag :color="getStatusColor(detailTarget.status)">
+            {{ getStatusText(detailTarget.status) }}
+          </a-tag>
+          <span v-if="detailTarget.overdueDays > 0" style="margin-left: 8px; color: #ff4d4f;">
+            (Quá hạn {{ detailTarget.overdueDays }} ngày)
+          </span>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Hạn thanh toán">
+          {{ formatDate(detailTarget.dueDate) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Số lần nhắc nợ">
+          <a-tag color="orange">{{ detailTarget.reminderCount || 0 }} lần</a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Chi tiết các khoản" :span="2">
+          <a-table 
+            :columns="itemColumns" 
+            :data-source="detailTarget.items || []" 
+            :pagination="false"
+            size="small"
+            bordered
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'amount'">
+                {{ formatCurrency(record.amount) }}
+              </template>
+              <template v-else-if="column.key === 'unitPrice'">
+                {{ formatCurrency(record.unitPrice) }}
+              </template>
+            </template>
+          </a-table>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Tiền phòng">
+          {{ formatCurrency(detailTarget.rentAmount) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Tiền điện">
+          {{ formatCurrency(detailTarget.electricityAmount) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Tiền nước">
+          {{ formatCurrency(detailTarget.waterAmount) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Phí dịch vụ">
+          {{ formatCurrency(detailTarget.serviceAmount) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Nợ kỳ trước">
+          {{ formatCurrency(detailTarget.previousDebt) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Giảm giá">
+          {{ formatCurrency(detailTarget.discount) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Tiền phạt">
+          <span style="color: #ff4d4f;">{{ formatCurrency(detailTarget.penaltyAmount) }}</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="Tổng tiền">
+          <strong style="color: #1890ff; font-size: 16px;">{{ formatCurrency(detailTarget.totalAmount) }}</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Đã thanh toán">
+          <strong style="color: #52c41a; font-size: 16px;">{{ formatCurrency(detailTarget.paidAmount) }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Còn nợ">
+          <strong style="color: #ff4d4f; font-size: 16px;">{{ formatCurrency(detailTarget.debtAmount) }}</strong>
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="detailTarget.notes" label="Ghi chú" :span="2">
+          {{ detailTarget.notes }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Ngày tạo" :span="2">
+          {{ formatDate(detailTarget.createdAt) }}
+        </a-descriptions-item>
+      </a-descriptions>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <a-button @click="detailDialog = false">Đóng</a-button>
+        <a-button 
+          v-if="detailTarget?.status !== 'Paid' && detailTarget?.status !== 'Cancelled'" 
+          type="primary"
+          style="background: #ff9800; border-color: #ff9800;"
+          @click="sendReminder(detailTarget)"
+        >
+          <template #icon><BellOutlined /></template>
+          Gửi nhắc nợ
+        </a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import {
   PlusOutlined,
   SearchOutlined,
   EyeOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  BellOutlined
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
-import invoiceService from '@/services/invoiceService'
+import billService from '@/services/billService'
+import { contractService } from '@/services/contractService'
+import dayjs from 'dayjs'
+import CreateInvoiceModal from './CreateInvoiceModal.vue'
 
 const loading = ref(false)
+const saving = ref(false)
 const invoices = ref([])
+const contracts = ref([])
 const search = ref('')
 const statusFilter = ref(undefined)
 const monthFilter = ref(undefined)
 const yearFilter = ref(undefined)
+const createDialog = ref(false)
+const detailDialog = ref(false)
+const detailTarget = ref(null)
+
+const editedItem = ref({
+  invoiceCode: '',
+  invoiceType: 'Monthly',
+  contractId: null,
+  studentId: null,
+  studentName: '',
+  studentCode: '',
+  roomId: null,
+  roomNumber: '',
+  buildingName: '',
+  billingMonth: new Date().getMonth() + 1,
+  billingYear: new Date().getFullYear(),
+  rentAmount: 0,
+  // Electricity
+  electricityStartIndex: 0,
+  electricityEndIndex: 0,
+  electricityUnitPrice: 3500,
+  electricityAmount: 0,
+  // Water
+  waterStartIndex: 0,
+  waterEndIndex: 0,
+  waterUnitPrice: 15000,
+  waterAmount: 0,
+  // Other
+  serviceAmount: 0,
+  previousDebt: 0,
+  discount: 0,
+  discountReason: '',
+  dueDate: dayjs().add(10, 'day'),
+  createdByUserId: 1,
+  createdByName: '',
+  paymentMethod: 'BankTransfer',
+  notes: '',
+  items: []
+})
 
 const pagination = reactive({
   current: 1,
@@ -247,6 +421,15 @@ const columns = [
   }
 ]
 
+const itemColumns = [
+  { title: 'Khoản thu', dataIndex: 'itemName', key: 'itemName' },
+  { title: 'Mô tả', dataIndex: 'itemDescription', key: 'itemDescription' },
+  { title: 'SL', dataIndex: 'quantity', key: 'quantity', align: 'center', width: 60 },
+  { title: 'ĐVT', dataIndex: 'unit', key: 'unit', align: 'center', width: 80 },
+  { title: 'Đơn giá', key: 'unitPrice', align: 'right', width: 120 },
+  { title: 'Thành tiền', key: 'amount', align: 'right', width: 120 }
+]
+
 const statusOptions = [
   { label: 'Chưa thanh toán', value: 'Unpaid' },
   { label: 'Thanh toán một phần', value: 'PartialPaid' },
@@ -263,6 +446,11 @@ const formatCurrency = (value) => {
     style: 'currency',
     currency: 'VND'
   }).format(value)
+}
+
+const formatDate = (value) => {
+  if (!value) return '---'
+  return new Date(value).toLocaleDateString('vi-VN')
 }
 
 const getStatusColor = (status) => {
@@ -290,7 +478,7 @@ const getStatusText = (status) => {
 const fetchInvoices = async () => {
   loading.value = true
   try {
-    const data = await invoiceService.getAll()
+    const data = await billService.getAll()
     invoices.value = data
     pagination.total = data.length
   } catch (error) {
@@ -309,16 +497,196 @@ const handleTableChange = (pag) => {
   pagination.pageSize = pag.pageSize
 }
 
-const showCreateDialog = () => {
-  message.info('Chức năng đang phát triển')
+const showCreateDialog = async () => {
+  try {
+    // Load active contracts
+    loading.value = true
+    const allContracts = await contractService.getAll()
+    contracts.value = allContracts.filter(c => c.status === 'Active')
+    
+    if (contracts.value.length === 0) {
+      message.warning('Không có hợp đồng Active nào. Vui lòng duyệt đơn đăng ký trước.')
+      return
+    }
+
+    // Generate invoice code automatically
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const count = invoices.value.length + 1
+    const sequence = String(count).padStart(3, '0')
+    const autoInvoiceCode = `PTT${year}${month}${sequence}`
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    editedItem.value = {
+      invoiceCode: autoInvoiceCode,
+      invoiceType: 'Monthly',
+      contractId: null,
+      studentId: null,
+      studentName: '',
+      studentCode: '',
+      roomId: null,
+      roomNumber: '',
+      buildingName: '',
+      billingMonth: now.getMonth() + 1,
+      billingYear: year,
+      rentAmount: 0,
+      // Electricity
+      electricityStartIndex: 0,
+      electricityEndIndex: 0,
+      electricityUnitPrice: 3500,
+      electricityAmount: 0,
+      // Water
+      waterStartIndex: 0,
+      waterEndIndex: 0,
+      waterUnitPrice: 15000,
+      waterAmount: 0,
+      // Other
+      serviceAmount: 50000,
+      previousDebt: 0,
+      discount: 0,
+      discountReason: '',
+      dueDate: dayjs().date(10).add(1, 'month'), // Ngày 10 tháng sau
+      createdByUserId: user.id || 1,
+      createdByName: user.fullName || 'Admin',
+      paymentMethod: 'BankTransfer',
+      notes: '',
+      items: []
+    }
+    createDialog.value = true
+  } catch (error) {
+    message.error('Không thể tải danh sách hợp đồng')
+  } finally {
+    loading.value = false
+  }
 }
 
-const viewInvoice = (record) => {
-  message.info(`Xem chi tiết: ${record.invoiceCode}`)
+const onContractChange = async (contractId) => {
+  try {
+    const selectedContract = contracts.value.find(c => c.id === contractId)
+    if (!selectedContract) return
+
+    // Auto-fill from contract
+    editedItem.value.studentId = selectedContract.studentId
+    editedItem.value.studentName = selectedContract.studentName || selectedContract.studentFullName
+    editedItem.value.studentCode = selectedContract.studentCode
+    editedItem.value.roomId = selectedContract.roomId
+    editedItem.value.roomNumber = selectedContract.roomNumber
+    editedItem.value.buildingName = selectedContract.buildingName
+    
+    // Only auto-fill rent amount for Monthly invoice type
+    if (editedItem.value.invoiceType === 'Monthly') {
+      editedItem.value.rentAmount = selectedContract.monthlyRent || selectedContract.rentAmount || 0
+    } else {
+      // For Deposit, DepositRefund, and Other types, don't auto-fill rent amount
+      editedItem.value.rentAmount = 0
+    }
+    
+    // Tính hạn thanh toán: Lấy ngày bắt đầu hợp đồng + thêm tháng
+    const contractStart = dayjs(selectedContract.startDate || selectedContract.effectiveDate)
+    const dayOfMonth = contractStart.date() // Lấy ngày trong tháng
+    editedItem.value.dueDate = dayjs().month(editedItem.value.billingMonth - 1).date(dayOfMonth)
+
+    message.success('Đã tự động điền thông tin từ hợp đồng')
+  } catch (error) {
+    message.error('Lỗi khi load thông tin hợp đồng')
+  }
 }
 
-const editInvoice = (record) => {
-  message.info(`Sửa: ${record.invoiceCode}`)
+// Auto calculate electricity amount
+const calculateElectricityAmount = () => {
+  const { electricityStartIndex, electricityEndIndex, electricityUnitPrice } = editedItem.value
+  const usage = (electricityEndIndex || 0) - (electricityStartIndex || 0)
+  editedItem.value.electricityAmount = usage > 0 ? usage * electricityUnitPrice : 0
+}
+
+// Auto calculate water amount  
+const calculateWaterAmount = () => {
+  const { waterStartIndex, waterEndIndex, waterUnitPrice } = editedItem.value
+  const usage = (waterEndIndex || 0) - (waterStartIndex || 0)
+  editedItem.value.waterAmount = usage > 0 ? usage * waterUnitPrice : 0
+}
+
+const closeCreateDialog = () => {
+  createDialog.value = false
+}
+
+const calculateTotal = () => {
+  const { rentAmount, electricityAmount, waterAmount, serviceAmount, previousDebt, discount } = editedItem.value
+  return (rentAmount || 0) + (electricityAmount || 0) + (waterAmount || 0) + 
+         (serviceAmount || 0) + (previousDebt || 0) - (discount || 0)
+}
+
+const filterContract = (input, option) => {
+  const text = option.children[0].children
+  if (Array.isArray(text)) {
+    return text.some(child => 
+      typeof child === 'string' && child.toLowerCase().includes(input.toLowerCase())
+    )
+  }
+  return false
+}
+
+const saveInvoice = async () => {
+  // Validate
+  if (!editedItem.value.invoiceCode) {
+    message.error('Vui lòng nhập mã phiếu thu')
+    return
+  }
+  if (!editedItem.value.contractId || !editedItem.value.studentId) {
+    message.error('Vui lòng nhập đầy đủ thông tin hợp đồng và sinh viên')
+    return
+  }
+  if (!editedItem.value.dueDate) {
+    message.error('Vui lòng chọn hạn thanh toán')
+    return
+  }
+
+  saving.value = true
+  try {
+    const invoiceData = {
+      ...editedItem.value,
+      dueDate: dayjs(editedItem.value.dueDate).format('YYYY-MM-DD')
+    }
+    
+    await billService.create(invoiceData)
+    message.success('Tạo phiếu thu thành công')
+    closeCreateDialog()
+    await fetchInvoices()
+  } catch (error) {
+    message.error(error.message || 'Lỗi tạo phiếu thu')
+  } finally {
+    saving.value = false
+  }
+}
+
+const viewInvoice = async (record) => {
+  try {
+    const data = await billService.getById(record.id)
+    detailTarget.value = data
+    detailDialog.value = true
+  } catch (error) {
+    message.error('Không thể tải chi tiết phiếu thu')
+  }
+}
+
+const sendReminder = (record) => {
+  Modal.confirm({
+    title: 'Gửi nhắc nợ',
+    content: `Bạn có chắc muốn gửi email nhắc nợ cho sinh viên ${record.studentName}?`,
+    okText: 'Gửi',
+    cancelText: 'Hủy',
+    async onOk() {
+      try {
+        await billService.sendReminder(record.id)
+        message.success(`Đã gửi email nhắc nợ đến ${record.studentName}`)
+        detailDialog.value = false
+        fetchInvoices()
+      } catch (error) {
+        message.error(error.message || 'Gửi nhắc nợ thất bại')
+      }
+    }
+  })
 }
 
 const deleteInvoice = (record) => {
@@ -330,7 +698,7 @@ const deleteInvoice = (record) => {
     cancelText: 'Hủy',
     async onOk() {
       try {
-        await invoiceService.delete(record.id)
+        await billService.delete(record.id)
         message.success('Xóa thành công')
         fetchInvoices()
       } catch (error) {

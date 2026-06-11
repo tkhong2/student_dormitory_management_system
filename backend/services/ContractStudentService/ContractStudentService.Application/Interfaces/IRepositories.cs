@@ -74,4 +74,26 @@ namespace ContractStudentService.Application.Interfaces
         Task UpdateAsync(RoomTransfer transfer);
         Task DeleteAsync(RoomTransfer transfer);
     }
+
+    public interface IContractTemplateRepository
+    {
+        Task<ContractTemplate?> GetByIdAsync(int id);
+        Task<IEnumerable<ContractTemplate>> GetAllAsync();
+        Task<ContractTemplate?> GetByCodeAsync(string code);
+        Task<ContractTemplate?> GetDefaultAsync();
+        Task<IEnumerable<ContractTemplate>> GetActiveAsync();
+        Task AddAsync(ContractTemplate template);
+        Task UpdateAsync(ContractTemplate template);
+        Task DeleteAsync(ContractTemplate template);
+    }
+
+    public interface IContractTermRepository
+    {
+        Task<ContractTerm?> GetByIdAsync(int id);
+        Task<IEnumerable<ContractTerm>> GetAllAsync();
+        Task<IEnumerable<ContractTerm>> GetByTemplateIdAsync(int templateId);
+        Task AddAsync(ContractTerm term);
+        Task UpdateAsync(ContractTerm term);
+        Task DeleteAsync(ContractTerm term);
+    }
 }
