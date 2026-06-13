@@ -555,13 +555,33 @@ const showCreateDialog = async () => {
       return
     }
 
-    // Generate invoice code automatically
+    // Generate invoice code automatically based on existing invoices for current month
     const now = new Date()
     const year = now.getFullYear()
     const month = String(now.getMonth() + 1).padStart(2, '0')
-    const count = invoices.value.length + 1
-    const sequence = String(count).padStart(3, '0')
-    const autoInvoiceCode = `PTT${year}${month}${sequence}`
+    
+    // Filter invoices for current month/year to get correct sequence number
+    const currentMonthInvoices = invoices.value.filter(inv => {
+      const invYear = inv.billingYear || new Date(inv.createdAt).getFullYear()
+      const invMonth = inv.billingMonth || new Date(inv.createdAt).getMonth() + 1
+      return invYear === year && invMonth === (now.getMonth() + 1)
+    })
+    
+    // Find max sequence number for current month
+    let maxSequence = 0
+    const pattern = new RegExp(`PTT${year}${month}(\\d{3})`)
+    currentMonthInvoices.forEach(inv => {
+      const match = inv.invoiceCode.match(pattern)
+      if (match) {
+        const seq = parseInt(match[1])
+        if (seq > maxSequence) maxSequence = seq
+      }
+    })
+    
+    const nextSequence = String(maxSequence + 1).padStart(3, '0')
+    const autoInvoiceCode = `PTT${year}${month}${nextSequence}`
+    
+    console.log('Generated invoice code:', autoInvoiceCode, 'from', currentMonthInvoices.length, 'invoices this month')
 
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     editedItem.value = {
@@ -700,7 +720,19 @@ const saveInvoice = async () => {
     closeCreateDialog()
     await fetchInvoices()
   } catch (error) {
-    message.error(error.message || 'Lỗi tạo phiếu thu')
+    console.error('Error creating invoice:', error)
+    
+    // Handle specific error cases
+    if (error.response?.status === 409) {
+      // Conflict - duplicate invoice
+      const errorData = error.response.data
+      message.error({
+        content: errorData.message || 'Phiếu thu đã tồn tại cho kỳ này',
+        duration: 5
+      })
+    } else {
+      message.error(error.response?.data?.message || error.message || 'Lỗi tạo phiếu thu')
+    }
   } finally {
     saving.value = false
   }

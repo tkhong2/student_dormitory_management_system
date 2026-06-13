@@ -91,34 +91,50 @@ namespace BillingMaintenanceService.API.Controllers
         }
 
         [HttpPost("{id}/assign")]
-        public async Task<ActionResult> Assign(int id, [FromBody] AssignMaintenanceRequest dto)
+        public async Task<ActionResult> Assign(int id, [FromBody] AssignMaintenanceRequestDto dto)
         {
-            var request = await _maintenanceRequestRepository.GetByIdAsync(id);
-            if (request == null) return NotFound();
-
-            var oldStatus = request.Status;
-            request.Status = "Assigned";
-            request.AssignedToUserId = dto.AssignedToUserId;
-            request.AssignedToName = dto.AssignedToName;
-            request.AssignedAt = DateTime.UtcNow;
-            request.ExpectedCompletionDate = dto.ExpectedCompletionDate;
-            request.EstimatedCost = dto.EstimatedCost;
-
-            // Add status log
-            var log = new MaintenanceStatusLog
+            try
             {
-                MaintenanceRequestId = id,
-                OldStatus = oldStatus,
-                NewStatus = "Assigned",
-                Note = $"Assigned to {dto.AssignedToName}",
-                ChangedByUserId = dto.AssignedToUserId,
-                ChangedByName = dto.AssignedToName,
-                ChangedAt = DateTime.UtcNow
-            };
-            request.StatusLogs.Add(log);
+                var request = await _maintenanceRequestRepository.GetByIdAsync(id);
+                if (request == null) return NotFound();
 
-            await _maintenanceRequestRepository.UpdateAsync(request);
-            return NoContent();
+                var oldStatus = request.Status;
+                request.Status = "Assigned";
+                request.AssignedToUserId = dto.AssignedToUserId;
+                request.AssignedToName = dto.AssignedToName ?? "Unknown";
+                request.AssignedAt = DateTime.UtcNow;
+                
+                // Convert DateTime to DateOnly if provided
+                if (dto.ExpectedCompletionDate.HasValue)
+                {
+                    request.ExpectedCompletionDate = DateOnly.FromDateTime(dto.ExpectedCompletionDate.Value);
+                }
+                
+                request.EstimatedCost = dto.EstimatedCost;
+
+                // Initialize StatusLogs if null
+                request.StatusLogs ??= new List<MaintenanceStatusLog>();
+
+                // Add status log
+                var log = new MaintenanceStatusLog
+                {
+                    MaintenanceRequestId = id,
+                    OldStatus = oldStatus ?? "New",
+                    NewStatus = "Assigned",
+                    Note = $"Assigned to {dto.AssignedToName}",
+                    ChangedByUserId = dto.AssignedToUserId,
+                    ChangedByName = dto.AssignedToName ?? "Unknown",
+                    ChangedAt = DateTime.UtcNow
+                };
+                request.StatusLogs.Add(log);
+
+                await _maintenanceRequestRepository.UpdateAsync(request);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message, detail = ex.InnerException?.Message });
+            }
         }
 
         [HttpPost("{id}/start")]

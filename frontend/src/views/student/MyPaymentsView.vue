@@ -12,7 +12,7 @@
     <!-- Summary Cards -->
     <a-row :gutter="16" style="margin-bottom: 24px">
       <a-col :xs="24" :sm="8">
-        <a-card :bordered="false" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+        <a-card :bordered="false" style="background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%)">
           <a-statistic
             title="Tổng đã thanh toán"
             :value="totalPaid"
@@ -122,10 +122,20 @@
                 v-if="record.status !== 'Paid'"
                 type="primary"
                 size="small"
+                style="background: #ff9800; border-color: #ff9800"
+                @click="openQRPayment(record)"
+              >
+                <template #icon><QrcodeOutlined /></template>
+                QR Thanh toán
+              </a-button>
+              <a-button
+                v-if="record.status !== 'Paid'"
+                type="default"
+                size="small"
                 @click="viewInvoiceDetail(record)"
               >
                 <template #icon><CreditCardOutlined /></template>
-                Thanh toán
+                Chi tiết
               </a-button>
               <a-button
                 v-else
@@ -223,19 +233,127 @@
         <a-button @click="detailDialog = false">Đóng</a-button>
       </div>
     </a-modal>
+
+    <!-- QR Payment Modal -->
+    <a-modal
+      v-model:open="qrDialog"
+      title="Thanh toán QR Code"
+      width="600px"
+      :footer="null"
+      @cancel="stopAutoCheckPayment"
+    >
+      <div v-if="selectedInvoice" style="text-align: center;">
+        <!-- Auto-check status indicator -->
+        <a-alert
+          v-if="autoCheckInterval"
+          message="Đang tự động kiểm tra thanh toán..."
+          type="info"
+          show-icon
+          style="margin-bottom: 16px;"
+        >
+          <template #description>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <a-spin size="small" />
+              <span>Hệ thống đang kiểm tra mỗi 5 giây ({{ checkCount }}/60)</span>
+            </div>
+          </template>
+        </a-alert>
+
+        <!-- Invoice Info -->
+        <a-descriptions bordered :column="2" size="small" style="margin-bottom: 24px;">
+          <a-descriptions-item label="Mã Phiếu Thu" :span="2">
+            <a-typography-text strong copyable>{{ selectedInvoice.invoiceCode }}</a-typography-text>
+          </a-descriptions-item>
+          <a-descriptions-item label="Kỳ thanh toán">
+            Tháng {{ selectedInvoice.billingMonth }}/{{ selectedInvoice.billingYear }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Số tiền">
+            <strong style="color: #ff9800; font-size: 18px;">{{ formatCurrency(selectedInvoice.debtAmount) }}</strong>
+          </a-descriptions-item>
+        </a-descriptions>
+
+        <!-- QR Code -->
+        <a-spin :spinning="qrLoading" tip="Đang tạo mã QR...">
+          <div style="background: #f5f5f5; padding: 24px; border-radius: 8px; margin-bottom: 16px;">
+            <img 
+              v-if="qrCodeUrl" 
+              :src="qrCodeUrl" 
+              alt="QR Code" 
+              style="max-width: 300px; width: 100%; height: auto; margin: 0 auto; display: block;"
+            />
+            <div v-else style="width: 300px; height: 300px; margin: 0 auto; background: #fff; display: flex; align-items: center; justify-content: center;">
+              <a-typography-text type="secondary">Đang tải QR Code...</a-typography-text>
+            </div>
+          </div>
+        </a-spin>
+
+        <!-- Payment Instructions -->
+        <a-alert
+          message="Hướng dẫn thanh toán"
+          type="info"
+          show-icon
+          style="text-align: left;"
+        >
+          <template #description>
+            <ol style="margin: 0; padding-left: 20px;">
+              <li>Mở ứng dụng ngân hàng của bạn</li>
+              <li>Chọn chức năng quét mã QR</li>
+              <li>Quét mã QR trên màn hình</li>
+              <li>Kiểm tra thông tin và xác nhận thanh toán</li>
+              <li><strong>Hệ thống sẽ tự động cập nhật sau khi thanh toán (1-5 giây)</strong></li>
+            </ol>
+          </template>
+        </a-alert>
+
+        <!-- Bank Info -->
+        <a-descriptions bordered size="small" style="margin-top: 16px;">
+          <a-descriptions-item label="Ngân hàng" :span="2">
+            <strong>BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</strong>
+          </a-descriptions-item>
+          <a-descriptions-item label="Chủ tài khoản" :span="2">
+            TRAN KHAC HONG
+          </a-descriptions-item>
+          <a-descriptions-item label="Số tài khoản" :span="2">
+            <a-typography-text copyable strong>8871422018</a-typography-text>
+          </a-descriptions-item>
+          <a-descriptions-item label="Nội dung chuyển khoản" :span="2">
+            <a-typography-text copyable strong type="danger">
+              {{ selectedInvoice.invoiceCode }} {{ selectedInvoice.studentCode }}
+            </a-typography-text>
+          </a-descriptions-item>
+        </a-descriptions>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 8px;">
+          <a-button type="default" @click="stopAutoCheckPayment(); qrDialog = false">Đóng</a-button>
+          <a-button type="primary" @click="checkPaymentStatus" :loading="qrLoading">
+            Kiểm tra ngay
+          </a-button>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { CreditCardOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import { CreditCardOutlined, EyeOutlined, QrcodeOutlined } from '@ant-design/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
+
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const invoices = ref([])
 const detailDialog = ref(false)
 const detailTarget = ref(null)
+const qrDialog = ref(false)
+const qrLoading = ref(false)
+const qrCodeUrl = ref('')
+const selectedInvoice = ref(null)
+const autoCheckInterval = ref(null)
+const checkCount = ref(0)
 
 const columns = [
   { title: 'Mã Phiếu Thu', key: 'invoiceCode', width: 140 },
@@ -338,32 +456,93 @@ const getDefaultItems = (invoice) => {
 const fetchInvoices = async () => {
   loading.value = true
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    console.log('User info:', user)
+    // Get user from auth store
+    const currentUser = authStore.user
+    console.log('=== FETCH INVOICES START ===')
+    console.log('Current user from auth store:', currentUser)
     
-    if (user.studentId) {
-      // Call real API
-      const response = await axios.get(`http://localhost:5002/api/invoices/student/${user.studentId}`, {
+    if (!currentUser) {
+      message.warning('Vui lòng đăng nhập để xem phiếu thu')
+      invoices.value = []
+      loading.value = false
+      return
+    }
+    
+    let studentId = null
+    
+    // Method 1: Try to get student by UserId (most reliable method)
+    // The Student table in ContractStudentService has UserId that links to BillingMaintenanceService User
+    try {
+      console.log('Method 1: Fetching student by userId:', currentUser.id)
+      const studentResponse = await axios.get(`http://localhost:5001/api/students/by-user/${currentUser.id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
+      studentId = studentResponse.data.id
+      console.log('✓ Student found in ContractStudentService:', studentResponse.data)
+      console.log('✓ Student ID:', studentId)
+      console.log('✓ Student Code:', studentResponse.data.studentCode)
+    } catch (err) {
+      console.warn('Method 1 failed:', err.response?.status, err.response?.data)
       
-      console.log('Invoices loaded from API:', response.data)
-      invoices.value = response.data || []
-      
-      if (invoices.value.length === 0) {
-        message.info('Bạn chưa có phiếu thu nào')
+      // Method 2: Try by StudentCode (if it looks like a real student code)
+      if (currentUser.studentCode && /^SV\d+$/.test(currentUser.studentCode)) {
+        try {
+          console.log('Method 2: Trying by studentCode:', currentUser.studentCode)
+          const studentResponse = await axios.get(`http://localhost:5001/api/students/code/${currentUser.studentCode}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+          studentId = studentResponse.data.id
+          console.log('✓ Student ID from ContractStudentService (by code):', studentId)
+        } catch (err2) {
+          console.warn('Method 2 failed:', err2.response?.status)
+        }
       }
-    } else {
-      message.warning('Không tìm thấy thông tin sinh viên. Vui lòng đăng nhập lại.')
-      invoices.value = []
     }
+    
+    if (!studentId) {
+      console.error('❌ Could not determine student ID')
+      message.warning('Không tìm thấy thông tin sinh viên. Vui lòng liên hệ quản trị viên.')
+      invoices.value = []
+      loading.value = false
+      return
+    }
+    
+    console.log('===== Final Student ID:', studentId, '=====')
+    
+    // Call Invoice API with student ID
+    console.log('Fetching invoices for student ID:', studentId)
+    const response = await axios.get(`http://localhost:5002/api/invoices/student/${studentId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    console.log('✓ Invoices loaded:', response.data.length, 'invoices')
+    invoices.value = response.data || []
+    
+    if (invoices.value.length === 0) {
+      message.info('Bạn chưa có phiếu thu nào')
+    } else {
+      message.success(`Đã tải ${invoices.value.length} phiếu thu`)
+    }
+    console.log('=== FETCH INVOICES END ===')
   } catch (error) {
     console.error('Error loading invoices:', error)
-    const errorMsg = error.response?.data?.message || error.message || 'Lỗi tải dữ liệu'
-    message.error(errorMsg)
-    invoices.value = []
+    console.error('Error response:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+    
+    if (error.response?.status === 404) {
+      message.info('Bạn chưa có phiếu thu nào')
+      invoices.value = []
+    } else {
+      const errorMsg = error.response?.data?.message || error.message || 'Lỗi tải dữ liệu'
+      message.error(errorMsg)
+      invoices.value = []
+    }
   } finally {
     loading.value = false
   }
@@ -384,8 +563,176 @@ const viewInvoiceDetail = async (record) => {
   }
 }
 
+const openQRPayment = async (record) => {
+  selectedInvoice.value = record
+  qrDialog.value = true
+  qrLoading.value = true
+  checkCount.value = 0
+  
+  try {
+    // Generate QR Code using VietQR API
+    // Bank: BIDV (970418), Account: 8871422018, Owner: TRAN KHAC HONG
+    const amount = record.debtAmount
+    const description = `${record.invoiceCode} ${record.studentCode}`
+    
+    // VietQR API format
+    const bankCode = '970418' // BIDV bank code
+    const accountNo = '8871422018'
+    const accountName = 'TRAN KHAC HONG'
+    const template = 'compact2' // or 'compact', 'qr_only', 'print'
+    
+    // Using VietQR API
+    qrCodeUrl.value = `https://img.vietqr.io/image/${bankCode}-${accountNo}-${template}.png?amount=${amount}&addInfo=${encodeURIComponent(description)}&accountName=${encodeURIComponent(accountName)}`
+    
+    console.log('QR Code URL:', qrCodeUrl.value)
+    message.success('Đã tạo mã QR thanh toán')
+    
+    // Start auto-check interval (every 5 seconds, max 60 times = 5 minutes)
+    startAutoCheckPayment()
+  } catch (error) {
+    console.error('Error generating QR code:', error)
+    message.error('Không thể tạo mã QR. Vui lòng thử lại.')
+  } finally {
+    qrLoading.value = false
+  }
+}
+
+const startAutoCheckPayment = () => {
+  // Clear any existing interval
+  stopAutoCheckPayment()
+  
+  console.log('🔄 Starting auto-check payment every 5 seconds...')
+  
+  autoCheckInterval.value = setInterval(async () => {
+    checkCount.value++
+    console.log(`⏱️ Auto-check #${checkCount.value}`)
+    
+    // Stop after 60 checks (5 minutes)
+    if (checkCount.value >= 60) {
+      console.log('⏹️ Stopping auto-check after 5 minutes')
+      stopAutoCheckPayment()
+      return
+    }
+    
+    await checkPaymentStatusSilent()
+  }, 5000) // Check every 5 seconds
+}
+
+const stopAutoCheckPayment = () => {
+  if (autoCheckInterval.value) {
+    clearInterval(autoCheckInterval.value)
+    autoCheckInterval.value = null
+    console.log('⏹️ Auto-check payment stopped')
+  }
+}
+
+const checkPaymentStatusSilent = async () => {
+  if (!selectedInvoice.value) return
+  
+  try {
+    // Call check payment API
+    const response = await axios.post('http://localhost:5002/api/sepay/check-payment', {
+      invoiceCode: selectedInvoice.value.invoiceCode
+    }, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    const result = response.data
+    
+    if (result.status === 'Paid') {
+      // Stop auto-check
+      stopAutoCheckPayment()
+      
+      // Show success notification
+      message.success({
+        content: '🎉 Thanh toán thành công! Đã thanh toán đầy đủ.',
+        duration: 5
+      })
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        qrDialog.value = false
+      }, 2000)
+      
+      // Reload all invoices
+      await fetchInvoices()
+      
+      console.log('✅ Payment successful!')
+    } else if (result.status === 'PartialPaid') {
+      // Stop auto-check
+      stopAutoCheckPayment()
+      
+      // Show partial payment notification
+      message.info({
+        content: `💰 Đã nhận được thanh toán một phần. Còn lại: ${formatCurrency(result.debtAmount)}`,
+        duration: 5
+      })
+      
+      // Update invoice data
+      selectedInvoice.value.paidAmount = result.paidAmount
+      selectedInvoice.value.debtAmount = result.debtAmount
+      selectedInvoice.value.status = result.status
+      
+      await fetchInvoices()
+      
+      console.log('⚠️ Partial payment received')
+    }
+    // If still unpaid, continue checking silently
+  } catch (error) {
+    console.error('Error in auto-check payment:', error)
+    // Don't show error message for auto-check to avoid spamming user
+  }
+}
+
+const checkPaymentStatus = async () => {
+  if (!selectedInvoice.value) return
+  
+  qrLoading.value = true
+  try {
+    // Call check payment API
+    const response = await axios.post('http://localhost:5002/api/sepay/check-payment', {
+      invoiceCode: selectedInvoice.value.invoiceCode
+    }, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    console.log('Payment check response:', response.data)
+    
+    const result = response.data
+    
+    if (result.status === 'Paid') {
+      stopAutoCheckPayment()
+      message.success('✅ Thanh toán thành công! Đã thanh toán đầy đủ.')
+      qrDialog.value = false
+      await fetchInvoices() // Reload all invoices
+    } else if (result.status === 'PartialPaid') {
+      stopAutoCheckPayment()
+      message.info(`Đã nhận được thanh toán một phần. Còn lại: ${formatCurrency(result.debtAmount)}`)
+      selectedInvoice.value.paidAmount = result.paidAmount
+      selectedInvoice.value.debtAmount = result.debtAmount
+      selectedInvoice.value.status = result.status
+      await fetchInvoices()
+    } else {
+      message.warning('⏳ Chưa nhận được thanh toán. Vui lòng kiểm tra lại sau ít phút.')
+    }
+  } catch (error) {
+    console.error('Error checking payment status:', error)
+    message.error('Không thể kiểm tra trạng thái thanh toán')
+  } finally {
+    qrLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchInvoices()
+})
+
+onUnmounted(() => {
+  stopAutoCheckPayment()
 })
 </script>
 

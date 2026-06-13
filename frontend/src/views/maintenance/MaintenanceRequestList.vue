@@ -241,11 +241,19 @@
     >
       <a-form layout="vertical">
         <a-form-item label="Phân công cho" required>
-          <a-select v-model:value="assignedUserId" placeholder="Chọn người thực hiện">
-            <a-select-option value="1">Nguyễn Văn A</a-select-option>
-            <a-select-option value="2">Trần Thị B</a-select-option>
-            <a-select-option value="3">Lê Văn C</a-select-option>
+          <a-select v-model:value="assignedUserId" placeholder="Chọn người thực hiện" loading-text="Đang tải...">
+            <a-select-option
+              v-for="staff in staffList"
+              :key="staff.id"
+              :value="staff.id"
+              :label="staff.fullName"
+            >
+              [ID: {{ staff.id }}] {{ staff.fullName }} - {{ staff.role }}
+            </a-select-option>
           </a-select>
+          <div style="margin-top: 4px; font-size: 12px; color: #8c8c8c;">
+            {{ staffList.length > 0 ? `Có ${staffList.length} nhân viên khả dụng` : 'Đang tải danh sách nhân viên...' }}
+          </div>
         </a-form-item>
         <a-form-item label="Ghi chú">
           <a-textarea v-model:value="assignNote" :rows="3" placeholder="Ghi chú cho người thực hiện" />
@@ -315,6 +323,7 @@ import {
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import maintenanceRequestService from '@/services/maintenanceRequestService'
+import axios from 'axios'
 
 const loading = ref(false)
 const requests = ref([])
@@ -338,6 +347,7 @@ const assignDialog = ref(false)
 const selectedRequest = ref(null)
 const assignedUserId = ref(undefined)
 const assignNote = ref('')
+const staffList = ref([])  // Danh sách nhân viên từ API
 
 // Resolve dialog
 const resolveDialog = ref(false)
@@ -522,6 +532,43 @@ const fetchRequests = async () => {
   }
 }
 
+const loadStaffList = async () => {
+  try {
+    const response = await axios.get('http://localhost:5002/api/users', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    })
+    
+    console.log('MaintenanceRequestList - Raw users from API:', response.data.length)
+    console.log('MaintenanceRequestList - All users:', response.data.map(u => ({ id: u.id, name: u.fullName, role: u.role, active: u.isActive })))
+    
+    // Filter STAFF only (not admin), and only active users
+    staffList.value = response.data.filter(u => 
+      u.role === 'Staff' && 
+      u.isActive === true
+    )
+    
+    console.log('MaintenanceRequestList - Filtered staff list:', staffList.value.length, 'users')
+    console.log('MaintenanceRequestList - Staff list details:', staffList.value.map(s => ({ 
+      id: s.id, 
+      name: s.fullName, 
+      role: s.role, 
+      email: s.email,
+      phone: s.phone 
+    })))
+    
+    if (staffList.value.length === 0) {
+      message.warning('Không tìm thấy nhân viên nào trong hệ thống')
+    }
+  } catch (error) {
+    console.error('MaintenanceRequestList - Lỗi tải danh sách nhân viên:', error)
+    message.error('Không thể tải danh sách nhân viên')
+  }
+}
+
 const handleSearch = () => {
   fetchRequests()
 }
@@ -603,6 +650,10 @@ const assignRequest = (record) => {
   assignedUserId.value = undefined
   assignNote.value = ''
   assignDialog.value = true
+  // Load staff list when opening assign dialog
+  if (staffList.value.length === 0) {
+    loadStaffList()
+  }
 }
 
 const closeAssignDialog = () => {
@@ -615,16 +666,51 @@ const confirmAssign = async () => {
     message.warning('Vui lòng chọn người thực hiện')
     return
   }
+  
   try {
-    await maintenanceRequestService.assign(selectedRequest.value.id, {
-      assignedToUserId: parseInt(assignedUserId.value),
-      note: assignNote.value
+    const staff = staffList.value.find(s => s.id === assignedUserId.value)
+    
+    if (!staff) {
+      message.error('Không tìm thấy nhân viên được chọn')
+      console.error('MaintenanceRequestList - Selected staff ID not found:', assignedUserId.value)
+      console.error('MaintenanceRequestList - Available staff IDs:', staffList.value.map(s => s.id))
+      return
+    }
+    
+    console.log('MaintenanceRequestList - Assigning to staff:', { 
+      id: staff.id, 
+      name: staff.fullName, 
+      email: staff.email,
+      phone: staff.phone 
     })
+    
+    // Calculate expected completion date (7 days from now)
+    const expectedDate = new Date()
+    expectedDate.setDate(expectedDate.getDate() + 7)
+    
+    const payload = {
+      assignedToUserId: staff.id,
+      assignedToName: staff.fullName,
+      expectedCompletionDate: expectedDate.toISOString(),
+      estimatedCost: 0
+    }
+    
+    console.log('MaintenanceRequestList - Assignment payload:', payload)
+    
+    await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/assign`, payload, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
     message.success('Phân công thành công')
     await fetchRequests()
     closeAssignDialog()
   } catch (error) {
-    message.error(error.message || 'Lỗi phân công')
+    console.error('MaintenanceRequestList - Error assigning:', error)
+    console.error('MaintenanceRequestList - Error response:', error.response?.data)
+    message.error(error.response?.data?.message || error.message || 'Lỗi phân công')
   }
 }
 
@@ -744,6 +830,7 @@ const deleteRequest = (record) => {
 
 onMounted(() => {
   fetchRequests()
+  loadStaffList()  // Load staff list on mount
 })
 </script>
 

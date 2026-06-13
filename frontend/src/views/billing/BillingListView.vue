@@ -13,7 +13,7 @@
     <!-- Revenue Summary -->
     <a-row :gutter="16" style="margin-bottom: 16px">
       <a-col :xs="24" :md="8">
-        <a-card :bordered="false" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white">
+        <a-card :bordered="false" style="background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); color: white">
           <a-statistic
             title="Tổng Thu Tháng Này"
             :value="totalRevenue"

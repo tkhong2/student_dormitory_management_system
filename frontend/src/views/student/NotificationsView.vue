@@ -1,115 +1,140 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Thông báo</h1>
-        <p class="text-body-2 text-medium-emphasis">
+        <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">Thông báo</h1>
+        <p style="font-size: 14px; color: rgba(0,0,0,0.45);">
           Xem các thông báo mới nhất từ hệ thống
         </p>
       </div>
-      <v-btn 
+      <a-button 
         v-if="unreadCount > 0" 
-        color="primary" 
-        variant="tonal"
+        type="primary"
         @click="markAllAsRead"
         :loading="markingAllRead"
       >
-        <v-icon start>mdi-check-all</v-icon>
+        <template #icon><check-outlined /></template>
         Đánh dấu tất cả đã đọc
-      </v-btn>
+      </a-button>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12">
-      <v-progress-circular indeterminate color="primary" />
+    <div v-if="loading" style="text-align: center; padding: 48px;">
+      <a-spin size="large" />
     </div>
 
     <!-- Notifications List -->
-    <v-card v-else-if="notifications.length > 0" class="rounded-lg">
-      <v-list lines="three">
-        <template v-for="(notification, index) in notifications" :key="notification.id">
-          <v-list-item 
-            :class="{ 'bg-blue-50': !notification.isRead }"
+    <a-card v-else-if="notifications.length > 0" :bordered="true" style="border-radius: 8px;">
+      <a-list :data-source="notifications" item-layout="horizontal">
+        <template #renderItem="{ item: notification, index }">
+          <a-list-item 
+            :style="{ 
+              backgroundColor: !notification.isRead ? '#e6f4ff' : 'transparent',
+              cursor: 'pointer',
+              padding: '16px'
+            }"
             @click="handleNotificationClick(notification)"
-            class="notification-item"
           >
-            <template v-slot:prepend>
-              <v-avatar :color="getIconColor(notification.iconType)" variant="tonal" size="48">
-                <v-icon :color="getIconColor(notification.iconType)">{{ getIcon(notification.type) }}</v-icon>
-              </v-avatar>
-            </template>
-
-            <v-list-item-title class="font-weight-bold mb-1">
-              {{ notification.title }}
-              <v-chip 
-                v-if="!notification.isRead" 
-                size="x-small" 
-                color="primary" 
-                variant="flat"
-                class="ml-2"
-              >
-                Mới
-              </v-chip>
-            </v-list-item-title>
-
-            <v-list-item-subtitle class="text-body-2 mb-1">
-              {{ notification.body }}
-            </v-list-item-subtitle>
-
-            <v-list-item-subtitle class="text-caption text-medium-emphasis">
-              <v-icon size="14" class="mr-1">mdi-clock-outline</v-icon>
-              {{ formatTime(notification.createdAt) }}
-            </v-list-item-subtitle>
-
-            <template v-slot:append>
-              <v-menu>
-                <template v-slot:activator="{ props }">
-                  <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props" size="small" />
+            <template #actions>
+              <a-dropdown>
+                <a-button type="text" size="small">
+                  <template #icon><more-outlined /></template>
+                </a-button>
+                <template #overlay>
+                  <a-menu>
+                    <a-menu-item 
+                      v-if="!notification.isRead"
+                      @click="markAsRead(notification.id)"
+                    >
+                      <check-outlined style="margin-right: 8px;" />
+                      Đánh dấu đã đọc
+                    </a-menu-item>
+                    <a-menu-item 
+                      danger
+                      @click="deleteNotification(notification.id)"
+                    >
+                      <delete-outlined style="margin-right: 8px;" />
+                      Xóa
+                    </a-menu-item>
+                  </a-menu>
                 </template>
-                <v-list density="compact">
-                  <v-list-item 
-                    v-if="!notification.isRead"
-                    @click="markAsRead(notification.id)"
-                  >
-                    <template v-slot:prepend>
-                      <v-icon size="18">mdi-check</v-icon>
-                    </template>
-                    <v-list-item-title>Đánh dấu đã đọc</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="deleteNotification(notification.id)">
-                    <template v-slot:prepend>
-                      <v-icon size="18" color="error">mdi-delete</v-icon>
-                    </template>
-                    <v-list-item-title class="text-error">Xóa</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
+              </a-dropdown>
             </template>
-          </v-list-item>
 
-          <v-divider v-if="index < notifications.length - 1" />
+            <a-list-item-meta>
+              <template #avatar>
+                <a-avatar :size="48" :style="{ backgroundColor: getIconColor(notification.iconType) }">
+                  <template #icon>
+                    <component :is="getIconComponent(notification.type)" />
+                  </template>
+                </a-avatar>
+              </template>
+
+              <template #title>
+                <span style="font-weight: bold;">
+                  {{ notification.title }}
+                  <a-tag 
+                    v-if="!notification.isRead" 
+                    color="blue"
+                    style="margin-left: 8px;"
+                  >
+                    Mới
+                  </a-tag>
+                </span>
+              </template>
+
+              <template #description>
+                <div style="font-size: 14px; margin-bottom: 4px;">
+                  {{ notification.body }}
+                </div>
+                <div style="font-size: 12px; color: rgba(0,0,0,0.45);">
+                  <clock-circle-outlined style="margin-right: 4px;" />
+                  {{ formatTime(notification.createdAt) }}
+                </div>
+              </template>
+            </a-list-item-meta>
+          </a-list-item>
         </template>
-      </v-list>
-    </v-card>
+      </a-list>
+    </a-card>
 
     <!-- Empty State -->
-    <v-card v-else class="rounded-lg">
-      <div class="text-center py-12">
-        <v-icon size="80" color="grey-lighten-2" class="mb-4">mdi-bell-off-outline</v-icon>
-        <h3 class="text-h6 font-weight-bold mb-2">Không có thông báo</h3>
-        <p class="text-body-2 text-medium-emphasis">
-          Bạn chưa có thông báo nào. Các thông báo mới sẽ xuất hiện tại đây.
-        </p>
-      </div>
-    </v-card>
+    <a-card v-else :bordered="true" style="border-radius: 8px;">
+      <a-empty description="Không có thông báo">
+        <template #image>
+          <bell-outlined style="font-size: 80px; color: #d9d9d9;" />
+        </template>
+        <template #description>
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">Không có thông báo</h3>
+          <p style="font-size: 14px; color: rgba(0,0,0,0.45);">
+            Bạn chưa có thông báo nào. Các thông báo mới sẽ xuất hiện tại đây.
+          </p>
+        </template>
+      </a-empty>
+    </a-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { 
+  CheckOutlined,
+  MoreOutlined,
+  DeleteOutlined,
+  ClockCircleOutlined,
+  BellOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  FileSearchOutlined,
+  ToolOutlined,
+  CalendarOutlined,
+  DollarOutlined,
+  HomeOutlined
+} from '@ant-design/icons-vue'
+import { message, Modal } from 'ant-design-vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -213,29 +238,41 @@ const markAllAsRead = async () => {
       n.isRead = true
       n.readAt = new Date().toISOString()
     })
+
+    message.success('Đã đánh dấu tất cả thông báo là đã đọc')
   } catch (error) {
     console.error('Error marking all as read:', error)
+    message.error('Lỗi khi đánh dấu thông báo')
   } finally {
     markingAllRead.value = false
   }
 }
 
 // Delete notification
-const deleteNotification = async (notificationId) => {
-  if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return
+const deleteNotification = (notificationId) => {
+  Modal.confirm({
+    title: 'Xác nhận xóa',
+    content: 'Bạn có chắc muốn xóa thông báo này?',
+    okText: 'Xóa',
+    cancelText: 'Hủy',
+    okType: 'danger',
+    async onOk() {
+      try {
+        await axios.delete(`http://localhost:5002/api/notifications/${notificationId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
 
-  try {
-    await axios.delete(`http://localhost:5002/api/notifications/${notificationId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // Remove from local state
+        notifications.value = notifications.value.filter(n => n.id !== notificationId)
+        message.success('Đã xóa thông báo')
+      } catch (error) {
+        console.error('Error deleting notification:', error)
+        message.error('Lỗi khi xóa thông báo')
       }
-    })
-
-    // Remove from local state
-    notifications.value = notifications.value.filter(n => n.id !== notificationId)
-  } catch (error) {
-    console.error('Error deleting notification:', error)
-  }
+    }
+  })
 }
 
 // Handle notification click
@@ -251,29 +288,29 @@ const handleNotificationClick = async (notification) => {
   }
 }
 
-// Get icon based on type
-const getIcon = (type) => {
+// Get icon component based on type
+const getIconComponent = (type) => {
   const iconMap = {
-    'System': 'mdi-information',
-    'ApplicationApproved': 'mdi-check-circle',
-    'InvoiceCreated': 'mdi-receipt-text',
-    'MaintenanceDone': 'mdi-tools',
-    'ContractExpiring': 'mdi-calendar-alert',
-    'PaymentReceived': 'mdi-cash-check',
-    'RoomAssigned': 'mdi-door-open'
+    'System': InfoCircleOutlined,
+    'ApplicationApproved': CheckCircleOutlined,
+    'InvoiceCreated': FileSearchOutlined,
+    'MaintenanceDone': ToolOutlined,
+    'ContractExpiring': CalendarOutlined,
+    'PaymentReceived': DollarOutlined,
+    'RoomAssigned': HomeOutlined
   }
-  return iconMap[type] || 'mdi-bell'
+  return iconMap[type] || BellOutlined
 }
 
 // Get icon color based on icon type
 const getIconColor = (iconType) => {
   const colorMap = {
-    'success': 'success',
-    'warning': 'warning',
-    'error': 'error',
-    'info': 'info'
+    'success': '#52c41a',
+    'warning': '#faad14',
+    'error': '#ff4d4f',
+    'info': '#1890ff'
   }
-  return colorMap[iconType] || 'primary'
+  return colorMap[iconType] || '#1890ff'
 }
 
 // Format time
@@ -304,14 +341,3 @@ onMounted(() => {
   fetchNotifications()
 })
 </script>
-
-<style scoped>
-.notification-item {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.notification-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-</style>

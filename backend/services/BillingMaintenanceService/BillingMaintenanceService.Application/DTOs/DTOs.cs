@@ -224,6 +224,14 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? ImageUrls { get; set; }
     }
 
+    public class AssignMaintenanceRequestDto
+    {
+        public int AssignedToUserId { get; set; }
+        public string? AssignedToName { get; set; }
+        public DateTime? ExpectedCompletionDate { get; set; } // Accept DateTime from frontend
+        public decimal? EstimatedCost { get; set; }
+    }
+    
     public class AssignMaintenanceRequest
     {
         public int AssignedToUserId { get; set; }

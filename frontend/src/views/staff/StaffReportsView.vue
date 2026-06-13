@@ -7,7 +7,7 @@
       <a-col :xs="24" :md="12" :lg="8">
         <a-card hoverable>
           <template #cover>
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); padding: 32px; text-align: center;">
               <FileTextOutlined style="font-size: 48px; color: white;" />
             </div>
           </template>

@@ -276,9 +276,12 @@
               :value="staff.id"
               :label="staff.fullName"
             >
-              {{ staff.fullName }} - {{ staff.phone }}
+              [ID: {{ staff.id }}] {{ staff.fullName }} - {{ staff.role }}
             </a-select-option>
           </a-select>
+          <div style="margin-top: 4px; font-size: 12px; color: #8c8c8c;">
+            Có {{ staffList.length }} nhân viên khả dụng
+          </div>
         </a-form-item>
 
         <a-form-item label="Ghi chú">
@@ -414,13 +417,36 @@ const loadStaffList = async () => {
   try {
     const response = await axios.get('http://localhost:5002/api/users', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       }
     })
-    // Filter staff and admin only
-    staffList.value = response.data.filter(u => u.role === 'Staff' || u.role === 'Admin')
+    
+    console.log('Raw users from API:', response.data.length)
+    console.log('All users:', response.data.map(u => ({ id: u.id, name: u.fullName, role: u.role, active: u.isActive })))
+    
+    // Filter STAFF only (not admin), and only active users
+    staffList.value = response.data.filter(u => 
+      u.role === 'Staff' && 
+      u.isActive === true
+    )
+    
+    console.log('Filtered staff list:', staffList.value.length, 'users')
+    console.log('Staff list details:', staffList.value.map(s => ({ 
+      id: s.id, 
+      name: s.fullName, 
+      role: s.role, 
+      email: s.email,
+      phone: s.phone 
+    })))
+    
+    if (staffList.value.length === 0) {
+      message.warning('Không tìm thấy nhân viên nào trong hệ thống')
+    }
   } catch (error) {
     console.error('Lỗi tải danh sách nhân viên:', error)
+    message.error('Không thể tải danh sách nhân viên')
   }
 }
 
@@ -463,14 +489,38 @@ const handleAssign = async () => {
   try {
     const staff = staffList.value.find(s => s.id === assignForm.value.assignedToUserId)
     
-    await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/assign`, {
-      assignedToUserId: assignForm.value.assignedToUserId,
-      assignedToName: staff?.fullName,
-      expectedCompletionDate: new Date().toISOString().split('T')[0],
+    if (!staff) {
+      message.error('Không tìm thấy nhân viên được chọn')
+      console.error('Selected staff ID not found:', assignForm.value.assignedToUserId)
+      console.error('Available staff IDs:', staffList.value.map(s => s.id))
+      return
+    }
+    
+    console.log('Assigning to staff:', { 
+      id: staff.id, 
+      name: staff.fullName, 
+      email: staff.email,
+      phone: staff.phone 
+    })
+    
+    // Calculate expected completion date (7 days from now)
+    const expectedDate = new Date()
+    expectedDate.setDate(expectedDate.getDate() + 7)
+    
+    const payload = {
+      assignedToUserId: staff.id,
+      assignedToName: staff.fullName,
+      expectedCompletionDate: expectedDate.toISOString(),
       estimatedCost: 0
-    }, {
+    }
+    
+    console.log('Assignment payload:', payload)
+    console.log('Request URL:', `http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/assign`)
+    
+    await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/assign`, payload, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
       }
     })
 
@@ -478,7 +528,11 @@ const handleAssign = async () => {
     assignModalVisible.value = false
     await loadMaintenanceRequests()
   } catch (error) {
-    message.error(error.message || 'Lỗi phân công')
+    console.error('Error assigning maintenance request:', error)
+    console.error('Error response:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+    console.error('Error details:', error.response?.data?.detail || error.response?.data?.message)
+    message.error(error.response?.data?.message || error.message || 'Lỗi phân công')
   } finally {
     assigning.value = false
   }
@@ -498,7 +552,8 @@ const handleResolve = async () => {
       afterImageUrls: null
     }, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
       }
     })
 
@@ -506,7 +561,9 @@ const handleResolve = async () => {
     resolveModalVisible.value = false
     await loadMaintenanceRequests()
   } catch (error) {
-    message.error(error.message || 'Lỗi hoàn thành')
+    console.error('Error resolving maintenance request:', error)
+    console.error('Error response:', error.response?.data)
+    message.error(error.response?.data?.message || error.message || 'Lỗi hoàn thành')
   } finally {
     resolving.value = false
   }

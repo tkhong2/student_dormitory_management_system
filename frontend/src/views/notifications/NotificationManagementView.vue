@@ -1,208 +1,203 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Quản lý thông báo</h1>
-        <p class="text-body-2 text-medium-emphasis">
+        <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Quản lý thông báo</h1>
+        <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
           Gửi thông báo đến sinh viên trong hệ thống
         </p>
       </div>
-      <v-btn color="primary" @click="openCreateDialog">
-        <v-icon start>mdi-plus</v-icon>
+      <a-button type="primary" @click="openCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+        <template #icon><PlusOutlined /></template>
         Tạo thông báo
-      </v-btn>
+      </a-button>
     </div>
 
-    <!-- Notifications List -->
-    <v-card class="rounded-lg">
-      <v-data-table
-        :headers="headers"
-        :items="notifications"
+    <!-- Notifications Table -->
+    <a-card :bordered="false">
+      <a-table
+        :columns="columns"
+        :data-source="notifications"
         :loading="loading"
-        items-per-page="10"
+        :pagination="{ pageSize: 10 }"
+        row-key="id"
       >
-        <template v-slot:item.title="{ item }">
-          <div class="font-weight-bold">{{ item.title }}</div>
-          <div class="text-caption text-medium-emphasis">{{ item.body }}</div>
-        </template>
-
-        <template v-slot:item.user="{ item }">
-          <div class="d-flex align-center ga-2">
-            <v-avatar size="32" color="primary" variant="tonal">
-              <v-icon size="16">mdi-account</v-icon>
-            </v-avatar>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'title'">
             <div>
-              <div class="text-body-2">{{ item.userName }}</div>
-              <div class="text-caption text-medium-emphasis">ID: {{ item.userId }}</div>
+              <div style="font-weight: 600;">{{ record.title }}</div>
+              <div style="font-size: 12px; color: #8c8c8c;">{{ record.body }}</div>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <template v-slot:item.type="{ item }">
-          <v-chip size="small" :color="getTypeColor(item.type)" variant="tonal">
-            {{ formatType(item.type) }}
-          </v-chip>
-        </template>
+          <template v-else-if="column.key === 'user'">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <a-avatar size="small" style="background: #1890ff;">
+                <template #icon><UserOutlined /></template>
+              </a-avatar>
+              <div>
+                <div style="font-size: 13px;">{{ record.userName || 'Không xác định' }}</div>
+                <div style="font-size: 12px; color: #8c8c8c;">
+                  {{ record.studentCode ? `${record.studentCode} · ` : '' }}{{ record.email || `ID: ${record.userId}` }}
+                </div>
+              </div>
+            </div>
+          </template>
 
-        <template v-slot:item.isRead="{ item }">
-          <v-chip 
-            size="small" 
-            :color="item.isRead ? 'success' : 'warning'" 
-            variant="flat"
-          >
-            {{ item.isRead ? 'Đã đọc' : 'Chưa đọc' }}
-          </v-chip>
-        </template>
+          <template v-else-if="column.key === 'type'">
+            <a-tag :color="getTypeColor(record.type)">
+              {{ formatType(record.type) }}
+            </a-tag>
+          </template>
 
-        <template v-slot:item.createdAt="{ item }">
-          {{ formatDate(item.createdAt) }}
-        </template>
+          <template v-else-if="column.key === 'isRead'">
+            <a-tag :color="record.isRead ? 'success' : 'warning'">
+              {{ record.isRead ? 'Đã đọc' : 'Chưa đọc' }}
+            </a-tag>
+          </template>
 
-        <template v-slot:item.actions="{ item }">
-          <v-btn 
-            icon="mdi-delete" 
-            variant="text" 
-            size="small" 
-            color="error"
-            @click="deleteNotification(item.id)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+          <template v-else-if="column.key === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
+          </template>
 
-    <!-- Create Notification Dialog -->
-    <v-dialog v-model="dialog" max-width="600px">
-      <v-card>
-        <v-card-title class="text-h5 font-weight-bold pa-6">
-          {{ editMode ? 'Sửa thông báo' : 'Tạo thông báo mới' }}
-        </v-card-title>
-
-        <v-divider />
-
-        <v-card-text class="pa-6">
-          <v-form ref="formRef">
-            <!-- Send to options -->
-            <v-radio-group v-model="form.sendType" class="mb-4">
-              <template v-slot:label>
-                <div class="text-body-2 font-weight-bold mb-2">Gửi đến</div>
-              </template>
-              <v-radio label="Một sinh viên cụ thể" value="single" />
-              <v-radio label="Nhiều sinh viên" value="multiple" />
-            </v-radio-group>
-
-            <!-- Single student select -->
-            <v-autocomplete
-              v-if="form.sendType === 'single'"
-              v-model="form.userId"
-              :items="students"
-              item-title="fullName"
-              item-value="id"
-              label="Chọn sinh viên"
-              prepend-inner-icon="mdi-account-search"
-              :rules="[v => !!v || 'Vui lòng chọn sinh viên']"
-              class="mb-4"
+          <template v-else-if="column.key === 'actions'">
+            <a-button 
+              type="text" 
+              danger 
+              size="small"
+              @click="deleteNotification(record.id)"
             >
-              <template v-slot:item="{ props, item }">
-                <v-list-item v-bind="props">
-                  <template v-slot:prepend>
-                    <v-avatar color="primary" variant="tonal">
-                      <v-icon size="20">mdi-account</v-icon>
-                    </v-avatar>
-                  </template>
-                  <template v-slot:subtitle>
-                    {{ item.raw.studentCode }} · {{ item.raw.email }}
-                  </template>
-                </v-list-item>
-              </template>
-            </v-autocomplete>
+              <template #icon><DeleteOutlined /></template>
+            </a-button>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
 
-            <!-- Multiple students select -->
-            <v-autocomplete
-              v-if="form.sendType === 'multiple'"
-              v-model="form.userIds"
-              :items="students"
-              item-title="fullName"
-              item-value="id"
-              label="Chọn nhiều sinh viên"
-              prepend-inner-icon="mdi-account-multiple"
-              multiple
-              chips
-              closable-chips
-              :rules="[v => v && v.length > 0 || 'Vui lòng chọn ít nhất một sinh viên']"
-              class="mb-4"
-            />
+    <!-- Create Notification Modal -->
+    <a-modal
+      v-model:open="dialog"
+      :title="editMode ? 'Sửa thông báo' : 'Tạo thông báo mới'"
+      width="600px"
+      @cancel="dialog = false"
+    >
+      <a-form layout="vertical">
+        <!-- Send to options -->
+        <a-form-item label="Gửi đến" required>
+          <a-radio-group v-model:value="form.sendType">
+            <a-radio value="single">Một sinh viên cụ thể</a-radio>
+            <a-radio value="multiple">Nhiều sinh viên</a-radio>
+          </a-radio-group>
+        </a-form-item>
 
-            <v-text-field
-              v-model="form.title"
-              label="Tiêu đề"
-              prepend-inner-icon="mdi-format-title"
-              :rules="[v => !!v || 'Vui lòng nhập tiêu đề']"
-              class="mb-4"
-            />
+        <!-- Single student select -->
+        <a-form-item 
+          v-if="form.sendType === 'single'"
+          label="Chọn sinh viên"
+          required
+        >
+          <a-select
+            v-model:value="form.userId"
+            show-search
+            placeholder="Tìm và chọn sinh viên"
+            :filter-option="filterStudentOption"
+            :options="studentOptions"
+          >
+            <template #option="{ label, value, studentCode, email }">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <a-avatar size="small" style="background: #1890ff;">
+                  <template #icon><UserOutlined /></template>
+                </a-avatar>
+                <div>
+                  <div>{{ label }}</div>
+                  <div style="font-size: 12px; color: #8c8c8c;">{{ studentCode }} · {{ email }}</div>
+                </div>
+              </div>
+            </template>
+          </a-select>
+        </a-form-item>
 
-            <v-textarea
-              v-model="form.body"
-              label="Nội dung"
-              prepend-inner-icon="mdi-text"
-              rows="3"
-              :rules="[v => !!v || 'Vui lòng nhập nội dung']"
-              class="mb-4"
-            />
+        <!-- Multiple students select -->
+        <a-form-item 
+          v-if="form.sendType === 'multiple'"
+          label="Chọn nhiều sinh viên"
+          required
+        >
+          <a-select
+            v-model:value="form.userIds"
+            mode="multiple"
+            show-search
+            placeholder="Chọn nhiều sinh viên"
+            :filter-option="filterStudentOption"
+            :options="studentOptions"
+          />
+        </a-form-item>
 
-            <v-select
-              v-model="form.type"
-              :items="notificationTypes"
-              item-title="label"
-              item-value="value"
-              label="Loại thông báo"
-              prepend-inner-icon="mdi-tag"
-              class="mb-4"
-            />
+        <a-form-item label="Tiêu đề" required>
+          <a-input
+            v-model:value="form.title"
+            placeholder="Nhập tiêu đề thông báo"
+          />
+        </a-form-item>
 
-            <v-select
-              v-model="form.iconType"
-              :items="iconTypes"
-              item-title="label"
-              item-value="value"
-              label="Biểu tượng"
-              prepend-inner-icon="mdi-emoticon"
-              class="mb-4"
-            />
+        <a-form-item label="Nội dung" required>
+          <a-textarea
+            v-model:value="form.body"
+            :rows="3"
+            placeholder="Nhập nội dung thông báo"
+          />
+        </a-form-item>
 
-            <v-text-field
-              v-model="form.actionUrl"
-              label="Đường dẫn (tùy chọn)"
-              prepend-inner-icon="mdi-link"
-              placeholder="/student/my-contract"
-              hint="Đường dẫn trang khi sinh viên click vào thông báo"
-              persistent-hint
-            />
-          </v-form>
-        </v-card-text>
+        <a-form-item label="Loại thông báo">
+          <a-select
+            v-model:value="form.type"
+            :options="notificationTypes"
+          />
+        </a-form-item>
 
-        <v-divider />
+        <a-form-item label="Biểu tượng">
+          <a-select
+            v-model:value="form.iconType"
+            :options="iconTypes"
+          />
+        </a-form-item>
 
-        <v-card-actions class="pa-6">
-          <v-spacer />
-          <v-btn variant="text" @click="dialog = false">Hủy</v-btn>
-          <v-btn color="primary" @click="submitForm" :loading="submitting">
-            {{ editMode ? 'Cập nhật' : 'Gửi thông báo' }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <a-form-item label="Đường dẫn (tùy chọn)">
+          <a-input
+            v-model:value="form.actionUrl"
+            placeholder="/student/my-contract"
+          />
+          <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+            Đường dẫn trang khi sinh viên click vào thông báo
+          </div>
+        </a-form-item>
+      </a-form>
+
+      <template #footer>
+        <a-button @click="dialog = false">Hủy</a-button>
+        <a-button type="primary" @click="submitForm" :loading="submitting">
+          {{ editMode ? 'Cập nhật' : 'Gửi thông báo' }}
+        </a-button>
+      </template>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { message, Modal } from 'ant-design-vue'
+import { 
+  PlusOutlined, 
+  UserOutlined, 
+  DeleteOutlined 
+} from '@ant-design/icons-vue'
 import axios from 'axios'
 
 const loading = ref(false)
 const submitting = ref(false)
 const dialog = ref(false)
 const editMode = ref(false)
-const formRef = ref(null)
 
 const notifications = ref([])
 const students = ref([])
@@ -218,13 +213,13 @@ const form = ref({
   actionUrl: ''
 })
 
-const headers = [
-  { title: 'Thông báo', key: 'title', sortable: false },
-  { title: 'Người nhận', key: 'user', sortable: false },
-  { title: 'Loại', key: 'type' },
-  { title: 'Trạng thái', key: 'isRead' },
-  { title: 'Ngày tạo', key: 'createdAt' },
-  { title: '', key: 'actions', sortable: false, align: 'end' }
+const columns = [
+  { title: 'Thông báo', key: 'title', width: 300 },
+  { title: 'Người nhận', key: 'user', width: 250 },
+  { title: 'Loại', key: 'type', align: 'center', width: 150 },
+  { title: 'Trạng thái', key: 'isRead', align: 'center', width: 120 },
+  { title: 'Ngày tạo', key: 'createdAt', align: 'center', width: 150 },
+  { title: '', key: 'actions', align: 'center', width: 80 }
 ]
 
 const notificationTypes = [
@@ -244,6 +239,21 @@ const iconTypes = [
   { label: 'Lỗi', value: 'error' }
 ]
 
+const studentOptions = computed(() => 
+  students.value.map(s => ({
+    label: s.fullName,
+    value: s.id,
+    studentCode: s.studentCode,
+    email: s.email
+  }))
+)
+
+const filterStudentOption = (input, option) => {
+  return option.label.toLowerCase().includes(input.toLowerCase()) ||
+         option.studentCode?.toLowerCase().includes(input.toLowerCase()) ||
+         option.email?.toLowerCase().includes(input.toLowerCase())
+}
+
 // Fetch all notifications
 const fetchNotifications = async () => {
   loading.value = true
@@ -253,7 +263,53 @@ const fetchNotifications = async () => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
-    notifications.value = response.data
+    
+    const notificationsData = response.data
+    console.log('Notifications raw data:', notificationsData)
+    
+    // Load student information from ContractStudentService for each notification
+    const notificationsWithStudentInfo = await Promise.all(
+      notificationsData.map(async (notification) => {
+        try {
+          // Try to get student info from ContractStudentService
+          const studentResponse = await axios.get(`http://localhost:5001/api/students/${notification.userId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+          return {
+            ...notification,
+            userName: studentResponse.data.fullName,
+            studentCode: studentResponse.data.studentCode,
+            email: studentResponse.data.email
+          }
+        } catch (error) {
+          // If student not found in ContractStudentService, try BillingMaintenanceService
+          try {
+            const userResponse = await axios.get(`http://localhost:5002/api/users/${notification.userId}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            })
+            return {
+              ...notification,
+              userName: userResponse.data.fullName,
+              email: userResponse.data.email
+            }
+          } catch {
+            // If not found in either service, use fallback
+            return {
+              ...notification,
+              userName: notification.userName || 'Không xác định',
+              email: '-'
+            }
+          }
+        }
+      })
+    )
+    
+    notifications.value = notificationsWithStudentInfo
+    console.log('Notifications with student info:', notificationsWithStudentInfo)
   } catch (error) {
     console.error('Error fetching notifications:', error)
   } finally {
@@ -270,8 +326,10 @@ const fetchStudents = async () => {
       }
     })
     students.value = response.data
+    console.log('Students loaded:', students.value.length)
   } catch (error) {
     console.error('Error fetching students:', error)
+    message.error('Không thể tải danh sách sinh viên')
   }
 }
 
@@ -293,8 +351,19 @@ const openCreateDialog = () => {
 
 // Submit form
 const submitForm = async () => {
-  const { valid } = await formRef.value.validate()
-  if (!valid) return
+  // Validation
+  if (form.value.sendType === 'single' && !form.value.userId) {
+    message.warning('Vui lòng chọn sinh viên')
+    return
+  }
+  if (form.value.sendType === 'multiple' && (!form.value.userIds || form.value.userIds.length === 0)) {
+    message.warning('Vui lòng chọn ít nhất một sinh viên')
+    return
+  }
+  if (!form.value.title || !form.value.body) {
+    message.warning('Vui lòng nhập đầy đủ tiêu đề và nội dung')
+    return
+  }
 
   submitting.value = true
   try {
@@ -312,6 +381,7 @@ const submitForm = async () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
+      message.success('Đã gửi thông báo')
     } else {
       // Broadcast to multiple users
       await axios.post('http://localhost:5002/api/notifications/broadcast', {
@@ -326,13 +396,14 @@ const submitForm = async () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
+      message.success(`Đã gửi thông báo đến ${form.value.userIds.length} sinh viên`)
     }
 
     dialog.value = false
     await fetchNotifications()
   } catch (error) {
     console.error('Error creating notification:', error)
-    alert('Lỗi khi gửi thông báo')
+    message.error('Lỗi khi gửi thông báo')
   } finally {
     submitting.value = false
   }
@@ -340,19 +411,27 @@ const submitForm = async () => {
 
 // Delete notification
 const deleteNotification = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return
-
-  try {
-    await axios.delete(`http://localhost:5002/api/notifications/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+  Modal.confirm({
+    title: 'Xác nhận xóa',
+    content: 'Bạn có chắc muốn xóa thông báo này?',
+    okText: 'Xóa',
+    okType: 'danger',
+    cancelText: 'Hủy',
+    async onOk() {
+      try {
+        await axios.delete(`http://localhost:5002/api/notifications/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        message.success('Đã xóa thông báo')
+        await fetchNotifications()
+      } catch (error) {
+        console.error('Error deleting notification:', error)
+        message.error('Lỗi khi xóa thông báo')
       }
-    })
-    await fetchNotifications()
-  } catch (error) {
-    console.error('Error deleting notification:', error)
-    alert('Lỗi khi xóa thông báo')
-  }
+    }
+  })
 }
 
 // Format type
@@ -372,15 +451,15 @@ const formatType = (type) => {
 // Get type color
 const getTypeColor = (type) => {
   const colorMap = {
-    'System': 'primary',
-    'ApplicationApproved': 'success',
-    'InvoiceCreated': 'warning',
-    'MaintenanceDone': 'info',
-    'ContractExpiring': 'error',
-    'PaymentReceived': 'success',
-    'RoomAssigned': 'success'
+    'System': 'blue',
+    'ApplicationApproved': 'green',
+    'InvoiceCreated': 'orange',
+    'MaintenanceDone': 'cyan',
+    'ContractExpiring': 'red',
+    'PaymentReceived': 'green',
+    'RoomAssigned': 'green'
   }
-  return colorMap[type] || 'grey'
+  return colorMap[type] || 'default'
 }
 
 // Format date

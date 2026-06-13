@@ -2,6 +2,7 @@ using BillingMaintenanceService.Application.DTOs;
 using BillingMaintenanceService.Application.Interfaces;
 using BillingMaintenanceService.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BillingMaintenanceService.API.Controllers
 {
@@ -59,30 +60,60 @@ namespace BillingMaintenanceService.API.Controllers
         [HttpPost]
         public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceDto dto)
         {
-            var invoice = new Invoice
+            try
             {
-                InvoiceCode = dto.InvoiceCode,
-                InvoiceType = dto.InvoiceType,
-                ContractId = dto.ContractId,
-                StudentId = dto.StudentId,
-                StudentName = dto.StudentName,
-                StudentCode = dto.StudentCode,
-                RoomId = dto.RoomId,
-                RoomNumber = dto.RoomNumber,
-                BuildingName = dto.BuildingName,
-                BillingMonth = dto.BillingMonth,
-                BillingYear = dto.BillingYear,
-                RentAmount = dto.RentAmount,
-                ElectricityAmount = dto.ElectricityAmount,
-                WaterAmount = dto.WaterAmount,
-                ServiceAmount = dto.ServiceAmount,
-                PreviousDebt = dto.PreviousDebt,
-                Discount = dto.Discount,
-                DueDate = dto.DueDate,
-                CreatedByUserId = dto.CreatedByUserId,
-                Notes = dto.Notes,
-                Status = "Unpaid"
-            };
+                // Check for duplicate invoice code
+                var existingByCode = await _invoiceRepository.GetByInvoiceCodeAsync(dto.InvoiceCode);
+                if (existingByCode != null)
+                {
+                    return Conflict(new { 
+                        message = $"Mã phiếu thu '{dto.InvoiceCode}' đã tồn tại",
+                        existingInvoiceId = existingByCode.Id,
+                        existingInvoiceCode = existingByCode.InvoiceCode
+                    });
+                }
+
+                // Check for duplicate invoice for same contract/month/year/type
+                var existingInvoices = await _invoiceRepository.GetByContractIdAsync(dto.ContractId);
+                var duplicate = existingInvoices.FirstOrDefault(i => 
+                    i.BillingMonth == dto.BillingMonth && 
+                    i.BillingYear == dto.BillingYear &&
+                    i.InvoiceType == dto.InvoiceType &&
+                    i.Status != "Cancelled");
+
+                if (duplicate != null)
+                {
+                    return Conflict(new { 
+                        message = $"Phiếu thu {dto.InvoiceType} đã tồn tại cho kỳ {dto.BillingMonth}/{dto.BillingYear}",
+                        existingInvoiceId = duplicate.Id,
+                        existingInvoiceCode = duplicate.InvoiceCode
+                    });
+                }
+
+                var invoice = new Invoice
+                {
+                    InvoiceCode = dto.InvoiceCode,
+                    InvoiceType = dto.InvoiceType,
+                    ContractId = dto.ContractId,
+                    StudentId = dto.StudentId,
+                    StudentName = dto.StudentName,
+                    StudentCode = dto.StudentCode,
+                    RoomId = dto.RoomId,
+                    RoomNumber = dto.RoomNumber,
+                    BuildingName = dto.BuildingName,
+                    BillingMonth = dto.BillingMonth,
+                    BillingYear = dto.BillingYear,
+                    RentAmount = dto.RentAmount,
+                    ElectricityAmount = dto.ElectricityAmount,
+                    WaterAmount = dto.WaterAmount,
+                    ServiceAmount = dto.ServiceAmount,
+                    PreviousDebt = dto.PreviousDebt,
+                    Discount = dto.Discount,
+                    DueDate = dto.DueDate,
+                    CreatedByUserId = dto.CreatedByUserId,
+                    Notes = dto.Notes,
+                    Status = "Unpaid"
+                };
 
             // Calculate total based on invoice type
             if (invoice.InvoiceType == "DepositRefund")
@@ -107,24 +138,51 @@ namespace BillingMaintenanceService.API.Controllers
                 invoice.DebtAmount = invoice.TotalAmount;
             }
 
-            // Add items
-            foreach (var itemDto in dto.Items)
-            {
-                var item = new InvoiceItem
+                // Add items
+                foreach (var itemDto in dto.Items)
                 {
-                    ItemName = itemDto.ItemName,
-                    ItemDescription = itemDto.ItemDescription,
-                    Quantity = itemDto.Quantity,
-                    Unit = itemDto.Unit,
-                    UnitPrice = itemDto.UnitPrice,
-                    Amount = itemDto.Quantity * itemDto.UnitPrice,
-                    SortOrder = itemDto.SortOrder
-                };
-                invoice.Items.Add(item);
-            }
+                    var item = new InvoiceItem
+                    {
+                        ItemName = itemDto.ItemName,
+                        ItemDescription = itemDto.ItemDescription,
+                        Quantity = itemDto.Quantity,
+                        Unit = itemDto.Unit,
+                        UnitPrice = itemDto.UnitPrice,
+                        Amount = itemDto.Quantity * itemDto.UnitPrice,
+                        SortOrder = itemDto.SortOrder
+                    };
+                    invoice.Items.Add(item);
+                }
 
-            await _invoiceRepository.AddAsync(invoice);
-            return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, MapToDto(invoice));
+                await _invoiceRepository.AddAsync(invoice);
+                return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, MapToDto(invoice));
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx)
+            {
+                // Handle SQL unique constraint violations
+                if (sqlEx.Number == 2601 || sqlEx.Number == 2627) // Unique constraint violation
+                {
+                    if (sqlEx.Message.Contains("IX_Invoices_InvoiceCode"))
+                    {
+                        return Conflict(new { 
+                            message = $"Mã phiếu thu '{dto.InvoiceCode}' đã tồn tại trong hệ thống"
+                        });
+                    }
+                    else if (sqlEx.Message.Contains("IX_Invoices_ContractId_BillingMonth_BillingYear_InvoiceType"))
+                    {
+                        return Conflict(new { 
+                            message = $"Phiếu thu {dto.InvoiceType} đã tồn tại cho hợp đồng này vào kỳ {dto.BillingMonth}/{dto.BillingYear}"
+                        });
+                    }
+                    
+                    return Conflict(new { 
+                        message = "Phiếu thu đã tồn tại. Vui lòng kiểm tra lại thông tin."
+                    });
+                }
+                
+                // Re-throw other database exceptions
+                throw;
+            }
         }
 
         [HttpPut("{id}")]

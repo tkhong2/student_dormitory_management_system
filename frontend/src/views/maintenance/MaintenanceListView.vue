@@ -10,8 +10,8 @@
           Tổng số: {{ requests.length }} yêu cầu - {{ pendingCount }} đang chờ
         </p>
       </div>
-      <a-button type="primary" style="background: #ff9800; border-color: #ff9800;">
-        + Tạo yêu cầu
+      <a-button type="primary" style="background: #ff9800; border-color: #ff9800;" @click="goToManagementPage">
+        + Tạo Yêu Cầu
       </a-button>
     </div>
 
@@ -104,12 +104,17 @@
           <template v-else-if="column.key === 'status'">
             <a-tag :color="stColor(record.status)">{{ record.status }}</a-tag>
           </template>
+          <template v-else-if="column.key === 'assignedToName'">
+            <span v-if="record.assignedToName">{{ record.assignedToName }}</span>
+            <a-typography-text v-else type="secondary">Chưa phân công</a-typography-text>
+          </template>
           <template v-else-if="column.key === 'actions'">
             <a-space>
               <a-button
                 v-if="record.status === 'Chờ xử lý'"
                 type="primary"
                 size="small"
+                @click="viewDetail(record)"
               >
                 Xử lý
               </a-button>
@@ -118,10 +123,11 @@
                 type="primary"
                 size="small"
                 style="background: #52c41a; border-color: #52c41a"
+                @click="viewDetail(record)"
               >
                 Hoàn thành
               </a-button>
-              <a-button type="link" size="small">
+              <a-button type="link" size="small" @click="viewDetail(record)">
                 Chi tiết
               </a-button>
             </a-space>
@@ -153,24 +159,15 @@ const columns = [
   { title: 'Yêu cầu', key: 'title', width: 250 },
   { title: 'Mô tả', key: 'description', width: 300 },
   { title: 'Phòng', dataIndex: 'room', key: 'room', align: 'center', width: 100 },
-  { title: 'Sinh viên', dataIndex: 'student', key: 'student', width: 150 },
+  { title: 'Nhân viên', dataIndex: 'assignedToName', key: 'assignedToName', width: 150 },
   { title: 'Ngày tạo', dataIndex: 'date', key: 'date', align: 'center', width: 120 },
   { title: 'Mức độ', key: 'priority', align: 'center', width: 120 },
   { title: 'Trạng thái', key: 'status', align: 'center', width: 120 },
   { title: 'Thao tác', key: 'actions', align: 'center', width: 200 },
 ]
 
-const studentMap = {
-  '30000000-0000-0000-0000-000000000001': 'Nguyễn Văn A',
-  '30000000-0000-0000-0000-000000000002': 'Trần Thị B',
-  '30000000-0000-0000-0000-000000000003': 'Lê Văn C'
-}
-
-const roomMap = {
-  '40000000-0000-0000-0000-000000000101': 'A101',
-  '40000000-0000-0000-0000-000000000102': 'A102',
-  '40000000-0000-0000-0000-000000000103': 'A103'
-}
+const studentMap = {}  // Remove hard-code, will use real data from API
+const roomMap = {}  // Remove hard-code, will use real data from API
 
 const requestCode = (index) => `MT${String(index + 1).padStart(4, '0')}`
 
@@ -201,24 +198,32 @@ async function loadData() {
   loading.value = true
   try {
     const res = await maintenanceRequestService.getAll()
+    console.log('MaintenanceListView - Raw data from API:', res)
+    
     requests.value = res.map((r, index) => ({
       id: r.id,
       code: requestCode(index),
-      title: r.description?.slice(0, 50) || 'Yêu cầu bảo trì',
-      room: roomMap[r.roomId] || 'N/A',
-      student: studentMap[r.studentId] || 'Không xác định',
+      title: r.title || 'Yêu cầu bảo trì',
+      room: r.roomNumber || 'N/A',
+      student: r.requestedByStudentName || 'Không xác định',
       date: new Date(r.createdAt).toLocaleDateString('vi-VN'),
       status:
-        r.status === 'Completed'
+        r.status === 'Done'
           ? 'Hoàn thành'
-          : r.status === 'InProgress'
+          : r.status === 'InProgress' || r.status === 'Assigned'
             ? 'Đang xử lý'
             : 'Chờ xử lý',
-      priority: r.status === 'Pending' ? 'Khẩn cấp' : 'Bình thường',
+      priority: r.priority === 'Urgent' ? 'Khẩn cấp' : 'Bình thường',
       desc: r.description || '',
-      note: r.note || ''
+      note: r.resolutionNote || '',
+      assignedToName: r.assignedToName || null,
+      category: r.category || 'Other',
+      buildingName: r.buildingName || ''
     }))
+    
+    console.log('MaintenanceListView - Processed requests:', requests.value)
   } catch (err) {
+    console.error('MaintenanceListView - Error loading data:', err)
     message.error(err.message || 'Không thể tải danh sách yêu cầu bảo trì')
   } finally {
     loading.value = false
@@ -235,6 +240,16 @@ const stColor = (s) =>
   ({ 'Chờ xử lý': 'orange', 'Đang xử lý': 'blue', 'Hoàn thành': 'green' })[s] || 'default'
 
 const priColor = (p) => (p === 'Khẩn cấp' ? '#ff4d4f' : '#1890ff')
+
+const viewDetail = (record) => {
+  console.log('View detail:', record)
+  // Navigate to the full maintenance management page
+  window.location.href = '/admin/maintenance-requests'
+}
+
+const goToManagementPage = () => {
+  window.location.href = '/admin/maintenance-requests'
+}
 
 onMounted(loadData)
 </script>

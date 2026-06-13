@@ -91,7 +91,7 @@
         <!-- Breadcrumb -->
         <div class="d-none d-sm-flex align-center ga-2">
           <v-icon size="16" color="indigo-darken-2" style="opacity:0.7">mdi-home-variant</v-icon>
-          <span style="font-size:12px; font-weight:600; color:#6366f1; opacity:0.75; text-transform:uppercase; letter-spacing:0.8px;">Cổng SV</span>
+          <span style="font-size:12px; font-weight:600; color:#1890ff; opacity:0.75; text-transform:uppercase; letter-spacing:0.8px;">Cổng SV</span>
           <v-icon size="14" style="opacity:0.3">mdi-chevron-right</v-icon>
           <span style="font-size:12px; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.8px;">{{ $route.meta?.title || 'Trang chủ' }}</span>
         </div>
@@ -130,7 +130,7 @@
               v-bind="props"
               size="38"
               class="cursor-pointer"
-              style="border: 2px solid #6366f1; box-shadow: 0 2px 10px rgba(99,102,241,0.3);"
+              style="border: 2px solid #1890ff; box-shadow: 0 2px 10px rgba(24,144,255,0.3);"
             >
               <v-img :src="userAvatarUrl" />
             </v-avatar>
@@ -355,7 +355,7 @@ const userAvatarUrl = computed(() => {
     return `http://localhost:5003${currentUser.value.avatarUrl}`
   }
   // Fallback to placeholder with user's name
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=6366f1&color=fff&size=128`
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=1890ff&color=fff&size=128`
 })
 
 // Check if student has room

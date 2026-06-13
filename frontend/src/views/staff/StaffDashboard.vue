@@ -212,59 +212,32 @@ import {
 } from '@ant-design/icons-vue'
 import PageHeaderAnt from '@/components/common/PageHeaderAnt.vue'
 import { message } from 'ant-design-vue'
+import { roomApplicationService } from '@/services/roomApplicationService'
+import maintenanceRequestService from '@/services/maintenanceRequestService'
+import { invoiceService } from '@/services/invoiceService'
+import { paymentService } from '@/services/paymentService'
+import { roomService } from '@/services/roomService'
+import { contractService } from '@/services/contractService'
 
 const loading = ref(false)
 
 const stats = ref({
-  pendingApplications: 12,
-  applicationsOver48h: 3,
-  maintenanceRequests: 8,
-  urgentMaintenance: 2,
-  todayPayments: 15000000,
-  paymentCount: 18,
-  overdueStudents: 23,
-  totalDebt: 45200000,
-  occupancyRate: 85,
-  totalRooms: 400,
-  occupiedRooms: 340,
-  availableRooms: 50,
-  maintenanceRooms: 10
+  pendingApplications: 0,
+  applicationsOver48h: 0,
+  maintenanceRequests: 0,
+  urgentMaintenance: 0,
+  todayPayments: 0,
+  paymentCount: 0,
+  overdueStudents: 0,
+  totalDebt: 0,
+  occupancyRate: 0,
+  totalRooms: 0,
+  occupiedRooms: 0,
+  availableRooms: 0,
+  maintenanceRooms: 0
 })
 
-const alerts = ref([
-  {
-    id: 1,
-    status: 'error',
-    urgent: true,
-    title: 'Đơn đăng ký chờ quá 48h',
-    description: '3 đơn đăng ký chờ xử lý quá 48 giờ, cần duyệt ngay',
-    action: 'applications'
-  },
-  {
-    id: 2,
-    status: 'error',
-    urgent: true,
-    title: 'Yêu cầu bảo trì khẩn cấp',
-    description: '2 yêu cầu bảo trì mức độ khẩn cấp chưa phân công',
-    action: 'maintenance'
-  },
-  {
-    id: 3,
-    status: 'warning',
-    urgent: false,
-    title: 'Hợp đồng sắp hết hạn',
-    description: '15 hợp đồng sẽ hết hạn trong 7 ngày tới',
-    action: 'contracts'
-  },
-  {
-    id: 4,
-    status: 'warning',
-    urgent: false,
-    title: 'Sinh viên nợ quá 2 tháng',
-    description: '5 sinh viên nợ tiền phòng quá 2 tháng, cần liên hệ',
-    action: 'debt'
-  }
-])
+const alerts = ref([])
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN').format(value)
@@ -273,10 +246,160 @@ const formatCurrency = (value) => {
 const refreshData = async () => {
   loading.value = true
   try {
-    // TODO: Call APIs to get real data
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Load all data in parallel
+    const [applications, maintenanceRequests, invoices, payments, rooms, contracts] = await Promise.all([
+      roomApplicationService.getAll(),
+      maintenanceRequestService.getAll(),
+      invoiceService.getAll(),
+      paymentService.getAll(),
+      roomService.getAll(),
+      contractService.getAll()
+    ])
+
+    // Pending applications
+    const pendingApps = applications.filter(app => app.status === 'Pending')
+    stats.value.pendingApplications = pendingApps.length
+
+    // Applications over 48 hours
+    const now = new Date()
+    const hours48 = 48 * 60 * 60 * 1000
+    stats.value.applicationsOver48h = pendingApps.filter(app => {
+      const createdAt = new Date(app.createdAt)
+      return (now - createdAt) > hours48
+    }).length
+
+    // Maintenance requests (Pending or InProgress)
+    const activeMaintenance = maintenanceRequests.filter(mr => 
+      mr.status === 'Pending' || mr.status === 'Assigned' || mr.status === 'InProgress'
+    )
+    stats.value.maintenanceRequests = activeMaintenance.length
+
+    // Urgent maintenance (priority = High or Critical)
+    stats.value.urgentMaintenance = activeMaintenance.filter(mr => 
+      mr.priority === 'High' || mr.priority === 'Critical' || mr.priority === 'Urgent'
+    ).length
+
+    // Today's payments
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayPayments = payments.filter(p => {
+      const paymentDate = new Date(p.paidAt || p.paymentDate)
+      return paymentDate >= today
+    })
+    stats.value.todayPayments = todayPayments.reduce((sum, p) => sum + (p.amount || 0), 0)
+    stats.value.paymentCount = todayPayments.length
+
+    // Overdue students
+    const overdueInvoices = invoices.filter(inv => {
+      if (inv.status !== 'Unpaid' && inv.status !== 'PartiallyPaid') return false
+      const dueDate = new Date(inv.dueDate)
+      return dueDate < now
+    })
+    
+    // Count unique students with overdue invoices
+    const overdueStudentIds = new Set(overdueInvoices.map(inv => inv.studentId))
+    stats.value.overdueStudents = overdueStudentIds.size
+    
+    // Total debt from overdue invoices
+    stats.value.totalDebt = overdueInvoices.reduce((sum, inv) => 
+      sum + (inv.debtAmount || inv.totalAmount || 0), 0
+    )
+
+    // Room occupancy statistics
+    stats.value.totalRooms = rooms.length
+    stats.value.occupiedRooms = rooms.filter(r => r.currentOccupants > 0).length
+    stats.value.availableRooms = rooms.filter(r => {
+      const available = r.maxOccupants - r.currentOccupants
+      return available > 0 && r.status === 'Available'
+    }).length
+    stats.value.maintenanceRooms = rooms.filter(r => r.status === 'Maintenance').length
+
+    // Calculate occupancy rate
+    const totalCapacity = rooms.reduce((sum, r) => sum + r.maxOccupants, 0)
+    const currentOccupants = rooms.reduce((sum, r) => sum + r.currentOccupants, 0)
+    stats.value.occupancyRate = totalCapacity > 0 
+      ? Math.round((currentOccupants / totalCapacity) * 100) 
+      : 0
+
+    // Generate alerts based on real data
+    alerts.value = []
+
+    if (stats.value.applicationsOver48h > 0) {
+      alerts.value.push({
+        id: 1,
+        status: 'error',
+        urgent: true,
+        title: 'Đơn đăng ký chờ quá 48h',
+        description: `${stats.value.applicationsOver48h} đơn đăng ký chờ xử lý quá 48 giờ, cần duyệt ngay`,
+        action: 'applications'
+      })
+    }
+
+    if (stats.value.urgentMaintenance > 0) {
+      alerts.value.push({
+        id: 2,
+        status: 'error',
+        urgent: true,
+        title: 'Yêu cầu bảo trì khẩn cấp',
+        description: `${stats.value.urgentMaintenance} yêu cầu bảo trì mức độ khẩn cấp chưa phân công`,
+        action: 'maintenance'
+      })
+    }
+
+    // Contracts expiring soon (within 7 days)
+    const days7 = 7 * 24 * 60 * 60 * 1000
+    const expiringSoon = contracts.filter(c => {
+      if (c.status !== 'Active') return false
+      const endDate = new Date(c.endDate)
+      const diff = endDate - now
+      return diff > 0 && diff < days7
+    })
+
+    if (expiringSoon.length > 0) {
+      alerts.value.push({
+        id: 3,
+        status: 'warning',
+        urgent: false,
+        title: 'Hợp đồng sắp hết hạn',
+        description: `${expiringSoon.length} hợp đồng sẽ hết hạn trong 7 ngày tới`,
+        action: 'contracts'
+      })
+    }
+
+    // Students with debt over 2 months
+    const overdueOver2Months = overdueInvoices.filter(inv => {
+      const dueDate = new Date(inv.dueDate)
+      const days60 = 60 * 24 * 60 * 60 * 1000
+      return (now - dueDate) > days60
+    })
+
+    if (overdueOver2Months.length > 0) {
+      const uniqueStudents = new Set(overdueOver2Months.map(inv => inv.studentId))
+      alerts.value.push({
+        id: 4,
+        status: 'warning',
+        urgent: false,
+        title: 'Sinh viên nợ quá 2 tháng',
+        description: `${uniqueStudents.size} sinh viên nợ tiền phòng quá 2 tháng, cần liên hệ`,
+        action: 'debt'
+      })
+    }
+
+    // If no alerts, add a placeholder
+    if (alerts.value.length === 0) {
+      alerts.value.push({
+        id: 0,
+        status: 'success',
+        urgent: false,
+        title: 'Không có cảnh báo',
+        description: 'Tất cả công việc đang được xử lý tốt',
+        action: null
+      })
+    }
+
     message.success('Đã làm mới dữ liệu')
   } catch (error) {
+    console.error('Error loading staff dashboard data:', error)
     message.error('Lỗi tải dữ liệu')
   } finally {
     loading.value = false
@@ -284,6 +407,8 @@ const refreshData = async () => {
 }
 
 const handleAlert = (item) => {
+  if (!item.action) return
+  
   const routes = {
     applications: '/staff/room-applications',
     maintenance: '/staff/maintenance-requests',

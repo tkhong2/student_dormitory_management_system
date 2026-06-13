@@ -1,178 +1,178 @@
 <template>
   <div>
     <!-- Welcome -->
-    <v-card class="pa-6 mb-6 gradient-secondary rounded-xl">
-      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
+    <a-card :bordered="false" style="background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); margin-bottom: 24px; border-radius: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div>
-          <h1 class="text-h4 font-weight-bold mb-2">Xin chào, {{ currentUser.fullName }}! 👋</h1>
-          <p style="opacity:.85;max-width:500px">Chào mừng bạn đến với Cổng thông tin Sinh viên KTX. Tại đây bạn có thể theo dõi phòng ở, hợp đồng, thanh toán và gửi yêu cầu hỗ trợ.</p>
+          <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 8px;">Xin chào, {{ currentUser.fullName }}! 👋</h1>
+          <p style="color: rgba(255,255,255,0.85); max-width: 500px; margin: 0;">Chào mừng bạn đến với Cổng thông tin Sinh viên KTX. Tại đây bạn có thể theo dõi phòng ở, hợp đồng, thanh toán và gửi yêu cầu hỗ trợ.</p>
         </div>
-        <v-avatar size="80" class="elevation-4">
-          <v-img :src="userAvatarUrl" />
-        </v-avatar>
+        <a-avatar :size="80" :src="userAvatarUrl" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
       </div>
-    </v-card>
+    </a-card>
 
     <!-- Quick Info Cards -->
-    <v-row class="mb-6">
+    <a-row :gutter="[16, 16]" style="margin-bottom: 24px;">
       <!-- Room Card -->
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-5" style="border:1px solid #e5e7eb" :loading="loadingRoom">
-          <div class="d-flex align-center ga-3 mb-3">
-            <v-avatar color="#ede9fe" size="42" rounded="lg">
-              <v-icon color="primary" size="22">mdi-door-closed</v-icon>
-            </v-avatar>
-            <div class="text-caption text-medium-emphasis">Phòng của tôi</div>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true" :loading="loadingRoom" style="padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <a-avatar :size="42" style="background-color: #e6f4ff; border-radius: 8px;">
+              <template #icon><home-outlined style="color: #1890ff; font-size: 22px;" /></template>
+            </a-avatar>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">Phòng của tôi</div>
           </div>
           <template v-if="roomInfo">
-            <div class="text-h5 font-weight-bold">{{ roomInfo.roomNumber }}</div>
-            <div class="text-caption text-medium-emphasis">{{ roomInfo.buildingName }}</div>
+            <div style="font-size: 20px; font-weight: bold;">{{ roomInfo.roomNumber }}</div>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">{{ roomInfo.buildingName }}</div>
           </template>
           <template v-else>
-            <div class="text-body-2 text-medium-emphasis">Chưa xếp phòng</div>
+            <div style="font-size: 14px; color: rgba(0,0,0,0.45);">Chưa xếp phòng</div>
           </template>
-        </v-card>
-      </v-col>
+        </a-card>
+      </a-col>
 
       <!-- Contract Card -->
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-5" style="border:1px solid #e5e7eb" :loading="loadingContract">
-          <div class="d-flex align-center ga-3 mb-3">
-            <v-avatar color="#dcfce7" size="42" rounded="lg">
-              <v-icon color="success" size="22">mdi-file-check</v-icon>
-            </v-avatar>
-            <div class="text-caption text-medium-emphasis">Hợp đồng</div>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true" :loading="loadingContract" style="padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <a-avatar :size="42" style="background-color: #dcfce7; border-radius: 8px;">
+              <template #icon><file-text-outlined style="color: #52c41a; font-size: 22px;" /></template>
+            </a-avatar>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">Hợp đồng</div>
           </div>
           <template v-if="contractInfo">
-            <div class="text-h5 font-weight-bold" :class="contractInfo.statusColor">
+            <div style="font-size: 20px; font-weight: bold;" :style="{ color: contractInfo.statusColorHex }">
               {{ contractInfo.statusText }}
             </div>
-            <div class="text-caption text-medium-emphasis">
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">
               Hết hạn: {{ contractInfo.endDate }}
             </div>
           </template>
           <template v-else>
-            <div class="text-body-2 text-medium-emphasis">Chưa có hợp đồng</div>
+            <div style="font-size: 14px; color: rgba(0,0,0,0.45);">Chưa có hợp đồng</div>
           </template>
-        </v-card>
-      </v-col>
+        </a-card>
+      </a-col>
 
       <!-- Payment Card -->
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-5" style="border:1px solid #e5e7eb" :loading="loadingPayment">
-          <div class="d-flex align-center ga-3 mb-3">
-            <v-avatar color="#fff7ed" size="42" rounded="lg">
-              <v-icon color="warning" size="22">mdi-cash-clock</v-icon>
-            </v-avatar>
-            <div class="text-caption text-medium-emphasis">Thanh toán</div>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true" :loading="loadingPayment" style="padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <a-avatar :size="42" style="background-color: #fff7ed; border-radius: 8px;">
+              <template #icon><clock-circle-outlined style="color: #faad14; font-size: 22px;" /></template>
+            </a-avatar>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">Thanh toán</div>
           </div>
           <template v-if="paymentInfo">
-            <div class="text-h5 font-weight-bold text-warning">
+            <div style="font-size: 20px; font-weight: bold; color: #faad14;">
               {{ formatCurrency(paymentInfo.amount) }}
             </div>
-            <div class="text-caption text-medium-emphasis">
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">
               Hạn: {{ paymentInfo.dueDate }}
             </div>
           </template>
           <template v-else>
-            <div class="text-body-2 text-medium-emphasis">Không có hóa đơn chưa thanh toán</div>
+            <div style="font-size: 14px; color: rgba(0,0,0,0.45);">Không có hóa đơn chưa thanh toán</div>
           </template>
-        </v-card>
-      </v-col>
+        </a-card>
+      </a-col>
 
       <!-- Maintenance Card -->
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-5" style="border:1px solid #e5e7eb" :loading="loadingMaintenance">
-          <div class="d-flex align-center ga-3 mb-3">
-            <v-avatar color="#e0f2fe" size="42" rounded="lg">
-              <v-icon color="info" size="22">mdi-wrench</v-icon>
-            </v-avatar>
-            <div class="text-caption text-medium-emphasis">Yêu cầu sửa chữa</div>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true" :loading="loadingMaintenance" style="padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <a-avatar :size="42" style="background-color: #e0f2fe; border-radius: 8px;">
+              <template #icon><tool-outlined style="color: #1890ff; font-size: 22px;" /></template>
+            </a-avatar>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">Yêu cầu sửa chữa</div>
           </div>
           <template v-if="maintenanceInfo && maintenanceInfo.count > 0">
-            <div class="text-h5 font-weight-bold">{{ maintenanceInfo.count }}</div>
-            <div class="text-caption text-medium-emphasis">{{ maintenanceInfo.status }}</div>
+            <div style="font-size: 20px; font-weight: bold;">{{ maintenanceInfo.count }}</div>
+            <div style="font-size: 12px; color: rgba(0,0,0,0.45);">{{ maintenanceInfo.status }}</div>
           </template>
           <template v-else>
-            <div class="text-body-2 text-medium-emphasis">Không có yêu cầu</div>
+            <div style="font-size: 14px; color: rgba(0,0,0,0.45);">Không có yêu cầu</div>
           </template>
-        </v-card>
-      </v-col>
-    </v-row>
+        </a-card>
+      </a-col>
+    </a-row>
 
-    <v-row>
+    <a-row :gutter="[16, 16]">
       <!-- Roommates -->
-      <v-col cols="12" md="6">
-        <v-card class="pa-5 h-100" style="border:1px solid #e5e7eb" :loading="loadingRoommates">
-          <h3 class="text-subtitle-1 font-weight-bold mb-4">Bạn cùng phòng</h3>
+      <a-col :xs="24" :md="12">
+        <a-card :bordered="true" :loading="loadingRoommates" style="padding: 20px; height: 100%;">
+          <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">Bạn cùng phòng</h3>
           
           <template v-if="roommates.length > 0">
-            <div v-for="mate in roommates" :key="mate.studentCode" class="d-flex align-center ga-3 mb-4">
-              <v-avatar size="40" color="primary" variant="tonal">
-                <v-icon size="20">mdi-account</v-icon>
-              </v-avatar>
-              <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-bold">{{ mate.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ mate.info }}</div>
+            <div v-for="mate in roommates" :key="mate.studentCode" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+              <a-avatar :size="40" style="background-color: #e6f4ff;">
+                <template #icon><user-outlined style="color: #1890ff;" /></template>
+              </a-avatar>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: bold;">{{ mate.name }}</div>
+                <div style="font-size: 12px; color: rgba(0,0,0,0.45);">{{ mate.info }}</div>
               </div>
-              <v-chip size="x-small" variant="tonal" color="success">Đang ở</v-chip>
+              <a-tag color="success">Đang ở</a-tag>
             </div>
             
-            <div v-if="roomCapacity.available > 0" class="text-center py-2">
-              <v-chip variant="outlined" size="small" color="info">
+            <div v-if="roomCapacity.available > 0" style="text-align: center; padding: 8px 0;">
+              <a-tag color="blue">
                 Còn {{ roomCapacity.available }} giường trống
-              </v-chip>
+              </a-tag>
             </div>
           </template>
           
           <template v-else-if="!loadingRoommates && !roomInfo">
-            <div class="text-center py-8 text-medium-emphasis">
-              <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-home-off</v-icon>
-              <div class="text-body-2">Chưa có phòng</div>
+            <div style="text-align: center; padding: 32px 0; color: rgba(0,0,0,0.45);">
+              <home-outlined style="font-size: 48px; color: #d9d9d9; margin-bottom: 8px; display: block;" />
+              <div style="font-size: 14px;">Chưa có phòng</div>
             </div>
           </template>
           
           <template v-else-if="!loadingRoommates">
-            <div class="text-center py-8 text-medium-emphasis">
-              <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-account-multiple</v-icon>
-              <div class="text-body-2">Bạn ở phòng một mình</div>
+            <div style="text-align: center; padding: 32px 0; color: rgba(0,0,0,0.45);">
+              <team-outlined style="font-size: 48px; color: #d9d9d9; margin-bottom: 8px; display: block;" />
+              <div style="font-size: 14px;">Bạn ở phòng một mình</div>
             </div>
           </template>
-        </v-card>
-      </v-col>
+        </a-card>
+      </a-col>
 
       <!-- Announcements -->
-      <v-col cols="12" md="6">
-        <v-card class="pa-5 h-100" style="border:1px solid #e5e7eb">
-          <h3 class="text-subtitle-1 font-weight-bold mb-4">Thông báo mới</h3>
+      <a-col :xs="24" :md="12">
+        <a-card :bordered="true" style="padding: 20px; height: 100%;">
+          <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">Thông báo mới</h3>
           
           <template v-if="announcements.length > 0">
-            <div v-for="a in announcements" :key="a.id" class="d-flex ga-3 mb-4">
-              <v-avatar :color="a.color" size="32" variant="tonal">
-                <v-icon size="16">{{ a.icon }}</v-icon>
-              </v-avatar>
-              <div style="min-width:0;flex:1">
-                <div class="text-body-2 font-weight-medium">
+            <div v-for="a in announcements" :key="a.id" style="display: flex; gap: 12px; margin-bottom: 16px;">
+              <a-avatar :size="32" :style="{ backgroundColor: getAntdColor(a.color) }">
+                <template #icon>
+                  <component :is="getAntdIcon(a.type)" />
+                </template>
+              </a-avatar>
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-size: 14px; font-weight: 500;">
                   {{ a.title }}
-                  <v-chip v-if="!a.isRead" size="x-small" color="primary" variant="flat" class="ml-1">Mới</v-chip>
+                  <a-tag v-if="!a.isRead" color="blue" style="margin-left: 4px;">Mới</a-tag>
                 </div>
-                <div class="text-caption text-medium-emphasis">{{ a.time }}</div>
+                <div style="font-size: 12px; color: rgba(0,0,0,0.45);">{{ a.time }}</div>
               </div>
             </div>
-            <v-btn block variant="text" color="primary" size="small" @click="$router.push('/student/notifications')">
+            <a-button type="link" block @click="$router.push('/student/notifications')">
               Xem tất cả
-            </v-btn>
+            </a-button>
           </template>
           
           <template v-else>
-            <div class="text-center py-8 text-medium-emphasis">
-              <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-bell-off</v-icon>
-              <div class="text-body-2">Không có thông báo mới</div>
+            <div style="text-align: center; padding: 32px 0; color: rgba(0,0,0,0.45);">
+              <bell-outlined style="font-size: 48px; color: #d9d9d9; margin-bottom: 8px; display: block;" />
+              <div style="font-size: 14px;">Không có thông báo mới</div>
             </div>
           </template>
-        </v-card>
-      </v-col>
-    </v-row>
+        </a-card>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
@@ -181,6 +181,20 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { contractService } from '@/services/contractService'
 import axios from 'axios'
+import { 
+  HomeOutlined, 
+  FileTextOutlined, 
+  ClockCircleOutlined, 
+  ToolOutlined, 
+  UserOutlined, 
+  TeamOutlined, 
+  BellOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  FileSearchOutlined,
+  CalendarOutlined,
+  DollarOutlined
+} from '@ant-design/icons-vue'
 
 const authStore = useAuthStore()
 
@@ -199,7 +213,7 @@ const userAvatarUrl = computed(() => {
     }
     return `http://localhost:5003${currentUser.value.avatarUrl}`
   }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=6366f1&color=fff&size=128`
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=1890ff&color=fff&size=128`
 })
 
 // Loading states
@@ -269,16 +283,16 @@ const fetchContractInfo = async () => {
     
     if (activeContract) {
       const statusMap = {
-        'Active': { text: 'Hiệu lực', color: 'text-success' },
-        'Pending': { text: 'Chờ duyệt', color: 'text-warning' },
-        'Expired': { text: 'Hết hạn', color: 'text-error' }
+        'Active': { text: 'Hiệu lực', colorHex: '#52c41a' },
+        'Pending': { text: 'Chờ duyệt', colorHex: '#faad14' },
+        'Expired': { text: 'Hết hạn', colorHex: '#ff4d4f' }
       }
       
-      const status = statusMap[activeContract.status] || { text: activeContract.status, color: '' }
+      const status = statusMap[activeContract.status] || { text: activeContract.status, colorHex: '#000' }
       
       contractInfo.value = {
         statusText: status.text,
-        statusColor: status.color,
+        statusColorHex: status.colorHex,
         endDate: formatDate(activeContract.endDate)
       }
     }
@@ -294,7 +308,25 @@ const fetchPaymentInfo = async () => {
   loadingPayment.value = true
   try {
     const userId = currentUser.value.id
-    if (!userId) return
+    if (!userId) {
+      console.log('No userId for payment')
+      return
+    }
+
+    console.log('=== FETCH PAYMENT INFO ===')
+    console.log('Fetching for userId:', userId)
+
+    // First, get studentId from active contract
+    const contracts = await contractService.getByUserId(userId)
+    const activeContract = contracts.find(c => c.status === 'Active')
+    
+    if (!activeContract) {
+      console.log('No active contract, cannot get studentId')
+      return
+    }
+
+    const studentId = activeContract.studentId
+    console.log('Student ID from contract:', studentId)
 
     // Get invoices for this user
     const response = await axios.get('http://localhost:5002/api/invoices', {
@@ -303,17 +335,26 @@ const fetchPaymentInfo = async () => {
       }
     })
     
-    // Find unpaid invoices for current student
-    const unpaidInvoice = response.data.find(inv => 
-      inv.studentId === userId && 
-      (inv.status === 'Unpaid' || inv.status === 'PartiallyPaid')
-    )
+    console.log('All invoices:', response.data)
+    
+    // Find unpaid invoices for current student using studentId
+    const unpaidInvoice = response.data.find(inv => {
+      console.log(`Invoice ${inv.invoiceCode}: studentId=${inv.studentId}, status=${inv.status}, debt=${inv.debtAmount}, total=${inv.totalAmount}`)
+      // Only show invoices that are Unpaid or PartiallyPaid AND have remaining debt
+      const isUnpaid = inv.status === 'Unpaid' || inv.status === 'PartiallyPaid'
+      const hasDebt = (inv.debtAmount && inv.debtAmount > 0) || (inv.totalAmount && inv.totalAmount > inv.paidAmount)
+      return inv.studentId === studentId && isUnpaid && hasDebt
+    })
+    
+    console.log('Unpaid invoice found:', unpaidInvoice)
     
     if (unpaidInvoice) {
       paymentInfo.value = {
         amount: unpaidInvoice.debtAmount || unpaidInvoice.totalAmount,
         dueDate: formatDate(unpaidInvoice.dueDate)
       }
+    } else {
+      paymentInfo.value = null
     }
   } catch (error) {
     console.error('Error fetching payment info:', error)
@@ -327,25 +368,38 @@ const fetchMaintenanceInfo = async () => {
   loadingMaintenance.value = true
   try {
     const userId = currentUser.value.id
-    if (!userId) return
+    if (!userId) {
+      console.log('No userId for maintenance')
+      return
+    }
 
-    const response = await axios.get('http://localhost:5002/api/maintenancerequests', {
+    console.log('=== FETCH MAINTENANCE ===')
+    console.log('Fetching for userId:', userId)
+
+    const response = await axios.get(`http://localhost:5002/api/maintenancerequests`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
     
-    // Count pending/inprogress requests for current student
-    const pendingRequests = response.data.filter(req => 
-      req.requestedByStudentId === userId && 
-      (req.status === 'Pending' || req.status === 'Assigned' || req.status === 'InProgress')
-    )
+    console.log('All maintenance requests:', response.data)
+    
+    // Count pending/inprogress requests for current student using userId directly
+    const pendingRequests = response.data.filter(req => {
+      console.log(`Request ${req.id}: requestedByStudentId=${req.requestedByStudentId}, status=${req.status}`)
+      return req.requestedByStudentId === userId && 
+        (req.status === 'New' || req.status === 'Assigned' || req.status === 'InProgress')
+    })
+    
+    console.log('Pending requests for user:', pendingRequests)
     
     if (pendingRequests.length > 0) {
       maintenanceInfo.value = {
         count: pendingRequests.length,
         status: 'Đang xử lý'
       }
+    } else {
+      maintenanceInfo.value = null
     }
   } catch (error) {
     console.error('Error fetching maintenance info:', error)
@@ -455,8 +509,8 @@ const fetchAnnouncements = async () => {
         id: n.id,
         title: n.title,
         time: getRelativeTime(n.createdAt),
-        icon: getAnnouncementIcon(n.type),
-        color: getAnnouncementColor(n.iconType),
+        type: n.type,  // Use type directly
+        color: n.iconType,  // Use iconType directly
         isRead: n.isRead
       }))
   } catch (error) {
@@ -481,7 +535,33 @@ const getRelativeTime = (dateString) => {
   return date.toLocaleDateString('vi-VN')
 }
 
-// Helper function to get icon based on type
+// Helper function to get Ant Design icon based on type
+const getAntdIcon = (type) => {
+  const iconMap = {
+    'System': InfoCircleOutlined,
+    'ApplicationApproved': CheckCircleOutlined,
+    'InvoiceCreated': FileSearchOutlined,
+    'MaintenanceDone': ToolOutlined,
+    'ContractExpiring': CalendarOutlined,
+    'PaymentReceived': DollarOutlined,
+    'RoomAssigned': HomeOutlined
+  }
+  return iconMap[type] || BellOutlined
+}
+
+// Helper function to get Ant Design color based on icon type
+const getAntdColor = (iconType) => {
+  const colorMap = {
+    'success': '#52c41a',
+    'warning': '#faad14',
+    'error': '#ff4d4f',
+    'info': '#1890ff',
+    'primary': '#1890ff'
+  }
+  return colorMap[iconType] || '#1890ff'
+}
+
+// Keep original helper functions for backward compatibility
 const getAnnouncementIcon = (type) => {
   const iconMap = {
     'System': 'mdi-information',
@@ -495,7 +575,6 @@ const getAnnouncementIcon = (type) => {
   return iconMap[type] || 'mdi-bell'
 }
 
-// Helper function to get color based on icon type
 const getAnnouncementColor = (iconType) => {
   const colorMap = {
     'success': 'success',

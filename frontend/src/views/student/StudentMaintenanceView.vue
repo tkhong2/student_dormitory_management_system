@@ -1,347 +1,287 @@
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-6">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Yêu cầu Sửa chữa & Bảo trì</h1>
-        <p class="text-body-2 text-medium-emphasis">Gửi yêu cầu khi phòng có sự cố cần xử lý</p>
+        <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">Yêu cầu Sửa chữa & Bảo trì</h1>
+        <p style="font-size: 14px; color: rgba(0,0,0,0.45);">Gửi yêu cầu khi phòng có sự cố cần xử lý</p>
       </div>
-      <v-btn color="primary" @click="openCreateDialog" prepend-icon="mdi-plus">
+      <a-button type="primary" @click="openCreateDialog">
+        <template #icon><plus-outlined /></template>
         Tạo yêu cầu mới
-      </v-btn>
+      </a-button>
     </div>
 
     <!-- Statistics Cards -->
-    <v-row class="mb-6">
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="warning" variant="tonal" size="48">
-              <v-icon color="warning">mdi-clock-outline</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h5 font-weight-bold">{{ stats.pending }}</div>
-              <div class="text-caption text-medium-emphasis">Chờ xử lý</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="info" variant="tonal" size="48">
-              <v-icon color="info">mdi-progress-wrench</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h5 font-weight-bold">{{ stats.inProgress }}</div>
-              <div class="text-caption text-medium-emphasis">Đang xử lý</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="success" variant="tonal" size="48">
-              <v-icon color="success">mdi-check-circle</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h5 font-weight-bold">{{ stats.done }}</div>
-              <div class="text-caption text-medium-emphasis">Hoàn thành</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex align-center ga-3">
-            <v-avatar color="grey" variant="tonal" size="48">
-              <v-icon>mdi-sigma</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-h5 font-weight-bold">{{ myRequests.length }}</div>
-              <div class="text-caption text-medium-emphasis">Tổng số</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <a-row :gutter="[16, 16]" style="margin-bottom: 24px;">
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true">
+          <a-statistic title="Chờ xử lý" :value="stats.pending">
+            <template #prefix>
+              <clock-circle-outlined style="color: #faad14;" />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true">
+          <a-statistic title="Đang xử lý" :value="stats.inProgress">
+            <template #prefix>
+              <sync-outlined :spin="true" style="color: #1890ff;" />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true">
+          <a-statistic title="Hoàn thành" :value="stats.done">
+            <template #prefix>
+              <check-circle-outlined style="color: #52c41a;" />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="24" :sm="12" :md="6">
+        <a-card :bordered="true">
+          <a-statistic title="Tổng số" :value="myRequests.length">
+            <template #prefix>
+              <span style="font-size: 20px;">Σ</span>
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+    </a-row>
 
     <!-- Request List -->
-    <v-card class="rounded-lg">
-      <v-card-text class="pa-6">
-        <h3 class="text-subtitle-1 font-weight-bold mb-4">Yêu cầu đã gửi</h3>
+    <a-card :bordered="true" style="border-radius: 8px;">
+      <div style="padding: 24px;">
+        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">Yêu cầu đã gửi</h3>
         
-        <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="primary" />
-        </div>
+        <a-spin v-if="loading" style="display: block; text-align: center; padding: 32px 0;" />
 
-        <div v-else-if="myRequests.length === 0" class="text-center py-12">
-          <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-wrench-outline</v-icon>
-          <div class="text-h6 font-weight-bold mb-2">Chưa có yêu cầu nào</div>
-          <p class="text-body-2 text-medium-emphasis mb-4">
-            Khi phòng có sự cố, hãy tạo yêu cầu để nhân viên xử lý
-          </p>
-          <v-btn color="primary" @click="openCreateDialog">
-            Tạo yêu cầu đầu tiên
-          </v-btn>
-        </div>
+        <a-empty v-else-if="myRequests.length === 0" style="padding: 48px 0;">
+          <template #description>
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">Chưa có yêu cầu nào</div>
+            <p style="font-size: 14px; color: rgba(0,0,0,0.45); margin-bottom: 16px;">
+              Khi phòng có sự cố, hãy tạo yêu cầu để nhân viên xử lý
+            </p>
+            <a-button type="primary" @click="openCreateDialog">
+              Tạo yêu cầu đầu tiên
+            </a-button>
+          </template>
+        </a-empty>
 
         <div v-else>
-          <v-card 
+          <a-card 
             v-for="r in myRequests" 
             :key="r.id" 
-            variant="outlined" 
-            class="mb-4 pa-4"
+            :bordered="true" 
+            style="margin-bottom: 16px; cursor: pointer;"
             @click="viewDetails(r)"
-            style="cursor: pointer"
+            :hoverable="true"
           >
-            <div class="d-flex align-start justify-space-between mb-3">
-              <div class="flex-grow-1">
-                <div class="d-flex align-center ga-2 mb-1">
-                  <v-icon :color="getCategoryColor(r.category)" size="20">
-                    {{ getCategoryIcon(r.category) }}
-                  </v-icon>
-                  <div class="text-body-1 font-weight-bold">{{ r.title }}</div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;">
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <component :is="getCategoryIconComponent(r.category)" :style="{ color: getCategoryColor(r.category), fontSize: '20px' }" />
+                  <div style="font-size: 16px; font-weight: bold;">{{ r.title }}</div>
                 </div>
-                <div class="text-caption text-medium-emphasis mb-2">
-                  <v-icon size="14">mdi-calendar</v-icon>
+                <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 8px;">
+                  <calendar-outlined style="font-size: 14px;" />
                   {{ formatDate(r.createdAt) }} · 
-                  <v-icon size="14">mdi-door</v-icon>
+                  <home-outlined style="font-size: 14px;" />
                   Phòng {{ r.roomNumber }} - {{ r.buildingName }}
                 </div>
               </div>
-              <div class="d-flex flex-column align-end ga-2">
-                <v-chip :color="getStatusColor(r.status)" size="small" variant="flat">
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <a-tag :color="getStatusColor(r.status)">
                   {{ getStatusText(r.status) }}
-                </v-chip>
-                <v-chip :color="getPriorityColor(r.priority)" size="x-small" variant="tonal">
+                </a-tag>
+                <a-tag :color="getPriorityColor(r.priority)">
                   {{ getPriorityText(r.priority) }}
-                </v-chip>
+                </a-tag>
               </div>
             </div>
 
-            <p class="text-body-2 text-medium-emphasis mb-3">{{ r.description }}</p>
+            <p style="font-size: 14px; color: rgba(0,0,0,0.45); margin-bottom: 12px;">{{ r.description }}</p>
 
             <!-- Assigned info -->
-            <div v-if="r.assignedToName" class="d-flex align-center ga-2 mb-2">
-              <v-icon size="16" color="info">mdi-account-wrench</v-icon>
-              <span class="text-caption">Được giao cho: <strong>{{ r.assignedToName }}</strong></span>
+            <div v-if="r.assignedToName" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <user-outlined style="font-size: 16px; color: #1890ff;" />
+              <span style="font-size: 12px;">Được giao cho: <strong>{{ r.assignedToName }}</strong></span>
             </div>
 
             <!-- Resolution note -->
-            <div v-if="r.resolutionNote" class="pa-3 rounded-lg" style="background:#f0fdf4">
-              <div class="text-caption font-weight-bold mb-1 text-success">
-                <v-icon size="14" class="mr-1">mdi-check-circle</v-icon>
+            <div v-if="r.resolutionNote" style="padding: 12px; border-radius: 8px; background: #f0fdf4;">
+              <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #52c41a;">
+                <check-circle-outlined style="font-size: 14px; margin-right: 4px;" />
                 Đã xử lý xong:
               </div>
-              <div class="text-body-2">{{ r.resolutionNote }}</div>
-              <div v-if="!r.rating && r.status === 'Done'" class="mt-3">
-                <v-btn size="small" color="success" @click.stop="openRatingDialog(r)">
-                  <v-icon start size="16">mdi-star</v-icon>
+              <div style="font-size: 14px;">{{ r.resolutionNote }}</div>
+              <div v-if="!r.rating && r.status === 'Done'" style="margin-top: 12px;">
+                <a-button type="primary" size="small" @click.stop="openRatingDialog(r)" style="background: #52c41a; border-color: #52c41a;">
+                  <template #icon><star-outlined /></template>
                   Đánh giá
-                </v-btn>
+                </a-button>
               </div>
             </div>
 
             <!-- Rating -->
-            <div v-if="r.rating" class="mt-2">
-              <v-rating 
-                :model-value="r.rating" 
-                readonly 
-                size="small" 
-                color="amber"
-                density="compact"
-              />
-              <div v-if="r.feedback" class="text-caption text-medium-emphasis mt-1">{{ r.feedback }}</div>
+            <div v-if="r.rating" style="margin-top: 8px;">
+              <a-rate :value="r.rating" disabled allow-half />
+              <div v-if="r.feedback" style="font-size: 12px; color: rgba(0,0,0,0.45); margin-top: 4px;">{{ r.feedback }}</div>
             </div>
-          </v-card>
+          </a-card>
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </a-card>
 
     <!-- Create Request Dialog -->
-    <v-dialog v-model="createDialog" max-width="600px">
-      <v-card>
-        <v-card-title class="text-h5 font-weight-bold pa-6">
-          Tạo yêu cầu sửa chữa
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-6">
-          <v-form ref="formRef">
-            <v-text-field
-              v-model="form.title"
-              label="Tiêu đề"
-              prepend-inner-icon="mdi-format-title"
-              placeholder="VD: Hỏng vòi nước"
-              :rules="[v => !!v || 'Vui lòng nhập tiêu đề']"
-              class="mb-4"
-            />
+    <a-modal v-model:open="createDialog" title="Tạo yêu cầu sửa chữa" :width="600" @ok="submitRequest" ok-text="Gửi yêu cầu" cancel-text="Hủy" :confirm-loading="submitting">
+      <a-form layout="vertical" style="margin-top: 16px;">
+        <a-form-item label="Tiêu đề" required>
+          <a-input 
+            v-model:value="form.title" 
+            placeholder="VD: Hỏng vòi nước"
+            :prefix="h(EditOutlined)"
+          />
+        </a-form-item>
 
-            <v-select
-              v-model="form.category"
-              label="Danh mục"
-              prepend-inner-icon="mdi-tag"
-              :items="categories"
-              item-title="label"
-              item-value="value"
-              :rules="[v => !!v || 'Vui lòng chọn danh mục']"
-              class="mb-4"
-            />
+        <a-form-item label="Danh mục" required>
+          <a-select
+            v-model:value="form.category"
+            placeholder="Chọn danh mục"
+            :options="categories"
+          />
+        </a-form-item>
 
-            <v-select
-              v-model="form.priority"
-              label="Mức độ ưu tiên"
-              prepend-inner-icon="mdi-alert-circle"
-              :items="priorities"
-              item-title="label"
-              item-value="value"
-              :rules="[v => !!v || 'Vui lòng chọn mức độ']"
-              class="mb-4"
-            />
+        <a-form-item label="Mức độ ưu tiên" required>
+          <a-select
+            v-model:value="form.priority"
+            placeholder="Chọn mức độ"
+            :options="priorities"
+          />
+        </a-form-item>
 
-            <v-textarea
-              v-model="form.description"
-              label="Mô tả chi tiết"
-              prepend-inner-icon="mdi-text"
-              rows="4"
-              placeholder="Mô tả sự cố để nhân viên xử lý nhanh hơn..."
-              :rules="[v => !!v || 'Vui lòng nhập mô tả']"
-              class="mb-4"
-            />
+        <a-form-item label="Mô tả chi tiết" required>
+          <a-textarea
+            v-model:value="form.description"
+            :rows="4"
+            placeholder="Mô tả sự cố để nhân viên xử lý nhanh hơn..."
+          />
+        </a-form-item>
 
-            <v-file-input
-              v-model="form.images"
-              label="Ảnh đính kèm"
-              prepend-inner-icon="mdi-camera"
-              accept="image/*"
-              multiple
-              chips
-              hint="Có thể đính kèm nhiều ảnh"
-              persistent-hint
-            />
-          </v-form>
-        </v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-6">
-          <v-spacer />
-          <v-btn variant="text" @click="createDialog = false">Hủy</v-btn>
-          <v-btn color="primary" @click="submitRequest" :loading="submitting">
-            <v-icon start>mdi-send</v-icon>
-            Gửi yêu cầu
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <a-form-item label="Ảnh đính kèm">
+          <a-upload
+            v-model:file-list="form.images"
+            list-type="picture-card"
+            accept="image/*"
+            :multiple="true"
+          >
+            <div v-if="form.images.length < 5">
+              <plus-outlined />
+              <div style="margin-top: 8px;">Tải ảnh</div>
+            </div>
+          </a-upload>
+          <div style="color: rgba(0,0,0,0.45); font-size: 12px; margin-top: 4px;">
+            Có thể đính kèm nhiều ảnh
+          </div>
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <!-- Rating Dialog -->
-    <v-dialog v-model="ratingDialog" max-width="500px">
-      <v-card>
-        <v-card-title class="text-h5 font-weight-bold pa-6">
-          Đánh giá dịch vụ
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-6">
-          <div class="text-center mb-4">
-            <v-rating
-              v-model="ratingForm.rating"
-              size="large"
-              color="amber"
-              hover
-            />
-            <div class="text-caption text-medium-emphasis mt-2">
-              Nhấn để đánh giá từ 1-5 sao
-            </div>
+    <a-modal v-model:open="ratingDialog" title="Đánh giá dịch vụ" :width="500" @ok="submitRating" ok-text="Gửi đánh giá" cancel-text="Hủy" :confirm-loading="submittingRating">
+      <div style="margin-top: 16px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <a-rate 
+            v-model:value="ratingForm.rating" 
+            :style="{ fontSize: '32px' }"
+            allow-half
+          />
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-top: 8px;">
+            Nhấn để đánh giá từ 1-5 sao
           </div>
-          <v-textarea
-            v-model="ratingForm.feedback"
-            label="Nhận xét (tùy chọn)"
-            rows="3"
+        </div>
+        <a-form-item label="Nhận xét (tùy chọn)">
+          <a-textarea
+            v-model:value="ratingForm.feedback"
+            :rows="3"
             placeholder="Chia sẻ trải nghiệm của bạn..."
           />
-        </v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-6">
-          <v-spacer />
-          <v-btn variant="text" @click="ratingDialog = false">Hủy</v-btn>
-          <v-btn color="success" @click="submitRating" :loading="submittingRating">
-            Gửi đánh giá
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        </a-form-item>
+      </div>
+    </a-modal>
 
     <!-- Detail Dialog -->
-    <v-dialog v-model="detailDialog" max-width="700px">
-      <v-card v-if="selectedRequest">
-        <v-card-title class="text-h5 font-weight-bold pa-6">
-          Chi tiết yêu cầu #{{ selectedRequest.id }}
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-6">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <v-chip :color="getStatusColor(selectedRequest.status)" variant="flat">
-              {{ getStatusText(selectedRequest.status) }}
-            </v-chip>
-            <v-chip :color="getPriorityColor(selectedRequest.priority)" size="small" variant="tonal">
-              {{ getPriorityText(selectedRequest.priority) }}
-            </v-chip>
-          </div>
+    <a-modal v-model:open="detailDialog" :title="`Chi tiết yêu cầu #${selectedRequest?.id || ''}`" :width="700" :footer="null">
+      <div v-if="selectedRequest" style="margin-top: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <a-tag :color="getStatusColor(selectedRequest.status)">
+            {{ getStatusText(selectedRequest.status) }}
+          </a-tag>
+          <a-tag :color="getPriorityColor(selectedRequest.priority)">
+            {{ getPriorityText(selectedRequest.priority) }}
+          </a-tag>
+        </div>
 
-          <div class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Tiêu đề</div>
-            <div class="text-h6">{{ selectedRequest.title }}</div>
-          </div>
+        <a-descriptions :column="1" bordered>
+          <a-descriptions-item label="Tiêu đề">
+            <strong>{{ selectedRequest.title }}</strong>
+          </a-descriptions-item>
+          <a-descriptions-item label="Phòng">
+            {{ selectedRequest.roomNumber }} - {{ selectedRequest.buildingName }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Danh mục">
+            {{ getCategoryLabel(selectedRequest.category) }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Mô tả">
+            {{ selectedRequest.description }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Người xử lý" v-if="selectedRequest.assignedToName">
+            {{ selectedRequest.assignedToName }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Dự kiến hoàn thành" v-if="selectedRequest.expectedCompletionDate">
+            {{ formatDate(selectedRequest.expectedCompletionDate) }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Ghi chú xử lý" v-if="selectedRequest.resolutionNote">
+            <div style="padding: 8px; background: #f0fdf4; border-radius: 4px;">{{ selectedRequest.resolutionNote }}</div>
+          </a-descriptions-item>
+          <a-descriptions-item label="Ngày tạo">
+            {{ formatDateTime(selectedRequest.createdAt) }}
+          </a-descriptions-item>
+        </a-descriptions>
 
-          <div class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Phòng</div>
-            <div>{{ selectedRequest.roomNumber }} - {{ selectedRequest.buildingName }}</div>
-          </div>
-
-          <div class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Danh mục</div>
-            <div>{{ getCategoryLabel(selectedRequest.category) }}</div>
-          </div>
-
-          <div class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Mô tả</div>
-            <div>{{ selectedRequest.description }}</div>
-          </div>
-
-          <div v-if="selectedRequest.assignedToName" class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Người xử lý</div>
-            <div>{{ selectedRequest.assignedToName }}</div>
-          </div>
-
-          <div v-if="selectedRequest.expectedCompletionDate" class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Dự kiến hoàn thành</div>
-            <div>{{ formatDate(selectedRequest.expectedCompletionDate) }}</div>
-          </div>
-
-          <div v-if="selectedRequest.resolutionNote" class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Ghi chú xử lý</div>
-            <div class="pa-3 rounded-lg bg-green-50">{{ selectedRequest.resolutionNote }}</div>
-          </div>
-
-          <div class="mb-4">
-            <div class="text-caption text-medium-emphasis mb-1">Ngày tạo</div>
-            <div>{{ formatDateTime(selectedRequest.createdAt) }}</div>
-          </div>
-        </v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-6">
-          <v-spacer />
-          <v-btn variant="text" @click="detailDialog = false">Đóng</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <div style="text-align: right; margin-top: 16px;">
+          <a-button @click="detailDialog = false">Đóng</a-button>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { contractService } from '@/services/contractService'
 import axios from 'axios'
+import { 
+  PlusOutlined,
+  ClockCircleOutlined,
+  SyncOutlined,
+  CheckCircleOutlined,
+  StarOutlined,
+  CalendarOutlined,
+  HomeOutlined,
+  TagOutlined,
+  EditOutlined,
+  UserOutlined,
+  ThunderboltOutlined,
+  DropboxOutlined,
+  LaptopOutlined,
+  BuildOutlined,
+  ToolOutlined
+} from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.user)
@@ -352,7 +292,6 @@ const submittingRating = ref(false)
 const createDialog = ref(false)
 const ratingDialog = ref(false)
 const detailDialog = ref(false)
-const formRef = ref(null)
 
 const myRequests = ref([])
 const selectedRequest = ref(null)
@@ -402,7 +341,10 @@ const fetchCurrentRoom = async () => {
   try {
     const userId = currentUser.value.id
     const contracts = await contractService.getByUserId(userId)
+    console.log('User contracts:', contracts)
+    
     const activeContract = contracts.find(c => c.status === 'Active')
+    console.log('Active contract:', activeContract)
     
     if (activeContract) {
       currentRoomId.value = activeContract.roomId
@@ -437,7 +379,7 @@ const fetchRequests = async () => {
 // Open create dialog
 const openCreateDialog = () => {
   if (!currentRoomId.value) {
-    alert('Bạn chưa có phòng. Vui lòng đăng ký phòng trước.')
+    message.warning('Bạn chưa có phòng. Vui lòng đăng ký phòng trước.')
     return
   }
   form.value = {
@@ -452,11 +394,13 @@ const openCreateDialog = () => {
 
 // Submit request
 const submitRequest = async () => {
-  const { valid } = await formRef.value.validate()
-  if (!valid) return
+  if (!form.value.title || !form.value.category || !form.value.description) {
+    message.error('Vui lòng điền đầy đủ thông tin!')
+    return
+  }
 
   if (!currentRoomId.value) {
-    alert('Không tìm thấy thông tin phòng')
+    message.error('Không tìm thấy thông tin phòng')
     return
   }
 
@@ -482,11 +426,10 @@ const submitRequest = async () => {
     createDialog.value = false
     await fetchRequests()
     
-    // Send notification to staff (optional)
-    alert('Đã gửi yêu cầu thành công!')
+    message.success('Đã gửi yêu cầu thành công!')
   } catch (error) {
     console.error('Error creating request:', error)
-    alert('Lỗi khi gửi yêu cầu')
+    message.error('Lỗi khi gửi yêu cầu')
   } finally {
     submitting.value = false
   }
@@ -517,9 +460,10 @@ const submitRating = async () => {
 
     ratingDialog.value = false
     await fetchRequests()
+    message.success('Cảm ơn bạn đã đánh giá!')
   } catch (error) {
     console.error('Error rating request:', error)
-    alert('Lỗi khi gửi đánh giá')
+    message.error('Lỗi khi gửi đánh giá')
   } finally {
     submittingRating.value = false
   }
@@ -534,14 +478,14 @@ const viewDetails = (request) => {
 // Helper functions
 const getStatusColor = (status) => {
   const colorMap = {
-    'New': 'warning',
-    'Assigned': 'info',
-    'InProgress': 'info',
-    'Done': 'success',
-    'Cancelled': 'grey',
-    'Rejected': 'error'
+    'New': 'orange',
+    'Assigned': 'blue',
+    'InProgress': 'blue',
+    'Done': 'green',
+    'Cancelled': 'default',
+    'Rejected': 'red'
   }
-  return colorMap[status] || 'grey'
+  return colorMap[status] || 'default'
 }
 
 const getStatusText = (status) => {
@@ -558,12 +502,12 @@ const getStatusText = (status) => {
 
 const getPriorityColor = (priority) => {
   const colorMap = {
-    'Low': 'grey',
-    'Medium': 'info',
-    'High': 'warning',
-    'Urgent': 'error'
+    'Low': 'default',
+    'Medium': 'blue',
+    'High': 'orange',
+    'Urgent': 'red'
   }
-  return colorMap[priority] || 'grey'
+  return colorMap[priority] || 'default'
 }
 
 const getPriorityText = (priority) => {
@@ -576,28 +520,28 @@ const getPriorityText = (priority) => {
   return textMap[priority] || priority
 }
 
-const getCategoryIcon = (category) => {
+const getCategoryIconComponent = (category) => {
   const iconMap = {
-    'Electric': 'mdi-lightning-bolt',
-    'Plumbing': 'mdi-water',
-    'Furniture': 'mdi-sofa',
-    'Network': 'mdi-wifi',
-    'Structure': 'mdi-home-outline',
-    'Other': 'mdi-wrench'
+    'Electric': ThunderboltOutlined,
+    'Plumbing': DropboxOutlined,
+    'Furniture': BuildOutlined,
+    'Network': LaptopOutlined,
+    'Structure': BuildOutlined,
+    'Other': ToolOutlined
   }
-  return iconMap[category] || 'mdi-wrench'
+  return iconMap[category] || ToolOutlined
 }
 
 const getCategoryColor = (category) => {
   const colorMap = {
-    'Electric': 'warning',
-    'Plumbing': 'info',
-    'Furniture': 'brown',
-    'Network': 'purple',
-    'Structure': 'grey',
-    'Other': 'grey'
+    'Electric': '#faad14',
+    'Plumbing': '#1890ff',
+    'Furniture': '#8b4513',
+    'Network': '#722ed1',
+    'Structure': '#595959',
+    'Other': '#8c8c8c'
   }
-  return colorMap[category] || 'grey'
+  return colorMap[category] || '#8c8c8c'
 }
 
 const getCategoryLabel = (category) => {

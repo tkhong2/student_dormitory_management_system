@@ -1,477 +1,405 @@
 <template>
   <div>
-    <h1 class="text-h4 font-weight-bold mb-1">Hợp đồng của tôi</h1>
-    <p class="text-body-2 text-medium-emphasis mb-6">Thông tin hợp đồng và đơn đăng ký thuê phòng KTX</p>
+    <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 4px;">Hợp đồng của tôi</h1>
+    <p style="font-size: 14px; color: rgba(0,0,0,0.45); margin-bottom: 24px;">Thông tin hợp đồng và đơn đăng ký thuê phòng KTX</p>
 
     <!-- Loading State -->
-    <v-card v-if="loading" class="pa-6">
-      <v-progress-circular indeterminate color="primary" />
-      <span class="ml-3">Đang tải...</span>
-    </v-card>
+    <a-card v-if="loading" :bordered="true" style="padding: 24px;">
+      <a-spin />
+      <span style="margin-left: 12px;">Đang tải...</span>
+    </a-card>
 
     <!-- Pending Contracts (Chờ sinh viên chấp thuận) -->
-    <v-card v-for="contract in pendingContracts" :key="contract.id" class="pa-6 mb-4" style="border:1px solid #e5e7eb">
-      <div class="d-flex align-center ga-4 mb-4">
-        <v-avatar color="#fff4e6" size="52" rounded="lg">
-          <v-icon color="warning" size="26">mdi-file-document-check</v-icon>
-        </v-avatar>
+    <a-card v-for="contract in pendingContracts" :key="contract.id" :bordered="true" style="padding: 24px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+        <a-avatar :size="52" style="background-color: #fff4e6; border-radius: 8px;">
+          <template #icon><file-text-outlined style="color: #faad14; font-size: 26px;" /></template>
+        </a-avatar>
         <div>
-          <div class="text-h6 font-weight-bold">Hợp đồng nháp - Mã {{ contract.contractCode }}</div>
-          <v-chip color="warning" size="small" variant="tonal" class="mt-1">Chờ chấp thuận</v-chip>
+          <div style="font-size: 18px; font-weight: bold;">Hợp đồng nháp - Mã {{ contract.contractCode }}</div>
+          <a-tag color="orange" style="margin-top: 4px;">Chờ chấp thuận</a-tag>
         </div>
       </div>
 
-      <v-alert type="success" variant="tonal" class="mb-4">
-        <strong>Chúc mừng!</strong> Đơn đăng ký của bạn đã được duyệt. Vui lòng xem hợp đồng bên dưới và chấp thuận để hoàn tất thủ tục.
-      </v-alert>
+      <a-alert type="success" show-icon style="margin-bottom: 16px;">
+        <template #message>
+          <strong>Chúc mừng!</strong> Đơn đăng ký của bạn đã được duyệt. Vui lòng xem hợp đồng bên dưới và chấp thuận để hoàn tất thủ tục.
+        </template>
+      </a-alert>
 
-      <v-divider class="mb-4" />
+      <a-divider style="margin: 16px 0;" />
 
-      <h4 class="text-subtitle-2 font-weight-bold mb-3">Thông tin hợp đồng</h4>
-      <v-row>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Mã hợp đồng</div>
-          <div class="text-body-1 font-weight-bold">{{ contract.contractCode }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Phòng</div>
-          <div class="text-body-1 font-weight-bold">{{ contract.roomNumber }} — {{ contract.buildingName }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Loại phòng</div>
-          <div class="text-body-1 font-weight-bold">{{ contract.roomTypeName }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Giá thuê</div>
-          <div class="text-body-1 font-weight-bold text-primary">{{ formatCurrency(contract.monthlyRent) }}/tháng</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Tiền cọc</div>
-          <div class="text-body-1 font-weight-bold">{{ formatCurrency(contract.depositAmount) }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Ngày thanh toán</div>
-          <div class="text-body-1 font-weight-bold">Ngày {{ contract.paymentDueDay }} hàng tháng</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Ngày bắt đầu</div>
-          <div class="text-body-1 font-weight-bold">{{ formatDate(contract.startDate) }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Ngày kết thúc</div>
-          <div class="text-body-1 font-weight-bold">{{ formatDate(contract.endDate) }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Giá điện/nước</div>
-          <div class="text-body-1 font-weight-bold">{{ formatCurrency(contract.electricityRate) }} / {{ formatCurrency(contract.waterRate) }}</div>
-        </v-col>
-      </v-row>
+      <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 12px;">Thông tin hợp đồng</h4>
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Mã hợp đồng</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ contract.contractCode }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Phòng</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ contract.roomNumber }} — {{ contract.buildingName }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Loại phòng</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ contract.roomTypeName }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Giá thuê</div>
+          <div style="font-size: 16px; font-weight: bold; color: #1890ff;">{{ formatCurrency(contract.monthlyRent) }}/tháng</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Tiền cọc</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatCurrency(contract.depositAmount) }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Ngày thanh toán</div>
+          <div style="font-size: 16px; font-weight: bold;">Ngày {{ contract.paymentDueDay }} hàng tháng</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Ngày bắt đầu</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatDate(contract.startDate) }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Ngày kết thúc</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatDate(contract.endDate) }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Giá điện/nước</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatCurrency(contract.electricityRate) }} / {{ formatCurrency(contract.waterRate) }}</div>
+        </a-col>
+      </a-row>
 
-      <v-divider class="my-4" />
+      <a-divider style="margin: 16px 0;" />
 
-      <h4 class="text-subtitle-2 font-weight-bold mb-3">Điều khoản quan trọng</h4>
-      <v-list v-if="contract.terms && contract.terms.length > 0" density="compact">
-        <v-list-item 
-          v-for="(term, index) in contract.terms" 
-          :key="term.id"
-          :title="term.title"
-          :subtitle="term.content"
-          :prepend-icon="term.icon || `mdi-numeric-${index + 1}-circle`"
-        />
-      </v-list>
-      <v-alert v-else type="info" variant="tonal" density="compact">
-        Không có điều khoản nào được áp dụng cho hợp đồng này.
-      </v-alert>
+      <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 12px;">Điều khoản quan trọng</h4>
+      <a-list v-if="contract.terms && contract.terms.length > 0" size="small" :data-source="contract.terms">
+        <template #renderItem="{ item: term, index }">
+          <a-list-item>
+            <a-list-item-meta :title="term.title" :description="term.content">
+              <template #avatar>
+                <span style="font-size: 20px;">{{ index + 1 }}.</span>
+              </template>
+            </a-list-item-meta>
+          </a-list-item>
+        </template>
+      </a-list>
+      <a-alert v-else type="info" show-icon message="Không có điều khoản nào được áp dụng cho hợp đồng này." />
 
-      <div class="d-flex ga-3 mt-6">
-        <v-btn 
-          prepend-icon="mdi-check-circle" 
-          color="success" 
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <a-button 
+          type="primary"
           size="large"
           @click="acceptContract(contract)"
           :loading="accepting"
+          style="background: #52c41a; border-color: #52c41a;"
         >
+          <template #icon><check-circle-outlined /></template>
           Tôi chấp thuận hợp đồng này
-        </v-btn>
-        <v-btn prepend-icon="mdi-close" variant="outlined" color="error" size="large" disabled>
+        </a-button>
+        <a-button size="large" danger disabled>
+          <template #icon><close-outlined /></template>
           Từ chối
-        </v-btn>
+        </a-button>
       </div>
-    </v-card>
+    </a-card>
 
     <!-- Active Contracts -->
-    <v-card v-for="contract in activeContracts" :key="contract.id" class="pa-6 mb-4" style="border:1px solid #e5e7eb">
-      <div class="d-flex align-center ga-4 mb-6">
-        <v-avatar color="#dcfce7" size="52" rounded="lg">
-          <v-icon color="success" size="26">mdi-file-sign</v-icon>
-        </v-avatar>
+    <a-card v-for="contract in activeContracts" :key="contract.id" :bordered="true" style="padding: 24px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <a-avatar :size="52" style="background-color: #dcfce7; border-radius: 8px;">
+          <template #icon><file-done-outlined style="color: #52c41a; font-size: 26px;" /></template>
+        </a-avatar>
         <div>
-          <div class="text-h6 font-weight-bold">Hợp đồng #{{ contract.contractCode }}</div>
-          <v-chip :color="getContractStatusColor(contract.status)" size="small" variant="tonal" class="mt-1">
+          <div style="font-size: 18px; font-weight: bold;">Hợp đồng #{{ contract.contractCode }}</div>
+          <a-tag :color="getContractStatusColor(contract.status)" style="margin-top: 4px;">
             {{ getContractStatusLabel(contract.status) }}
-          </v-chip>
+          </a-tag>
         </div>
       </div>
 
-      <v-divider class="mb-5" />
+      <a-divider style="margin: 20px 0;" />
 
-      <v-row>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Phòng</div>
-          <div class="text-body-1 font-weight-bold">{{ contract.roomNumber }} — {{ contract.buildingName }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Loại phòng</div>
-          <div class="text-body-1 font-weight-bold">{{ contract.roomTypeName }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Giá thuê</div>
-          <div class="text-body-1 font-weight-bold">{{ formatCurrency(contract.monthlyRent) }}/tháng</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Ngày bắt đầu</div>
-          <div class="text-body-1 font-weight-bold">{{ formatDate(contract.startDate) }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Ngày kết thúc</div>
-          <div class="text-body-1 font-weight-bold">{{ formatDate(contract.endDate) }}</div>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <div class="text-caption text-medium-emphasis mb-1">Tiền cọc</div>
-          <div class="text-body-1 font-weight-bold">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Phòng</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ contract.roomNumber }} — {{ contract.buildingName }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Loại phòng</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ contract.roomTypeName }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Giá thuê</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatCurrency(contract.monthlyRent) }}/tháng</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Ngày bắt đầu</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatDate(contract.startDate) }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Ngày kết thúc</div>
+          <div style="font-size: 16px; font-weight: bold;">{{ formatDate(contract.endDate) }}</div>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <div style="font-size: 12px; color: rgba(0,0,0,0.45); margin-bottom: 4px;">Tiền cọc</div>
+          <div style="font-size: 16px; font-weight: bold;">
             {{ formatCurrency(contract.depositAmount) }}
-            <v-chip v-if="contract.isDepositPaid" size="x-small" color="success" class="ml-2">Đã đóng</v-chip>
-            <v-chip v-else size="x-small" color="warning" class="ml-2">Chưa đóng</v-chip>
+            <a-tag v-if="contract.isDepositPaid" color="success" style="margin-left: 8px;">Đã đóng</a-tag>
+            <a-tag v-else color="orange" style="margin-left: 8px;">Chưa đóng</a-tag>
           </div>
-        </v-col>
-      </v-row>
+        </a-col>
+      </a-row>
 
-      <v-divider class="my-5" />
+      <a-divider style="margin: 20px 0;" />
 
-      <h4 class="text-subtitle-2 font-weight-bold mb-3">Điều khoản quan trọng</h4>
-      <v-list v-if="contract.terms && contract.terms.length > 0" density="compact">
-        <v-list-item 
-          v-for="(term, index) in contract.terms" 
-          :key="term.id"
-          :title="term.title"
-          :subtitle="term.content"
-          :prepend-icon="term.icon || `mdi-numeric-${index + 1}-circle`"
-        />
-      </v-list>
-      <v-alert v-else type="info" variant="tonal" density="compact">
-        Không có điều khoản nào được áp dụng cho hợp đồng này.
-      </v-alert>
+      <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 12px;">Điều khoản quan trọng</h4>
+      <a-list v-if="contract.terms && contract.terms.length > 0" size="small" :data-source="contract.terms">
+        <template #renderItem="{ item: term, index }">
+          <a-list-item>
+            <a-list-item-meta :title="term.title" :description="term.content">
+              <template #avatar>
+                <span style="font-size: 20px;">{{ index + 1 }}.</span>
+              </template>
+            </a-list-item-meta>
+          </a-list-item>
+        </template>
+      </a-list>
+      <a-alert v-else type="info" show-icon message="Không có điều khoản nào được áp dụng cho hợp đồng này." />
 
-      <div class="d-flex ga-3 mt-6">
-        <v-btn prepend-icon="mdi-download" variant="tonal" color="primary" disabled>Tải hợp đồng PDF</v-btn>
-        <v-btn 
-          prepend-icon="mdi-refresh" 
-          variant="tonal" 
-          color="success"
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <a-button disabled>
+          <template #icon><download-outlined /></template>
+          Tải hợp đồng PDF
+        </a-button>
+        <a-button 
+          type="primary"
           @click="openExtensionDialog(contract)"
+          style="background: #52c41a; border-color: #52c41a;"
         >
+          <template #icon><reload-outlined /></template>
           Yêu cầu gia hạn
-        </v-btn>
-        <v-btn 
-          prepend-icon="mdi-swap-horizontal" 
-          variant="tonal" 
-          color="warning"
+        </a-button>
+        <a-button 
           @click="openTransferDialog(contract)"
+          style="background: #faad14; border-color: #faad14; color: white;"
         >
+          <template #icon><swap-outlined /></template>
           Yêu cầu chuyển phòng
-        </v-btn>
+        </a-button>
       </div>
-    </v-card>
+    </a-card>
 
     <!-- No Data State -->
-    <v-card v-if="!loading && pendingContracts.length === 0 && activeContracts.length === 0" class="pa-8 text-center">
-      <v-icon size="64" color="grey-lighten-1">mdi-file-document-outline</v-icon>
-      <div class="text-h6 mt-4">Chưa có hợp đồng</div>
-      <p class="text-body-2 text-medium-emphasis mt-2">
+    <a-card v-if="!loading && pendingContracts.length === 0 && activeContracts.length === 0" :bordered="true" style="text-align: center; padding: 32px;">
+      <file-text-outlined style="font-size: 64px; color: #d9d9d9;" />
+      <div style="font-size: 18px; margin-top: 16px;">Chưa có hợp đồng</div>
+      <p style="font-size: 14px; color: rgba(0,0,0,0.45); margin-top: 8px;">
         Bạn chưa có đơn đăng ký nào được duyệt hoặc hợp đồng nào.
       </p>
-      <v-btn prepend-icon="mdi-home-search" color="primary" to="/student/rooms" class="mt-4">
+      <a-button type="primary" @click="$router.push('/student/rooms')" style="margin-top: 16px;">
+        <template #icon><home-outlined /></template>
         Đăng ký phòng
-      </v-btn>
-    </v-card>
+      </a-button>
+    </a-card>
 
     <!-- History Section: Extensions and Transfers -->
-    <v-card v-if="activeContracts.length > 0" class="pa-6 mt-4" style="border:1px solid #e5e7eb">
-      <div class="d-flex align-center ga-3 mb-4">
-        <v-icon color="primary" size="28">mdi-history</v-icon>
-        <div class="text-h6 font-weight-bold">Lịch sử yêu cầu</div>
+    <a-card v-if="activeContracts.length > 0" :bordered="true" style="padding: 24px; margin-top: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <history-outlined style="color: #1890ff; font-size: 28px;" />
+        <div style="font-size: 18px; font-weight: bold;">Lịch sử yêu cầu</div>
       </div>
 
-      <v-tabs v-model="historyTab" color="primary" class="mb-4">
-        <v-tab value="extensions">
-          <v-icon start>mdi-refresh</v-icon>
-          Gia hạn hợp đồng
-        </v-tab>
-        <v-tab value="transfers">
-          <v-icon start>mdi-swap-horizontal</v-icon>
-          Chuyển phòng
-        </v-tab>
-      </v-tabs>
+      <a-tabs v-model:activeKey="historyTab">
+        <a-tab-pane key="extensions">
+          <template #tab>
+            <reload-outlined />
+            Gia hạn hợp đồng
+          </template>
 
-      <v-window v-model="historyTab">
-        <!-- Extensions History -->
-        <v-window-item value="extensions">
-          <v-card v-if="loadingHistory" class="pa-4 text-center">
-            <v-progress-circular indeterminate color="primary" size="32" />
-          </v-card>
-          <div v-else-if="extensions.length === 0" class="text-center pa-6 text-medium-emphasis">
-            <v-icon size="48" color="grey-lighten-1">mdi-clipboard-text-outline</v-icon>
-            <div class="mt-2">Chưa có yêu cầu gia hạn nào</div>
-          </div>
-          <v-list v-else density="compact">
-            <v-list-item
-              v-for="ext in extensions"
-              :key="ext.id"
-              class="mb-2"
-              style="border: 1px solid #e5e7eb; border-radius: 8px;"
-            >
-              <template #prepend>
-                <v-avatar color="success" size="40">
-                  <v-icon>mdi-calendar-check</v-icon>
-                </v-avatar>
-              </template>
-              <v-list-item-title class="font-weight-bold">
-                Hợp đồng {{ ext.contractCode }}
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                <div class="d-flex flex-column ga-1 mt-1">
-                  <div>
-                    <v-icon size="16" color="error">mdi-calendar-remove</v-icon>
-                    Cũ: {{ formatDate(ext.oldEndDate) }}
-                  </div>
-                  <div>
-                    <v-icon size="16" color="success">mdi-calendar-plus</v-icon>
-                    Mới: {{ formatDate(ext.newEndDate) }}
-                  </div>
-                  <div class="text-caption">
-                    <v-icon size="14">mdi-clock-outline</v-icon>
-                    {{ formatDateTime(ext.approvedAt) }}
-                  </div>
-                  <div v-if="ext.reason" class="text-caption">
-                    <v-icon size="14">mdi-note-text</v-icon>
-                    {{ ext.reason }}
-                  </div>
-                </div>
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-        </v-window-item>
+          <a-spin v-if="loadingHistory" style="display: block; text-align: center; padding: 16px;" />
+          <a-empty v-else-if="extensions.length === 0" description="Chưa có yêu cầu gia hạn nào" />
+          <a-list v-else size="small" :data-source="extensions">
+            <template #renderItem="{ item: ext }">
+              <a-list-item style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; padding: 12px;">
+                <a-list-item-meta :title="`Hợp đồng ${ext.contractCode}`">
+                  <template #avatar>
+                    <a-avatar style="background-color: #52c41a;">
+                      <template #icon><calendar-outlined /></template>
+                    </a-avatar>
+                  </template>
+                  <template #description>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <div>
+                        <close-outlined style="color: #ff4d4f; font-size: 16px;" />
+                        Cũ: {{ formatDate(ext.oldEndDate) }}
+                      </div>
+                      <div>
+                        <check-circle-outlined style="color: #52c41a; font-size: 16px;" />
+                        Mới: {{ formatDate(ext.newEndDate) }}
+                      </div>
+                      <div style="font-size: 12px;">
+                        {{ formatDateTime(ext.approvedAt) }}
+                      </div>
+                      <div v-if="ext.reason" style="font-size: 12px;">{{ ext.reason }}</div>
+                    </div>
+                  </template>
+                </a-list-item-meta>
+              </a-list-item>
+            </template>
+          </a-list>
+        </a-tab-pane>
 
-        <!-- Transfers History -->
-        <v-window-item value="transfers">
-          <v-card v-if="loadingHistory" class="pa-4 text-center">
-            <v-progress-circular indeterminate color="primary" size="32" />
-          </v-card>
-          <div v-else-if="transfers.length === 0" class="text-center pa-6 text-medium-emphasis">
-            <v-icon size="48" color="grey-lighten-1">mdi-clipboard-text-outline</v-icon>
-            <div class="mt-2">Chưa có yêu cầu chuyển phòng nào</div>
-          </div>
-          <v-list v-else density="compact">
-            <v-list-item
-              v-for="transfer in transfers"
-              :key="transfer.id"
-              class="mb-2"
-              style="border: 1px solid #e5e7eb; border-radius: 8px;"
-            >
-              <template #prepend>
-                <v-avatar :color="getTransferStatusColor(transfer.status)" size="40">
-                  <v-icon>{{ getTransferStatusIcon(transfer.status) }}</v-icon>
-                </v-avatar>
-              </template>
-              <v-list-item-title class="font-weight-bold">
-                {{ transfer.currentRoomNumber }} 
-                <v-icon size="16">mdi-arrow-right</v-icon>
-                {{ transfer.newRoomNumber || '?' }}
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                <div class="d-flex flex-column ga-1 mt-1">
-                  <div>
-                    <v-chip size="x-small" :color="getTransferStatusColor(transfer.status)">
-                      {{ getTransferStatusLabel(transfer.status) }}
-                    </v-chip>
-                  </div>
-                  <div v-if="transfer.requestedRoomTypeName || transfer.requestedBuildingName" class="text-caption">
-                    <v-icon size="14">mdi-home-search</v-icon>
-                    Yêu cầu: {{ transfer.requestedRoomTypeName || '' }} {{ transfer.requestedBuildingName || '' }}
-                  </div>
-                  <div class="text-caption">
-                    <v-icon size="14">mdi-note-text</v-icon>
-                    {{ transfer.reason }}
-                  </div>
-                  <div class="text-caption">
-                    <v-icon size="14">mdi-clock-outline</v-icon>
-                    {{ formatDateTime(transfer.createdAt) }}
-                  </div>
-                  <div v-if="transfer.rejectReason" class="text-caption text-error">
-                    <v-icon size="14" color="error">mdi-close-circle</v-icon>
-                    Lý do từ chối: {{ transfer.rejectReason }}
-                  </div>
-                  <div v-if="transfer.reviewedByName" class="text-caption">
-                    <v-icon size="14">mdi-account</v-icon>
-                    Xử lý bởi: {{ transfer.reviewedByName }}
-                  </div>
-                </div>
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-        </v-window-item>
-      </v-window>
-    </v-card>
+        <a-tab-pane key="transfers">
+          <template #tab>
+            <swap-outlined />
+            Chuyển phòng
+          </template>
 
-    <!-- Error Dialog -->
-    <v-dialog v-model="errorDialog" max-width="500">
-      <v-card>
-        <v-card-title class="bg-error">
-          <v-icon class="mr-2">mdi-alert-circle</v-icon>
-          Lỗi
-        </v-card-title>
-        <v-card-text class="pt-4">
-          {{ errorMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" @click="errorDialog = false">Đóng</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          <a-spin v-if="loadingHistory" style="display: block; text-align: center; padding: 16px;" />
+          <a-empty v-else-if="transfers.length === 0" description="Chưa có yêu cầu chuyển phòng nào" />
+          <a-list v-else size="small" :data-source="transfers">
+            <template #renderItem="{ item: transfer }">
+              <a-list-item style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; padding: 12px;">
+                <a-list-item-meta>
+                  <template #title>
+                    {{ transfer.currentRoomNumber }} 
+                    <swap-outlined style="font-size: 16px; margin: 0 4px;" />
+                    {{ transfer.newRoomNumber || '?' }}
+                  </template>
+                  <template #avatar>
+                    <a-avatar :style="{ backgroundColor: getTransferStatusColorHex(transfer.status) }">
+                      <template #icon>
+                        <component :is="getTransferStatusIconComponent(transfer.status)" />
+                      </template>
+                    </a-avatar>
+                  </template>
+                  <template #description>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <div>
+                        <a-tag :color="getTransferStatusColor(transfer.status)">
+                          {{ getTransferStatusLabel(transfer.status) }}
+                        </a-tag>
+                      </div>
+                      <div v-if="transfer.requestedRoomTypeName || transfer.requestedBuildingName" style="font-size: 12px;">
+                        Yêu cầu: {{ transfer.requestedRoomTypeName || '' }} {{ transfer.requestedBuildingName || '' }}
+                      </div>
+                      <div style="font-size: 12px;">{{ transfer.reason }}</div>
+                      <div style="font-size: 12px;">{{ formatDateTime(transfer.createdAt) }}</div>
+                      <div v-if="transfer.rejectReason" style="font-size: 12px; color: #ff4d4f;">
+                        Lý do từ chối: {{ transfer.rejectReason }}
+                      </div>
+                      <div v-if="transfer.reviewedByName" style="font-size: 12px;">
+                        Xử lý bởi: {{ transfer.reviewedByName }}
+                      </div>
+                    </div>
+                  </template>
+                </a-list-item-meta>
+              </a-list-item>
+            </template>
+          </a-list>
+        </a-tab-pane>
+      </a-tabs>
+    </a-card>
 
-    <!-- Success Dialog -->
-    <v-dialog v-model="successDialog" max-width="500">
-      <v-card>
-        <v-card-title class="bg-success">
-          <v-icon class="mr-2">mdi-check-circle</v-icon>
-          Thành công
-        </v-card-title>
-        <v-card-text class="pt-4">
-          {{ successMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" @click="successDialog = false">Đóng</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Extension Request Modal -->
+    <a-modal 
+      v-model:open="extensionDialog" 
+      title="Yêu cầu gia hạn hợp đồng"
+      :width="600"
+      @ok="submitExtension"
+      ok-text="Gửi yêu cầu"
+      cancel-text="Hủy"
+      :confirm-loading="submitting"
+    >
+      <div style="margin-top: 16px;">
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Thông tin hợp đồng hiện tại</div>
+          <a-card :bordered="true" size="small" style="padding: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Mã hợp đồng:</span>
+              <span style="font-weight: bold;">{{ selectedContract?.contractCode }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Phòng:</span>
+              <span style="font-weight: bold;">{{ selectedContract?.roomNumber }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Ngày kết thúc hiện tại:</span>
+              <span style="font-weight: bold; color: #ff4d4f;">{{ formatDate(selectedContract?.endDate) }}</span>
+            </div>
+          </a-card>
+        </div>
 
-    <!-- Extension Request Dialog -->
-    <v-dialog v-model="extensionDialog" max-width="600">
-      <v-card>
-        <v-card-title class="bg-primary">
-          <v-icon class="mr-2">mdi-refresh</v-icon>
-          Yêu cầu gia hạn hợp đồng
-        </v-card-title>
-        <v-card-text class="pt-4">
-          <div class="mb-4">
-            <div class="text-subtitle-2 mb-2">Thông tin hợp đồng hiện tại</div>
-            <v-card variant="outlined" class="pa-3">
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-caption text-medium-emphasis">Mã hợp đồng:</span>
-                <span class="font-weight-bold">{{ selectedContract?.contractCode }}</span>
-              </div>
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-caption text-medium-emphasis">Phòng:</span>
-                <span class="font-weight-bold">{{ selectedContract?.roomNumber }}</span>
-              </div>
-              <div class="d-flex justify-space-between">
-                <span class="text-caption text-medium-emphasis">Ngày kết thúc hiện tại:</span>
-                <span class="font-weight-bold text-error">{{ formatDate(selectedContract?.endDate) }}</span>
-              </div>
-            </v-card>
-          </div>
-
-          <v-text-field
-            v-model="extensionForm.newEndDate"
-            label="Ngày kết thúc mới"
+        <a-form-item label="Ngày kết thúc mới" required :validate-status="extensionErrors.newEndDate ? 'error' : ''" :help="extensionErrors.newEndDate">
+          <a-input
+            v-model:value="extensionForm.newEndDate"
             type="date"
-            variant="outlined"
             :min="getMinExtensionDate()"
-            :error-messages="extensionErrors.newEndDate"
-            class="mb-3"
           />
+        </a-form-item>
 
-          <v-textarea
-            v-model="extensionForm.reason"
-            label="Lý do gia hạn"
-            variant="outlined"
-            rows="3"
-            :error-messages="extensionErrors.reason"
+        <a-form-item label="Lý do gia hạn" required :validate-status="extensionErrors.reason ? 'error' : ''" :help="extensionErrors.reason">
+          <a-textarea
+            v-model:value="extensionForm.reason"
+            :rows="3"
             placeholder="Nhập lý do bạn muốn gia hạn hợp đồng..."
           />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="extensionDialog = false">Hủy</v-btn>
-          <v-btn color="primary" @click="submitExtension" :loading="submitting">
-            Gửi yêu cầu
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        </a-form-item>
+      </div>
+    </a-modal>
 
-    <!-- Transfer Request Dialog -->
-    <v-dialog v-model="transferDialog" max-width="600">
-      <v-card>
-        <v-card-title class="bg-warning">
-          <v-icon class="mr-2">mdi-swap-horizontal</v-icon>
-          Yêu cầu chuyển phòng
-        </v-card-title>
-        <v-card-text class="pt-4">
-          <div class="mb-4">
-            <div class="text-subtitle-2 mb-2">Thông tin phòng hiện tại</div>
-            <v-card variant="outlined" class="pa-3">
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-caption text-medium-emphasis">Phòng:</span>
-                <span class="font-weight-bold">{{ selectedContract?.roomNumber }}</span>
-              </div>
-              <div class="d-flex justify-space-between mb-2">
-                <span class="text-caption text-medium-emphasis">Tòa nhà:</span>
-                <span class="font-weight-bold">{{ selectedContract?.buildingName }}</span>
-              </div>
-              <div class="d-flex justify-space-between">
-                <span class="text-caption text-medium-emphasis">Loại phòng:</span>
-                <span class="font-weight-bold">{{ selectedContract?.roomTypeName }}</span>
-              </div>
-            </v-card>
-          </div>
+    <!-- Transfer Request Modal -->
+    <a-modal 
+      v-model:open="transferDialog" 
+      title="Yêu cầu chuyển phòng"
+      :width="600"
+      @ok="submitTransfer"
+      ok-text="Gửi yêu cầu"
+      cancel-text="Hủy"
+      :confirm-loading="submitting"
+    >
+      <div style="margin-top: 16px;">
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Thông tin phòng hiện tại</div>
+          <a-card :bordered="true" size="small" style="padding: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Phòng:</span>
+              <span style="font-weight: bold;">{{ selectedContract?.roomNumber }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Tòa nhà:</span>
+              <span style="font-weight: bold;">{{ selectedContract?.buildingName }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="font-size: 12px; color: rgba(0,0,0,0.45);">Loại phòng:</span>
+              <span style="font-weight: bold;">{{ selectedContract?.roomTypeName }}</span>
+            </div>
+          </a-card>
+        </div>
 
-          <v-text-field
-            v-model="transferForm.requestedBuildingName"
-            label="Tòa nhà mong muốn (tùy chọn)"
-            variant="outlined"
+        <a-form-item label="Tòa nhà mong muốn (tùy chọn)">
+          <a-input
+            v-model:value="transferForm.requestedBuildingName"
             placeholder="Ví dụ: Nhà A, Nhà B..."
-            class="mb-3"
           />
+        </a-form-item>
 
-          <v-text-field
-            v-model="transferForm.requestedRoomTypeName"
-            label="Loại phòng mong muốn (tùy chọn)"
-            variant="outlined"
+        <a-form-item label="Loại phòng mong muốn (tùy chọn)">
+          <a-input
+            v-model:value="transferForm.requestedRoomTypeName"
             placeholder="Ví dụ: Phòng 4 người, Phòng 6 người..."
-            class="mb-3"
           />
+        </a-form-item>
 
-          <v-textarea
-            v-model="transferForm.reason"
-            label="Lý do chuyển phòng"
-            variant="outlined"
-            rows="3"
-            :error-messages="transferErrors.reason"
+        <a-form-item label="Lý do chuyển phòng" required :validate-status="transferErrors.reason ? 'error' : ''" :help="transferErrors.reason">
+          <a-textarea
+            v-model:value="transferForm.reason"
+            :rows="3"
             placeholder="Nhập lý do bạn muốn chuyển phòng..."
           />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="transferDialog = false">Hủy</v-btn>
-          <v-btn color="warning" @click="submitTransfer" :loading="submitting">
-            Gửi yêu cầu
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        </a-form-item>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -480,6 +408,20 @@ import { ref, onMounted, computed } from 'vue'
 import { contractService } from '@/services/contractService'
 import { contractExtensionService } from '@/services/contractExtensionService'
 import { roomTransferService } from '@/services/roomTransferService'
+import { 
+  FileTextOutlined,
+  FileDoneOutlined,
+  CheckCircleOutlined,
+  CloseOutlined,
+  DownloadOutlined,
+  ReloadOutlined,
+  SwapOutlined,
+  HomeOutlined,
+  HistoryOutlined,
+  CalendarOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue'
+import { message, Modal } from 'ant-design-vue'
 
 const loading = ref(false)
 const accepting = ref(false)
@@ -488,11 +430,6 @@ const loadingHistory = ref(false)
 const contracts = ref([])
 const extensions = ref([])
 const transfers = ref([])
-const errorDialog = ref(false)
-const errorMessage = ref('')
-const successDialog = ref(false)
-const successMessage = ref('')
-const newContractCode = ref('')
 const historyTab = ref('extensions')
 
 // Extension Dialog
@@ -528,8 +465,7 @@ async function loadData() {
     const userId = user.id
 
     if (!userId) {
-      errorMessage.value = 'Không tìm thấy thông tin người dùng'
-      errorDialog.value = true
+      message.error('Không tìm thấy thông tin người dùng')
       return
     }
 
@@ -543,8 +479,7 @@ async function loadData() {
     }
   } catch (err) {
     console.error('Error loading contracts:', err)
-    errorMessage.value = err.message || 'Không thể tải dữ liệu hợp đồng'
-    errorDialog.value = true
+    message.error(err.message || 'Không thể tải dữ liệu hợp đồng')
   } finally {
     loading.value = false
   }
@@ -600,23 +535,19 @@ async function acceptContract(contract) {
     const userId = user.id
 
     if (!userId) {
-      errorMessage.value = 'Không tìm thấy thông tin người dùng'
-      errorDialog.value = true
+      message.error('Không tìm thấy thông tin người dùng')
       return
     }
 
     const response = await contractService.acceptContract(contract.id, { userId })
     
-    newContractCode.value = contract.contractCode
-    successMessage.value = `Hợp đồng ${contract.contractCode} đã được chấp thuận thành công!`
-    successDialog.value = true
+    message.success(`Hợp đồng ${contract.contractCode} đã được chấp thuận thành công!`)
     
     // Reload data
     await loadData()
   } catch (err) {
     console.error('Error accepting contract:', err)
-    errorMessage.value = err.response?.data?.message || err.message || 'Không thể chấp thuận hợp đồng'
-    errorDialog.value = true
+    message.error(err.response?.data?.message || err.message || 'Không thể chấp thuận hợp đồng')
   } finally {
     accepting.value = false
   }
@@ -666,8 +597,7 @@ async function submitExtension() {
     const userName = user.fullName || user.username
 
     if (!userId) {
-      errorMessage.value = 'Không tìm thấy thông tin người dùng'
-      errorDialog.value = true
+      message.error('Không tìm thấy thông tin người dùng')
       return
     }
 
@@ -679,16 +609,14 @@ async function submitExtension() {
       approvedByName: userName
     })
 
-    successMessage.value = 'Yêu cầu gia hạn đã được gửi thành công!'
-    successDialog.value = true
+    message.success('Yêu cầu gia hạn đã được gửi thành công!')
     extensionDialog.value = false
     
     // Reload data
     await loadData()
   } catch (err) {
     console.error('Error submitting extension:', err)
-    errorMessage.value = err.response?.data?.message || err.message || 'Không thể gửi yêu cầu gia hạn'
-    errorDialog.value = true
+    message.error(err.response?.data?.message || err.message || 'Không thể gửi yêu cầu gia hạn')
   } finally {
     submitting.value = false
   }
@@ -721,13 +649,12 @@ async function submitTransfer() {
     const userId = user.id
 
     if (!userId) {
-      errorMessage.value = 'Không tìm thấy thông tin người dùng'
-      errorDialog.value = true
+      message.error('Không tìm thấy thông tin người dùng')
       return
     }
 
     await roomTransferService.create({
-      contractId: selectedContract.value.id,
+      contractId: selectedContract.value.contractId,
       studentId: selectedContract.value.studentId,
       currentRoomId: selectedContract.value.roomId,
       currentRoomNumber: selectedContract.value.roomNumber,
@@ -736,13 +663,11 @@ async function submitTransfer() {
       reason: transferForm.value.reason.trim()
     })
 
-    successMessage.value = 'Yêu cầu chuyển phòng đã được gửi thành công!'
-    successDialog.value = true
+    message.success('Yêu cầu chuyển phòng đã được gửi thành công!')
     transferDialog.value = false
   } catch (err) {
     console.error('Error submitting transfer:', err)
-    errorMessage.value = err.response?.data?.message || err.message || 'Không thể gửi yêu cầu chuyển phòng'
-    errorDialog.value = true
+    message.error(err.response?.data?.message || err.message || 'Không thể gửi yêu cầu chuyển phòng')
   } finally {
     submitting.value = false
   }
@@ -771,12 +696,58 @@ function getContractStatusLabel(status) {
 
 function getContractStatusColor(status) {
   const colors = {
-    'Pending': 'warning',
-    'Active': 'success',
-    'Terminated': 'error',
-    'Expired': 'grey'
+    'Pending': 'orange',
+    'Active': 'green',
+    'Terminated': 'red',
+    'Expired': 'default'
   }
-  return colors[status] || 'grey'
+  return colors[status] || 'default'
+}
+
+function getTransferStatusColor(status) {
+  const colors = {
+    'Pending': 'orange',
+    'Approved': 'green',
+    'Rejected': 'red',
+    'Completed': 'blue'
+  }
+  return colors[status] || 'default'
+}
+
+function getTransferStatusColorHex(status) {
+  const colors = {
+    'Pending': '#faad14',
+    'Approved': '#52c41a',
+    'Rejected': '#ff4d4f',
+    'Completed': '#1890ff'
+  }
+  return colors[status] || '#d9d9d9'
+}
+
+function getTransferStatusLabel(status) {
+  const labels = {
+    'Pending': 'Chờ xử lý',
+    'Approved': 'Đã duyệt',
+    'Rejected': 'Từ chối',
+    'Completed': 'Hoàn thành'
+  }
+  return labels[status] || status
+}
+
+function getTransferStatusIconComponent(status) {
+  const icons = {
+    'Pending': CalendarOutlined,
+    'Approved': CheckCircleOutlined,
+    'Rejected': CloseOutlined,
+    'Completed': CheckCircleOutlined
+  }
+  return icons[status] || ExclamationCircleOutlined
+}
+
+function formatDateTime(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  return date.toLocaleString('vi-VN')
 }
 
 onMounted(() => {

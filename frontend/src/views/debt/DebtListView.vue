@@ -156,6 +156,7 @@ import { useRouter } from 'vue-router'
 import { UserOutlined, BellOutlined, DollarOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import billService from '@/services/billService'
+import axios from 'axios'
 
 const router = useRouter()
 const loading = ref(false)
@@ -287,14 +288,50 @@ function handleSearch() {
 
 async function sendReminder(debt) {
   try {
-    // Send reminder for all unpaid invoices of this student
-    for (const invoice of debt.invoices) {
-      await billService.sendReminder(invoice.id)
+    console.log('Sending reminder to student:', debt)
+    
+    // Calculate total debt amount
+    const totalDebtAmount = debt.totalDebt
+    const invoiceCount = debt.invoiceCount
+    const overdueDays = debt.maxOverdueDays
+    
+    // Create notification message
+    let notificationBody = `Bạn có ${invoiceCount} hóa đơn chưa thanh toán với tổng số tiền ${formatCurrency(totalDebtAmount)}.`
+    
+    if (overdueDays > 0) {
+      notificationBody += ` Đã quá hạn ${overdueDays} ngày. Vui lòng thanh toán sớm để tránh bị ngưng dịch vụ.`
+    } else {
+      notificationBody += ` Vui lòng thanh toán trước hạn để tránh phí phạt.`
     }
-    message.success(`Đã gửi email nhắc nợ đến ${debt.studentName}`)
-    loadData()
+    
+    // Send notification via API
+    await axios.post('http://localhost:5002/api/notifications', {
+      userId: debt.studentId,
+      title: 'Nhắc nhở thanh toán công nợ',
+      body: notificationBody,
+      type: 'InvoiceCreated',
+      iconType: 'warning',
+      actionUrl: '/student/my-invoices'
+    }, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    // Also send email reminder for all unpaid invoices
+    for (const invoice of debt.invoices) {
+      try {
+        await billService.sendReminder(invoice.id)
+      } catch (emailErr) {
+        console.error('Email reminder failed for invoice:', invoice.id, emailErr)
+      }
+    }
+    
+    message.success(`Đã gửi thông báo nhắc nợ đến ${debt.studentName}`)
+    await loadData()
   } catch (err) {
-    message.error('Gửi nhắc nợ thất bại')
+    console.error('Send reminder error:', err)
+    message.error(err.response?.data?.message || 'Gửi nhắc nợ thất bại')
   }
 }
 
