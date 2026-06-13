@@ -80,17 +80,28 @@
       <v-col cols="12" md="4">
         <v-card class="pa-5 mb-4" style="border:1px solid #e5e7eb">
           <h4 class="text-subtitle-2 font-weight-bold mb-4">
-            Bạn cùng phòng ({{ roomInfo.currentOccupants }}/{{ roomInfo.maxOccupants }})
+            Bạn cùng phòng ({{ actualOccupants }}/{{ roomInfo.maxOccupants || '?' }})
           </h4>
-          <v-empty-states v-if="roommates.length === 0" text="Chưa có thông tin bạn cùng phòng" />
-          <div v-else v-for="mate in roommates" :key="mate.id" class="d-flex align-center ga-3 mb-3">
-            <v-avatar size="36" color="primary" variant="tonal">
-              <v-icon size="16">mdi-account</v-icon>
-            </v-avatar>
-            <div>
-              <div class="text-body-2 font-weight-medium">{{ mate.name }}</div>
-              <div class="text-caption text-medium-emphasis">{{ mate.studentCode }}</div>
+          
+          <!-- Roommates list -->
+          <div v-if="roommates.length > 0">
+            <div v-for="mate in roommates" :key="mate.id" class="d-flex align-center ga-3 mb-3">
+              <v-avatar size="36" color="grey-lighten-3">
+                <v-icon size="18" color="grey-darken-2">mdi-account</v-icon>
+              </v-avatar>
+              <div>
+                <div class="text-body-2 font-weight-medium">{{ mate.name }}</div>
+                <div class="text-caption text-medium-emphasis">{{ mate.studentCode }}</div>
+              </div>
             </div>
+          </div>
+          
+          <!-- Empty state when alone -->
+          <div v-else class="text-center pa-4">
+            <v-icon size="40" color="grey-lighten-2">mdi-account-multiple-outline</v-icon>
+            <p class="text-caption text-medium-emphasis mt-2 mb-0">
+              Bạn đang ở một mình
+            </p>
           </div>
         </v-card>
 
@@ -109,11 +120,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { roomApplicationService } from '@/services/roomApplicationService'
 import { contractService } from '@/services/contractService'
+import { roomService } from '@/services/roomService'
+import { roomTypeService } from '@/services/roomTypeService'
+import { buildingService } from '@/services/buildingService'
+import { floorService } from '@/services/floorService'
 
 const loading = ref(false)
 const hasRoom = ref(false)
 const roomInfo = ref(null)
 const roommates = ref([])
+const actualOccupants = ref(0)
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
 
 const rules = [
   'Giữ vệ sinh phòng sạch sẽ',
@@ -156,53 +173,121 @@ async function loadMyRoom() {
       return
     }
 
-    // 1. Check for active contracts first - use /user/{userId} endpoint
+    // 1. Check for active contracts first
     const contracts = await contractService.getByUserId(userId)
     console.log('Contracts:', contracts)
     const activeContract = contracts.find(c => c.status === 'Active' || c.status === 'Pending')
     
     if (activeContract) {
       console.log('Found active contract:', activeContract)
-      roomInfo.value = {
-        roomNumber: activeContract.roomNumber,
-        buildingName: activeContract.buildingName,
-        floorNumber: '-',
-        roomTypeName: activeContract.roomTypeName,
-        currentOccupants: '-',
-        maxOccupants: '-',
-        pricePerMonth: activeContract.monthlyRent,
-        area: '-'
+      
+      // Try to load detailed room info, fallback to contract data if fails
+      try {
+        if (activeContract.roomId) {
+          const room = await roomService.getById(activeContract.roomId)
+          const roomType = await roomTypeService.getById(room.roomTypeId)
+          const building = await buildingService.getById(room.buildingId)
+          
+          let floorNumber = '-'
+          try {
+            const floor = await floorService.getById(room.floorId)
+            floorNumber = floor.floorNumber
+          } catch (e) {
+            console.warn('Could not load floor:', e)
+          }
+          
+          roomInfo.value = {
+            roomNumber: room.roomNumber,
+            buildingName: building.name,
+            floorNumber: floorNumber,
+            roomTypeName: roomType.name,
+            currentOccupants: room.currentOccupants,
+            maxOccupants: room.maxOccupants,
+            pricePerMonth: roomType.pricePerMonth,
+            area: roomType.area,
+            roomId: room.id
+          }
+          
+          // Load roommates
+          await loadRoommates(room.id)
+        } else {
+          throw new Error('No roomId in contract')
+        }
+      } catch (roomError) {
+        console.warn('Could not load detailed room info, using contract data:', roomError)
+        // Fallback to contract data
+        roomInfo.value = {
+          roomNumber: activeContract.roomNumber || 'N/A',
+          buildingName: activeContract.buildingName || 'N/A',
+          floorNumber: '-',
+          roomTypeName: activeContract.roomTypeName || 'N/A',
+          currentOccupants: '-',
+          maxOccupants: '-',
+          pricePerMonth: activeContract.monthlyRent || 0,
+          area: '-',
+          roomId: activeContract.roomId
+        }
       }
+      
       hasRoom.value = true
       return
     }
 
-    // 2. If no contract, check for applications - use /user/{userId} endpoint
+    // 2. Check for applications
     const applications = await roomApplicationService.getByUserId(userId)
     console.log('Applications:', applications)
     
-    // Tìm đơn đang chờ xử lý hoặc đã duyệt
     const appWithRoom = applications.find(app => 
-      app.status === 'Pending' || app.status === 'UnderReview' || app.status === 'Approved'
+      app.status === 'Approved' && app.assignedRoomId
     )
     
     if (appWithRoom) {
       console.log('Found application with room:', appWithRoom)
-      // Ưu tiên hiển thị assigned room, nếu không có thì hiển thị preferred room
-      const roomNumber = appWithRoom.assignedRoomNumber || appWithRoom.preferredRoomNumber
-      const buildingName = appWithRoom.assignedBuildingName || appWithRoom.preferredBuildingName
       
-      roomInfo.value = {
-        roomNumber: roomNumber,
-        buildingName: buildingName,
-        floorNumber: '-',
-        roomTypeName: appWithRoom.preferredRoomTypeName,
-        currentOccupants: '-',
-        maxOccupants: '-',
-        pricePerMonth: appWithRoom.preferredRoomPrice,
-        area: '-',
-        applicationStatus: appWithRoom.status
+      try {
+        const room = await roomService.getById(appWithRoom.assignedRoomId)
+        const roomType = await roomTypeService.getById(room.roomTypeId)
+        const building = await buildingService.getById(room.buildingId)
+        
+        let floorNumber = '-'
+        try {
+          const floor = await floorService.getById(room.floorId)
+          floorNumber = floor.floorNumber
+        } catch (e) {
+          console.warn('Could not load floor:', e)
+        }
+        
+        roomInfo.value = {
+          roomNumber: room.roomNumber,
+          buildingName: building.name,
+          floorNumber: floorNumber,
+          roomTypeName: roomType.name,
+          currentOccupants: room.currentOccupants,
+          maxOccupants: room.maxOccupants,
+          pricePerMonth: roomType.pricePerMonth,
+          area: roomType.area,
+          applicationStatus: appWithRoom.status,
+          roomId: room.id
+        }
+        
+        await loadRoommates(room.id)
+      } catch (roomError) {
+        console.warn('Could not load detailed room info from application:', roomError)
+        // Fallback
+        roomInfo.value = {
+          roomNumber: appWithRoom.assignedRoomNumber || appWithRoom.preferredRoomNumber || 'N/A',
+          buildingName: appWithRoom.assignedBuildingName || appWithRoom.preferredBuildingName || 'N/A',
+          floorNumber: '-',
+          roomTypeName: appWithRoom.preferredRoomTypeName || 'N/A',
+          currentOccupants: '-',
+          maxOccupants: '-',
+          pricePerMonth: appWithRoom.preferredRoomPrice || 0,
+          area: '-',
+          applicationStatus: appWithRoom.status,
+          roomId: appWithRoom.assignedRoomId
+        }
       }
+      
       hasRoom.value = true
       return
     }
@@ -216,6 +301,42 @@ async function loadMyRoom() {
     hasRoom.value = false
   } finally {
     loading.value = false
+  }
+}
+
+async function loadRoommates(roomId) {
+  try {
+    // Get all contracts for this room
+    const allContracts = await contractService.getAll()
+    const roomContracts = allContracts.filter(c => 
+      c.roomId === roomId && 
+      (c.status === 'Active' || c.status === 'Pending')
+    )
+    
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    
+    // Update currentOccupants with actual count
+    actualOccupants.value = roomContracts.length
+    if (roomInfo.value) {
+      roomInfo.value.currentOccupants = roomContracts.length
+    }
+    
+    // Map to roommate data (exclude current user)
+    roommates.value = roomContracts
+      .filter(c => c.userId !== user.id)
+      .map(c => ({
+        id: c.userId,
+        name: c.studentName || 'Sinh viên',
+        studentCode: c.studentCode || 'N/A'
+      }))
+    
+    console.log('Loaded roommates:', roommates.value)
+    console.log('Total occupants:', roomContracts.length)
+    console.log('actualOccupants.value:', actualOccupants.value)
+  } catch (error) {
+    console.error('Error loading roommates:', error)
+    roommates.value = []
+    actualOccupants.value = 0
   }
 }
 

@@ -84,7 +84,7 @@
               </div>
             </div>
             <v-divider class="my-8" />
-            <v-btn block color="primary" class="font-weight-bold rounded-lg" height="48">Liên hệ trực tiếp</v-btn>
+            <v-btn block color="primary" class="font-weight-bold rounded-lg contact"  height="48">Liên hệ trực tiếp</v-btn>
           </v-card>
         </v-col>
       </v-row>
@@ -112,6 +112,9 @@
   bottom: 0;
   background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
   pointer-events: none;
+}
+.contact{
+  color:white;
 }
 .banner-overlay {
   position: relative;

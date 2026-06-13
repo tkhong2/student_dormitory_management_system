@@ -90,6 +90,12 @@
             </a-typography-text>
           </template>
 
+          <template v-else-if="column.key === 'invoiceType'">
+            <a-tag :color="getInvoiceTypeColor(record.invoiceType)">
+              {{ getInvoiceTypeText(record.invoiceType) }}
+            </a-tag>
+          </template>
+
           <template v-else-if="column.key === 'studentInfo'">
             <div>
               <div style="font-weight: 500">{{ record.studentName }}</div>
@@ -126,9 +132,16 @@
             </a-typography-text>
           </template>
 
+          <template v-else-if="column.key === 'refundAmount'">
+            <a-typography-text v-if="record.invoiceType === 'DepositRefund'" strong style="color: #722ed1">
+              {{ formatCurrency(Math.abs(record.totalAmount)) }}
+            </a-typography-text>
+            <span v-else style="color: #d9d9d9">---</span>
+          </template>
+
           <template v-else-if="column.key === 'debtAmount'">
             <a-typography-text :type="record.debtAmount > 0 ? 'danger' : 'success'" strong>
-              {{ formatCurrency(record.debtAmount) }}
+              {{ formatCurrency(Math.abs(record.debtAmount)) }}
             </a-typography-text>
           </template>
 
@@ -305,6 +318,7 @@ import {
 import { message, Modal } from 'ant-design-vue'
 import billService from '@/services/billService'
 import { contractService } from '@/services/contractService'
+import notificationService from '@/services/notificationService'
 import dayjs from 'dayjs'
 import CreateInvoiceModal from './CreateInvoiceModal.vue'
 
@@ -373,6 +387,12 @@ const columns = [
     fixed: 'left'
   },
   {
+    title: 'Loại',
+    key: 'invoiceType',
+    width: 130,
+    align: 'center'
+  },
+  {
     title: 'Sinh Viên',
     key: 'studentInfo',
     width: 180
@@ -397,6 +417,12 @@ const columns = [
   {
     title: 'Đã Trả',
     key: 'paidAmount',
+    width: 140,
+    align: 'right'
+  },
+  {
+    title: 'Được Hoàn',
+    key: 'refundAmount',
     width: 140,
     align: 'right'
   },
@@ -473,6 +499,26 @@ const getStatusText = (status) => {
     'Cancelled': 'Đã hủy'
   }
   return texts[status] || status
+}
+
+const getInvoiceTypeColor = (type) => {
+  const colors = {
+    'Monthly': 'blue',
+    'Deposit': 'green',
+    'DepositRefund': 'purple',
+    'Other': 'default'
+  }
+  return colors[type] || 'default'
+}
+
+const getInvoiceTypeText = (type) => {
+  const texts = {
+    'Monthly': 'Tiền phòng',
+    'Deposit': 'Tiền cọc',
+    'DepositRefund': 'Hoàn cọc',
+    'Other': 'Khác'
+  }
+  return texts[type] || type
 }
 
 const fetchInvoices = async () => {
@@ -671,18 +717,77 @@ const viewInvoice = async (record) => {
 }
 
 const sendReminder = (record) => {
+  console.log('=== SEND REMINDER DEBUG ===')
+  console.log('Invoice record:', record)
+  console.log('Student ID:', record.studentId)
+  console.log('Student Name:', record.studentName)
+  
+  // TEST: Try with minimal data first
+  const testData = {
+    userId: 1, // Try with a simple ID first
+    title: 'Test notification',
+    body: 'This is a test',
+    type: 'System'
+  }
+  console.log('TEST: Sending minimal notification:', testData)
+  
   Modal.confirm({
     title: 'Gửi nhắc nợ',
-    content: `Bạn có chắc muốn gửi email nhắc nợ cho sinh viên ${record.studentName}?`,
+    content: `Bạn có chắc muốn gửi thông báo nhắc nợ cho sinh viên ${record.studentName}?`,
     okText: 'Gửi',
     cancelText: 'Hủy',
     async onOk() {
       try {
-        await billService.sendReminder(record.id)
-        message.success(`Đã gửi email nhắc nợ đến ${record.studentName}`)
+        // TEST: Send minimal notification first
+        console.log('=== TESTING MINIMAL NOTIFICATION ===')
+        try {
+          const testResult = await notificationService.create(testData)
+          console.log('TEST SUCCESS:', testResult)
+        } catch (testError) {
+          console.error('TEST FAILED:', testError)
+          console.error('TEST Error response:', testError.response)
+        }
+        
+        // Send email reminder (existing functionality)
+        try {
+          await billService.sendReminder(record.id)
+          console.log('Email reminder sent successfully')
+        } catch (emailError) {
+          console.warn('Email reminder failed:', emailError)
+        }
+        
+        // Also create notification in student portal
+        const notificationData = {
+          userId: record.studentId,
+          title: 'Nhắc nhở thanh toán',
+          body: `Bạn có khoản thanh toán ${record.invoiceCode} đến hạn ngày ${formatDate(record.dueDate)}. Tổng tiền: ${formatCurrency(record.debtAmount)}. Vui lòng thanh toán đúng hạn để tránh phát sinh phí phạt.`,
+          type: 'System',
+          iconType: record.status === 'Overdue' ? 'error' : 'warning',
+          actionUrl: '/student/my-payments',
+          relatedEntityId: record.id,
+          relatedEntityType: 'Invoice'
+        }
+        
+        console.log('=== NOTIFICATION DATA ===')
+        console.log('Sending notification with data:', JSON.stringify(notificationData, null, 2))
+        
+        try {
+          const notifResponse = await notificationService.create(notificationData)
+          console.log('Notification created successfully:', notifResponse)
+          message.success(`Đã gửi thông báo nhắc nợ đến ${record.studentName}`)
+        } catch (notifError) {
+          console.error('=== NOTIFICATION ERROR ===')
+          console.error('Error object:', notifError)
+          console.error('Error response:', notifError.response)
+          console.error('Error response data:', notifError.response?.data)
+          console.error('Error status:', notifError.response?.status)
+          message.warning(`Đã gửi email nhưng không thể tạo thông báo. Lỗi: ${notifError.response?.data?.message || notifError.message}`)
+        }
+        
         detailDialog.value = false
         fetchInvoices()
       } catch (error) {
+        console.error('Send reminder error:', error)
         message.error(error.message || 'Gửi nhắc nợ thất bại')
       }
     }

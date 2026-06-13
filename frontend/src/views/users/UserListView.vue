@@ -269,6 +269,22 @@
               />
             </a-form-item>
           </a-col>
+          <a-col :span="12" v-if="form.role === 'Student'">
+            <a-form-item label="Khoa">
+              <a-input 
+                v-model:value="form.faculty" 
+                placeholder="Nhập tên khoa"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="form.role === 'Student'">
+            <a-form-item label="Lớp">
+              <a-input 
+                v-model:value="form.classCode" 
+                placeholder="Nhập mã lớp (VD: K65-CNTT)"
+              />
+            </a-form-item>
+          </a-col>
           <a-col :span="12" v-if="!editMode">
             <a-form-item 
               label="Mật khẩu"
@@ -383,6 +399,8 @@ const form = ref({
   phone: '',
   role: 'Student',
   studentCode: '',
+  faculty: '',
+  classCode: '',
   gender: undefined,
   dateOfBirth: null,
   address: '',
@@ -418,13 +436,12 @@ const roleStats = computed(() => {
 const antColumns = [
   { title: 'Người dùng', key: 'fullName', width: 280 },
   { title: 'Username', dataIndex: 'username', key: 'username', width: 150, align: 'center' },
-  { title: 'Giới tính', key: 'gender', dataIndex: 'gender', width: 100, align: 'center' },
-  { title: 'Ngày sinh', key: 'dateOfBirth', dataIndex: 'dateOfBirth', width: 120, align: 'center' },
   { title: 'Vai trò', key: 'role', width: 120, align: 'center' },
+  { title: 'Mã SV', dataIndex: 'studentCode', key: 'studentCode', width: 100, align: 'center' },
+  { title: 'Khoa', dataIndex: 'faculty', key: 'faculty', width: 180, ellipsis: true },
+  { title: 'Lớp', dataIndex: 'classCode', key: 'classCode', width: 120, align: 'center' },
   { title: 'Số điện thoại', dataIndex: 'phone', key: 'phone', width: 130, align: 'center' },
-  { title: 'Địa chỉ', dataIndex: 'address', key: 'address', width: 250, ellipsis: true },
-  { title: 'Trạng thái', key: 'status', width: 130, align: 'center' },
-  { title: 'Ngày tạo', dataIndex: 'created', key: 'created', width: 130, align: 'center' },
+  { title: 'Trạng thái', key: 'status', width: 120, align: 'center' },
   { title: 'Thao tác', key: 'actions', width: 150, align: 'center', fixed: 'right' }
 ]
 
@@ -467,6 +484,9 @@ async function loadUsers() {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        studentCode: user.studentCode || '-',
+        faculty: user.faculty || '-',
+        classCode: user.classCode || '-',
         gender: user.gender ? (user.gender === 'Male' ? 'Nam' : user.gender === 'Female' ? 'Nữ' : user.gender) : '-',
         dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : '-',
         address: user.address || '-',
@@ -514,6 +534,8 @@ function openCreateDialog() {
     phone: '',
     role: 'Student',
     studentCode: '',
+    faculty: '',
+    classCode: '',
     gender: undefined,
     dateOfBirth: null,
     address: '',
@@ -541,6 +563,8 @@ function openEditDialog(user) {
       phone: userData.phone || '',
       role: userData.role,
       studentCode: userData.studentCode || '',
+      faculty: userData.faculty || '',
+      classCode: userData.classCode || '',
       gender: userData.gender,
       dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
       address: userData.address || '',
@@ -615,6 +639,8 @@ async function saveUser() {
       phone: form.value.phone,
       role: form.value.role,
       studentCode: form.value.studentCode,
+      faculty: form.value.faculty,
+      classCode: form.value.classCode,
       gender: form.value.gender,
       dateOfBirth: form.value.dateOfBirth ? dayjs(form.value.dateOfBirth).format('YYYY-MM-DD') : null,
       address: form.value.address,

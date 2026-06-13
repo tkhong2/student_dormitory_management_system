@@ -15,12 +15,55 @@
       </a-button>
     </div>
     
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm tên loại phòng..."
+            allow-clear
+            @search="handleSearch"
+          >
+            <template #prefix><SearchOutlined /></template>
+          </a-input-search>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-select
+            v-model:value="buildingFilter"
+            placeholder="Tòa nhà"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả tòa nhà</a-select-option>
+            <a-select-option v-for="building in buildings" :key="building.id" :value="building.id">
+              {{ building.name }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="8">
+          <a-select
+            v-model:value="statusFilter"
+            placeholder="Trạng thái"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả</a-select-option>
+            <a-select-option value="active">Hoạt động</a-select-option>
+            <a-select-option value="inactive">Ngừng</a-select-option>
+          </a-select>
+        </a-col>
+      </a-row>
+    </a-card>
+    
     <!-- Table Card -->
     <a-card :bordered="false" :loading="loading">
-      <p style="margin-bottom: 16px">Tổng: <strong>{{ roomTypes.length }}</strong> loại phòng</p>
+      <p style="margin-bottom: 16px">Tổng: <strong>{{ filteredRoomTypes.length }}</strong> loại phòng</p>
       
       <a-table 
-        :dataSource="roomTypes" 
+        :dataSource="filteredRoomTypes" 
         :columns="columns" 
         :rowKey="r => r.id"
         :pagination="{ pageSize: 10, showTotal: (total) => `Tổng ${total} loại phòng` }"
@@ -53,23 +96,33 @@
           </template>
           
           <template v-else-if="column.key === 'amenities'">
-            <a-space size="small" wrap>
-              <a-tag 
-                v-for="amenityId in record.amenityIds" 
-                :key="amenityId" 
-                :color="getAmenityColor(amenityId)" 
-                size="small"
-              >
-                {{ getAmenityName(amenityId) }}
-              </a-tag>
-              <!-- Fallback: hiển thị từ boolean fields nếu không có amenityIds -->
-              <template v-if="!record.amenityIds || record.amenityIds.length === 0">
-                <a-tag v-if="record.hasAirConditioner" color="cyan" size="small">Điều hòa</a-tag>
-                <a-tag v-if="record.hasWaterHeater" color="orange" size="small">Nóng lạnh</a-tag>
-                <a-tag v-if="record.hasPrivateBathroom" color="blue" size="small">WC riêng</a-tag>
-                <a-tag v-if="record.hasWindowView" color="green" size="small">Cửa sổ</a-tag>
+            <a-tooltip>
+              <template #title>
+                <div v-if="record.amenityIds && record.amenityIds.length > 0">
+                  <div v-for="amenityId in record.amenityIds" :key="amenityId" style="margin-bottom: 4px;">
+                    • {{ getAmenityName(amenityId) }}
+                  </div>
+                </div>
+                <div v-else-if="hasAnyAmenity(record)">
+                  <div v-if="record.hasAirConditioner">• Điều hòa</div>
+                  <div v-if="record.hasWaterHeater">• Nóng lạnh</div>
+                  <div v-if="record.hasPrivateBathroom">• WC riêng</div>
+                  <div v-if="record.hasWindowView">• Cửa sổ</div>
+                </div>
+                <div v-else>Không có tiện nghi</div>
               </template>
-            </a-space>
+              <a-button size="small" type="link">
+                <template v-if="record.amenityIds && record.amenityIds.length > 0">
+                  {{ record.amenityIds.length }} tiện nghi
+                </template>
+                <template v-else-if="hasAnyAmenity(record)">
+                  {{ countAmenities(record) }} tiện nghi
+                </template>
+                <template v-else>
+                  Không có
+                </template>
+              </a-button>
+            </a-tooltip>
           </template>
           
           <template v-else-if="column.key === 'isActive'">
@@ -198,8 +251,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import { SearchOutlined } from '@ant-design/icons-vue'
 import { roomTypeService } from '@/services/roomTypeService'
 import { buildingService } from '@/services/buildingService'
 import { amenityService } from '@/services/amenityService'
@@ -212,6 +266,11 @@ const dialog = ref(false)
 const deleteDialog = ref(false)
 const editTarget = ref(null)
 const deleteTarget = ref(null)
+
+// Filter states
+const search = ref('')
+const buildingFilter = ref('')
+const statusFilter = ref('')
 
 const form = ref({
   buildingId: null,
@@ -229,6 +288,37 @@ const form = ref({
   isActive: true
 })
 
+// Filtered room types
+const filteredRoomTypes = computed(() => {
+  let result = roomTypes.value
+
+  // Search by name
+  if (search.value) {
+    result = result.filter(rt => 
+      rt.name.toLowerCase().includes(search.value.toLowerCase()) ||
+      (rt.code && rt.code.toLowerCase().includes(search.value.toLowerCase()))
+    )
+  }
+
+  // Filter by building
+  if (buildingFilter.value) {
+    result = result.filter(rt => rt.buildingId === buildingFilter.value)
+  }
+
+  // Filter by status
+  if (statusFilter.value === 'active') {
+    result = result.filter(rt => rt.isActive === true)
+  } else if (statusFilter.value === 'inactive') {
+    result = result.filter(rt => rt.isActive === false)
+  }
+
+  return result
+})
+
+function handleSearch() {
+  // Trigger computed property re-evaluation
+}
+
 const columns = [
   { title: 'Tên', dataIndex: 'name', key: 'name', width: 180, fixed: 'left' },
   { title: 'Tòa nhà', key: 'building', width: 150 },
@@ -238,7 +328,7 @@ const columns = [
   { title: 'Giá thuê', key: 'price', width: 150 },
   { title: 'Tiền cọc', key: 'deposit', width: 130 },
   { title: 'Giá điện/nước', key: 'rates', width: 130 },
-  { title: 'Tiện nghi', key: 'amenities', width: 150 },
+  { title: 'Tiện nghi', key: 'amenities', width: 120 },
   { title: 'Trạng thái', key: 'isActive', width: 120 },
   { title: 'Thao tác', key: 'actions', width: 150, fixed: 'right' }
 ]
@@ -294,6 +384,20 @@ function getCapacityColor(capacity) {
   if (capacity <= 2) return 'orange'
   if (capacity <= 4) return 'blue'
   return 'purple'
+}
+
+function hasAnyAmenity(record) {
+  return record.hasAirConditioner || record.hasWaterHeater || 
+         record.hasPrivateBathroom || record.hasWindowView
+}
+
+function countAmenities(record) {
+  let count = 0
+  if (record.hasAirConditioner) count++
+  if (record.hasWaterHeater) count++
+  if (record.hasPrivateBathroom) count++
+  if (record.hasWindowView) count++
+  return count
 }
 
 function openCreate() {

@@ -1,350 +1,332 @@
 <template>
-  <div>
+  <div class="room-registration-page">
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="hero-overlay">
-        <v-container style="max-width: 1280px;">
-          <div class="text-center py-16">
-            <div class="hero-badge mb-6">
-              <v-icon size="20" class="mr-2">mdi-home-heart</v-icon>
-              <span>TÌM PHÒNG PHÙ HỢP</span>
+      <v-container style="max-width: 1280px" class="hero-container">
+        <v-row align="center">
+          <!-- Left Content -->
+          <v-col cols="12" md="6">
+            <div class="hero-badge mb-4">
+              <i class="fas fa-calendar-alt mr-2"></i>
+              NĂM HỌC 2024-2025
             </div>
-            <h1 class="hero-title mb-4">Đăng ký phòng ký túc xá</h1>
-            <p class="hero-subtitle mb-10">Chọn phòng phù hợp với nhu cầu và ngân sách của bạn</p>
             
-            <!-- Search & Filter -->
-            <v-card class="mx-auto pa-8 rounded-xl elevation-12" max-width="1000" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.98);">
-              <v-row align="center">
-                <v-col cols="12" md="3">
-                  <v-select
-                    v-model="filters.building"
-                    :items="buildings"
-                    label="Tòa nhà"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    clearable
-                    prepend-inner-icon="mdi-office-building"
-                  />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-select
-                    v-model="filters.roomType"
-                    :items="roomTypes"
-                    label="Loại phòng"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    clearable
-                    prepend-inner-icon="mdi-account-group"
-                  />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-select
-                    v-model="filters.priceRange"
-                    :items="priceRanges"
-                    label="Mức giá"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    clearable
-                    prepend-inner-icon="mdi-cash"
-                  />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-btn
-                    color="primary"
-                    size="large"
-                    block
-                    class="font-weight-bold"
-                    height="48"
-                    @click="searchRooms"
+            <h1 class="hero-title mb-4">
+              Tìm phòng phù hợp<br>với bạn
+            </h1>
+            
+            <p class="hero-subtitle mb-8">
+              Chọn phòng theo nhu cầu và ngân sách. Đăng ký nhanh,<br>
+              nhận phòng dễ dàng tại Ký túc xá Đại học Đà Nẵng.
+            </p>
+
+            <!-- Stats -->
+            <v-row class="stats-row mt-8">
+              <v-col cols="4">
+                <div class="stat-number">{{ stats.totalRooms }}</div>
+                <div class="stat-label">PHÒNG CÓ SẴN</div>
+              </v-col>
+              <v-col cols="4">
+                <div class="stat-number">{{ stats.totalBuildings }}</div>
+                <div class="stat-label">TÒA NHÀ</div>
+              </v-col>
+              <v-col cols="4">
+                <div class="stat-number">{{ stats.totalRoomTypes }}</div>
+                <div class="stat-label">LOẠI PHÒNG</div>
+              </v-col>
+            </v-row>
+          </v-col>
+
+          <!-- Right Filter Card -->
+          <v-col cols="12" md="6">
+            <v-card class="filter-card pa-6 rounded-xl" elevation="4">
+              <div class="filter-header mb-6">
+                <i class="fas fa-search text-orange mr-2"></i>
+                <span class="filter-title">Tìm phòng phù hợp</span>
+              </div>
+
+              <div class="mb-4">
+                <div class="input-label mb-2">TÒA NHÀ</div>
+                <select 
+                  v-model="filters.building" 
+                  class="filter-select"
+                >
+                  <option :value="null">Tất cả tòa nhà</option>
+                  <option v-for="building in buildings" :key="building" :value="building">
+                    {{ building }}
+                  </option>
+                </select>
+              </div>
+
+              <v-row class="mb-4">
+                <v-col cols="6" class="pr-2">
+                  <div class="input-label mb-2">LOẠI PHÒNG</div>
+                  <select 
+                    v-model="filters.roomType" 
+                    class="filter-select"
                   >
-                    <v-icon start>mdi-magnify</v-icon>
-                    Tìm kiếm
-                  </v-btn>
+                    <option :value="null">Tất cả</option>
+                    <option v-for="roomType in roomTypes" :key="roomType" :value="roomType">
+                      {{ roomType }}
+                    </option>
+                  </select>
+                </v-col>
+                <v-col cols="6" class="pl-2">
+                  <div class="input-label mb-2">MỨC GIÁ</div>
+                  <select 
+                    v-model="filters.priceRange" 
+                    class="filter-select"
+                  >
+                    <option :value="null">Tất cả</option>
+                    <option v-for="price in priceRanges" :key="price" :value="price">
+                      {{ price }}
+                    </option>
+                  </select>
                 </v-col>
               </v-row>
+
+              <v-btn
+                block
+                size="large"
+                class="search-btn"
+                @click="searchRooms"
+              >
+                <i class="fas fa-search mr-2"></i>
+                Tìm kiếm phòng
+              </v-btn>
             </v-card>
-          </div>
-        </v-container>
-      </div>
+          </v-col>
+        </v-row>
+      </v-container>
     </section>
 
-    <!-- Room List Section -->
-    <section class="py-12" style="background-color: #f8fafc;">
-      <v-container style="max-width: 1280px;">
-        <div class="d-flex justify-space-between align-center mb-8">
-          <div>
-            <h2 class="text-h4 font-weight-bold mb-2">Phòng có sẵn</h2>
-            <p class="text-body-1 opacity-70">Tìm thấy {{ filteredRooms.length }} phòng phù hợp</p>
+    <!-- Announcement Bar -->
+    <div class="announcement-bar">
+      <v-container style="max-width: 1280px">
+        <div class="announcement-content">
+          <div v-for="building in buildingStats" :key="building.name" class="announcement-item">
+            <i class="fas fa-map-marker-alt mr-2 announcement-icon"></i>
+            {{ building.name }}: {{ building.availableRooms }} phòng trống
           </div>
-          <v-btn-toggle v-model="viewMode" mandatory density="compact" color="primary">
-            <v-btn value="grid" icon="mdi-view-grid" />
-            <v-btn value="list" icon="mdi-view-list" />
-          </v-btn-toggle>
+          <div class="announcement-deadline">
+            <i class="fas fa-calendar-check mr-2 announcement-icon"></i>
+            Hạn đăng ký: 30/06/2025
+          </div>
+        </div>
+      </v-container>
+    </div>
+
+    <!-- Room List Section -->
+    <section class="room-list-section py-12">
+      <v-container style="max-width: 1280px">
+        <!-- Header -->
+        <div class="section-header mb-6">
+          <div>
+            <h2 class="section-title">Phòng có sẵn</h2>
+            <p class="section-subtitle">Tìm thấy {{ filteredRooms.length }} phòng phù hợp</p>
+          </div>
+
+          <!-- View Toggle -->
+          <div class="view-toggle">
+            <button
+              :class="['view-btn', { active: viewMode === 'grid' }]"
+              @click="viewMode = 'grid'"
+            >
+              <i class="fas fa-th"></i>
+            </button>
+            <button
+              :class="['view-btn', { active: viewMode === 'list' }]"
+              @click="viewMode = 'list'"
+            >
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Grid View -->
-        <v-row v-if="viewMode === 'grid'">
-          <v-col v-for="room in filteredRooms" :key="room.id" cols="12" sm="6" lg="4">
-            <v-card class="room-card rounded-xl" elevation="2">
-              <div class="room-image">
-                <v-img :src="room.image" height="200" cover>
-                  <div class="room-badge">
-                    <v-chip color="success" size="small" class="font-weight-bold">
-                      {{ room.available }} chỗ trống
-                    </v-chip>
-                  </div>
-                </v-img>
+        <!-- Filter Chips -->
+        <div class="filter-chips mb-6">
+          <button
+            :class="['filter-chip', { active: filterChip === 'all' }]"
+            @click="filterChip = 'all'"
+          >
+            Tất cả
+            <span class="chip-count">{{ rooms.length }}</span>
+          </button>
+          <button
+            :class="['filter-chip', { active: filterChip === '2' }]"
+            @click="filterChip = '2'"
+          >
+            2 người
+            <span class="chip-count orange">{{ rooms.filter(r => r.capacity === 2).length }}</span>
+          </button>
+          <button
+            :class="['filter-chip', { active: filterChip === '4' }]"
+            @click="filterChip = '4'"
+          >
+            4 người
+            <span class="chip-count orange">{{ rooms.filter(r => r.capacity === 4).length }}</span>
+          </button>
+          <button
+            :class="['filter-chip', { active: filterChip === '6' }]"
+            @click="filterChip = '6'"
+          >
+            6 người
+            <span class="chip-count orange">{{ rooms.filter(r => r.capacity === 6).length }}</span>
+          </button>
+          <button
+            :class="['filter-chip', { active: filterChip === 'wc' }]"
+            @click="filterChip = 'wc'"
+          >
+            WC riêng
+          </button>
+          <button
+            :class="['filter-chip', { active: filterChip === 'ac' }]"
+            @click="filterChip = 'ac'"
+          >
+            Máy lạnh
+          </button>
+        </div>
+
+        <!-- Room Cards Grid -->
+        <v-row v-if="viewMode === 'grid' && !loading">
+          <v-col v-for="room in paginatedRooms" :key="room.id" cols="12" sm="6" md="4" lg="3">
+            <v-card class="room-card" elevation="2">
+              <!-- Room Image -->
+              <div class="room-image-wrapper">
+                <v-img
+                  :src="room.image"
+                  height="200"
+                  cover
+                  class="room-image"
+                />
+                <div class="room-badge">
+                  <span :class="['badge', room.available > 0 ? 'success' : 'error']">
+                    {{ room.available }} chỗ trống
+                  </span>
+                </div>
+                <div class="room-building">{{ room.building }}</div>
               </div>
-              
-              <v-card-text class="pa-6">
-                <div class="d-flex justify-space-between align-center mb-3">
-                  <h3 class="text-h6 font-weight-bold">{{ room.name }}</h3>
-                  <v-chip color="primary" size="small" variant="tonal">{{ room.building }}</v-chip>
-                </div>
-                
-                <div class="mb-4">
-                  <div class="d-flex align-center mb-2">
-                    <v-icon size="18" color="primary" class="mr-2">mdi-account-group</v-icon>
-                    <span class="text-body-2">{{ room.capacity }} người/phòng</span>
+
+              <!-- Room Info -->
+              <v-card-text class="pa-4">
+                <h3 class="room-name mb-3">{{ room.name }}</h3>
+
+                <div class="room-details mb-4">
+                  <div class="detail-item">
+                    <i class="fas fa-users"></i>
+                    {{ room.capacity }} người/phòng
                   </div>
-                  <div class="d-flex align-center mb-2">
-                    <v-icon size="18" color="primary" class="mr-2">mdi-ruler-square</v-icon>
-                    <span class="text-body-2">{{ room.area }} m²</span>
+                  <div class="detail-item">
+                    <i class="fas fa-ruler-combined"></i>
+                    {{ room.area }} m²
                   </div>
-                  <div class="d-flex align-center">
-                    <v-icon size="18" color="primary" class="mr-2">mdi-air-conditioner</v-icon>
-                    <span class="text-body-2">{{ room.facilities }}</span>
+                  <div class="detail-item">
+                    <i class="fas fa-check-circle"></i>
+                    {{ room.facilitiesShort }}
                   </div>
                 </div>
 
-                <v-divider class="my-4" />
-
-                <div class="d-flex justify-space-between align-center">
-                  <div>
-                    <div class="text-caption opacity-70">Giá thuê/tháng</div>
-                    <div class="text-h6 font-weight-bold text-primary">{{ formatPrice(room.price) }}</div>
-                  </div>
-                  <v-btn
-                    color="primary"
-                    variant="flat"
-                    class="font-weight-bold"
-                    @click="openRegistrationDialog(room)"
-                  >
-                    Đăng ký
-                  </v-btn>
+                <div class="room-footer">
+                  <div class="room-price">{{ formatPrice(room.price) }}</div>
+                  <button class="details-btn" @click="viewRoomDetails(room)">
+                    Xem chi tiết
+                  </button>
                 </div>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
 
-        <!-- List View -->
-        <div v-else>
-          <v-card v-for="room in filteredRooms" :key="room.id" class="mb-4 rounded-xl" elevation="2">
-            <v-row no-gutters>
-              <v-col cols="12" md="4">
-                <v-img :src="room.image" height="100%" min-height="200" cover>
-                  <div class="room-badge">
-                    <v-chip color="success" size="small" class="font-weight-bold">
-                      {{ room.available }} chỗ trống
-                    </v-chip>
-                  </div>
-                </v-img>
-              </v-col>
-              <v-col cols="12" md="8">
-                <v-card-text class="pa-6">
-                  <div class="d-flex justify-space-between align-center mb-3">
-                    <div>
-                      <h3 class="text-h6 font-weight-bold mb-1">{{ room.name }}</h3>
-                      <v-chip color="primary" size="small" variant="tonal">{{ room.building }}</v-chip>
-                    </div>
-                    <div class="text-right">
-                      <div class="text-caption opacity-70">Giá thuê/tháng</div>
-                      <div class="text-h6 font-weight-bold text-primary">{{ formatPrice(room.price) }}</div>
-                    </div>
-                  </div>
-
-                  <v-row class="mb-4">
-                    <v-col cols="4">
-                      <div class="d-flex align-center">
-                        <v-icon size="18" color="primary" class="mr-2">mdi-account-group</v-icon>
-                        <span class="text-body-2">{{ room.capacity }} người</span>
-                      </div>
-                    </v-col>
-                    <v-col cols="4">
-                      <div class="d-flex align-center">
-                        <v-icon size="18" color="primary" class="mr-2">mdi-ruler-square</v-icon>
-                        <span class="text-body-2">{{ room.area }} m²</span>
-                      </div>
-                    </v-col>
-                    <v-col cols="4">
-                      <div class="d-flex align-center">
-                        <v-icon size="18" color="primary" class="mr-2">mdi-air-conditioner</v-icon>
-                        <span class="text-body-2">{{ room.facilities }}</span>
-                      </div>
-                    </v-col>
-                  </v-row>
-
-                  <div class="d-flex justify-end">
-                    <v-btn
-                      color="primary"
-                      variant="flat"
-                      class="font-weight-bold"
-                      @click="openRegistrationDialog(room)"
-                    >
-                      Đăng ký ngay
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-col>
-            </v-row>
-          </v-card>
+        <!-- Loading -->
+        <div v-if="loading" class="loading-wrapper">
+          <v-progress-circular indeterminate color="orange" size="64" />
+          <p class="loading-text">Đang tải danh sách phòng...</p>
         </div>
 
         <!-- Empty State -->
-        <v-card v-if="filteredRooms.length === 0" class="pa-12 text-center rounded-xl" elevation="0">
-          <v-icon size="80" color="grey-lighten-2">mdi-home-search-outline</v-icon>
-          <h3 class="text-h6 font-weight-bold mt-4 mb-2">Không tìm thấy phòng phù hợp</h3>
-          <p class="text-body-2 opacity-70">Vui lòng thử lại với bộ lọc khác</p>
-        </v-card>
+        <div v-if="!loading && filteredRooms.length === 0" class="empty-state">
+          <i class="fas fa-search fa-4x mb-4"></i>
+          <h3>Không tìm thấy phòng phù hợp</h3>
+          <v-btn color="orange" class="mt-4 text-white" @click="resetFilters">
+            Xem tất cả phòng
+          </v-btn>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="!loading && filteredRooms.length > 0" class="pagination-wrapper mt-8">
+          <v-pagination
+            v-model="pagination.current"
+            :length="Math.ceil(filteredRooms.length / pagination.pageSize)"
+            :total-visible="7"
+            color="orange"
+          />
+        </div>
       </v-container>
     </section>
 
-    <!-- Registration Dialog -->
-    <v-dialog v-model="registrationDialog" max-width="600">
-      <v-card class="rounded-xl">
-        <v-card-title class="pa-6 bg-primary text-white">
-          <h3 class="text-h6 font-weight-bold">Đăng ký phòng {{ selectedRoom?.name }}</h3>
-        </v-card-title>
+    <!-- Room Details Dialog -->
+    <v-dialog v-model="detailsDialog" max-width="900">
+      <v-card v-if="selectedRoom" class="details-dialog">
+        <div class="dialog-header">
+          <div>
+            <h2 class="dialog-title">{{ selectedRoom.name }}</h2>
+            <p class="dialog-subtitle">{{ selectedRoom.building }} · {{ selectedRoom.roomTypeName }}</p>
+          </div>
+          <button class="close-btn" @click="detailsDialog = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
 
         <v-card-text class="pa-6">
-          <v-form ref="registrationForm">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="registrationData.fullName"
-                  label="Họ và tên *"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng nhập họ tên']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="registrationData.studentId"
-                  label="Mã sinh viên *"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng nhập mã sinh viên']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="registrationData.phone"
-                  label="Số điện thoại *"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng nhập số điện thoại']"
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="registrationData.email"
-                  label="Email *"
-                  type="email"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng nhập email']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="registrationData.gender"
-                  :items="['Nam', 'Nữ']"
-                  label="Giới tính *"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng chọn giới tính']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="registrationData.dateOfBirth"
-                  label="Ngày sinh *"
-                  type="date"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Vui lòng nhập ngày sinh']"
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="registrationData.address"
-                  label="Địa chỉ thường trú"
-                  variant="outlined"
-                  density="comfortable"
-                  rows="2"
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="registrationData.note"
-                  label="Ghi chú"
-                  variant="outlined"
-                  density="comfortable"
-                  rows="2"
-                  placeholder="Yêu cầu đặc biệt hoặc thông tin bổ sung..."
-                />
-              </v-col>
-            </v-row>
-          </v-form>
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-img :src="selectedRoom.image" class="rounded-lg" />
+            </v-col>
+            <v-col cols="12" md="6">
+              <h3 class="mb-4">Thông tin phòng</h3>
+              <div class="info-list">
+                <div class="info-item">
+                  <span>Sức chứa:</span>
+                  <strong>{{ selectedRoom.capacity }} người</strong>
+                </div>
+                <div class="info-item">
+                  <span>Diện tích:</span>
+                  <strong>{{ selectedRoom.area }} m²</strong>
+                </div>
+                <div class="info-item">
+                  <span>Giá thuê:</span>
+                  <strong class="price-highlight">{{ formatPrice(selectedRoom.price) }}</strong>
+                </div>
+                <div class="info-item">
+                  <span>Còn trống:</span>
+                  <span :class="['badge', selectedRoom.available > 0 ? 'success' : 'error']">
+                    {{ selectedRoom.available }} chỗ
+                  </span>
+                </div>
+              </div>
 
-          <v-alert type="info" variant="tonal" class="mt-4">
-            <div class="text-body-2">
-              <strong>Lưu ý:</strong> Sau khi gửi đăng ký, bạn sẽ nhận được email xác nhận trong vòng 24h. 
-              Vui lòng chuẩn bị đầy đủ giấy tờ theo yêu cầu.
-            </div>
-          </v-alert>
+              <v-divider class="my-5" />
+
+              <h3 class="mb-3">Tiện nghi</h3>
+              <div class="amenities-list">
+                <span v-for="amenity in selectedRoom.amenities" :key="amenity" class="amenity-chip">
+                  {{ amenity }}
+                </span>
+              </div>
+
+              <v-btn
+                block
+                size="large"
+                class="register-btn mt-6"
+                :disabled="selectedRoom.available === 0"
+                @click="registerRoom"
+              >
+                <i class="fas fa-pen-to-square mr-2"></i>
+                Đăng ký phòng này
+              </v-btn>
+            </v-col>
+          </v-row>
         </v-card-text>
-
-        <v-card-actions class="pa-6 pt-0">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="registrationDialog = false"
-          >
-            Hủy
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            class="font-weight-bold px-6"
-            @click="submitRegistration"
-          >
-            Gửi đăng ký
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Success Dialog -->
-    <v-dialog v-model="successDialog" max-width="500">
-      <v-card class="rounded-xl pa-8">
-        <div class="text-center">
-          <div class="d-flex justify-center mb-4">
-            <v-icon size="80" color="success">mdi-check-circle</v-icon>
-          </div>
-          <h3 class="text-h5 font-weight-bold mb-2">Đăng ký thành công!</h3>
-          <p class="text-body-1 opacity-70 mb-6">
-            Chúng tôi đã nhận được đơn đăng ký của bạn. Vui lòng kiểm tra email để biết thêm chi tiết.
-          </p>
-          <v-btn color="primary" variant="flat" class="font-weight-bold" @click="successDialog = false">
-            Đóng
-          </v-btn>
-        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -353,18 +335,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { roomService } from '@/services/roomService'
-import { buildingService } from '@/services/buildingService'
-import { roomTypeService } from '@/services/roomTypeService'
+import axios from 'axios'
 
 const router = useRouter()
+const loading = ref(true)
 const viewMode = ref('grid')
-const registrationDialog = ref(false)
-const successDialog = ref(false)
+const detailsDialog = ref(false)
 const selectedRoom = ref(null)
-const registrationForm = ref(null)
-const loading = ref(false)
+const filterChip = ref('all')
 
 const filters = ref({
   building: null,
@@ -372,22 +350,27 @@ const filters = ref({
   priceRange: null
 })
 
-const registrationData = ref({
-  fullName: '',
-  studentId: '',
-  phone: '',
-  email: '',
-  gender: '',
-  dateOfBirth: '',
-  address: '',
-  note: ''
+const pagination = ref({
+  current: 1,
+  pageSize: 12
 })
 
-// Data from API
+const stats = ref({
+  totalRooms: 0,
+  totalBuildings: 0,
+  totalRoomTypes: 0
+})
+
+const buildingStats = ref([])
 const rooms = ref([])
 const buildings = ref([])
 const roomTypes = ref([])
-const priceRanges = ['Dưới 500k', '500k - 1tr', '1tr - 1.5tr', 'Trên 1.5tr']
+const priceRanges = ref([
+  'Dưới 500k',
+  '500k - 1tr',
+  '1tr - 1.5tr',
+  'Trên 1.5tr'
+])
 
 onMounted(async () => {
   await loadData()
@@ -396,28 +379,69 @@ onMounted(async () => {
 async function loadData() {
   loading.value = true
   try {
-    // Load buildings, room types, and rooms
-    console.log('Loading data from APIs...')
     const [buildingsData, roomTypesData, roomsData] = await Promise.all([
-      buildingService.getAll(),
-      roomTypeService.getAll(),
-      roomService.getAll()
+      axios.get('http://localhost:5003/api/buildings').then(r => r.data),
+      axios.get('http://localhost:5003/api/roomtypes').then(r => r.data),
+      axios.get('http://localhost:5003/api/rooms').then(r => r.data)
     ])
 
-    console.log('Buildings:', buildingsData)
-    console.log('Room Types:', roomTypesData)
-    console.log('Rooms:', roomsData)
+    console.log('Buildings data:', buildingsData)
+    console.log('Room types data:', roomTypesData)
+    console.log('Rooms data:', roomsData)
 
     buildings.value = buildingsData.map(b => b.name)
     roomTypes.value = roomTypesData.map(rt => rt.name)
     
-    // Map rooms data to display format
+    console.log('Buildings array:', buildings.value)
+    console.log('Room types array:', roomTypes.value)
+    
+    // Calculate building stats
+    buildingStats.value = buildingsData.map(building => {
+      const buildingRooms = roomsData.filter(r => r.buildingId === building.id)
+      const availableRooms = buildingRooms.filter(r => {
+        const available = r.maxOccupants - r.currentOccupants
+        return available > 0 && (r.status === 'Available' || r.status === 'Maintenance')
+      })
+      return {
+        name: building.name,
+        availableRooms: availableRooms.length
+      }
+    })
+    
+    stats.value = {
+      totalRooms: roomsData.filter(r => {
+        const available = r.maxOccupants - r.currentOccupants
+        return available > 0 && (r.status === 'Available' || r.status === 'Maintenance')
+      }).length,
+      totalBuildings: buildingsData.length,
+      totalRoomTypes: roomTypesData.length
+    }
+
+    const roomTypeAmenitiesMap = {}
+    for (const roomType of roomTypesData) {
+      try {
+        const amenitiesResponse = await axios.get(`http://localhost:5003/api/roomtypes/${roomType.id}/amenities`)
+        roomTypeAmenitiesMap[roomType.id] = amenitiesResponse.data || []
+      } catch {
+        roomTypeAmenitiesMap[roomType.id] = []
+      }
+    }
+    
     rooms.value = roomsData
-      // Tạm thời bỏ filter để debug
-      // .filter(r => r.status === 'Available' && r.currentOccupants < r.maxOccupants)
+      .filter(room => {
+        const available = room.maxOccupants - room.currentOccupants
+        return (available > 0 && room.status === 'Available') || room.status === 'Maintenance'
+      })
       .map(room => {
         const roomType = roomTypesData.find(rt => rt.id === room.roomTypeId)
         const building = buildingsData.find(b => b.id === room.buildingId)
+        
+        const roomTypeAmenities = roomTypeAmenitiesMap[room.roomTypeId] || []
+        const amenityNames = roomTypeAmenities.map(a => a.name)
+        
+        if (roomType?.hasAirConditioner && !amenityNames.includes('Điều hòa')) amenityNames.push('Điều hòa')
+        if (roomType?.hasWaterHeater && !amenityNames.includes('Nóng lạnh')) amenityNames.push('Nóng lạnh')
+        if (roomType?.hasPrivateBathroom && !amenityNames.includes('WC riêng')) amenityNames.push('WC riêng')
         
         return {
           id: room.id,
@@ -427,33 +451,24 @@ async function loadData() {
           capacity: room.maxOccupants,
           area: roomType?.area || 25,
           price: roomType?.pricePerMonth || 0,
-          available: room.maxOccupants - room.currentOccupants,
-          facilities: getFacilities(roomType),
-          image: roomType?.thumbnailUrl || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
+          available: Math.max(0, room.maxOccupants - room.currentOccupants),
+          facilities: amenityNames.join(', ') || 'Tiện nghi cơ bản',
+          facilitiesShort: amenityNames.slice(0, 2).join(', ') || 'Tiện nghi cơ bản',
+          amenities: amenityNames,
+          image: roomType?.thumbnailUrl || `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop&seed=${room.id}`,
           roomTypeId: room.roomTypeId,
-          roomTypeName: roomType?.name || 'N/A'
+          roomTypeName: roomType?.name || 'N/A',
+          status: room.status
         }
       })
-      
-    console.log('Mapped rooms:', rooms.value)
-    console.log(`Total available rooms: ${rooms.value.length}`)
+      .sort((a, b) => b.available - a.available)
+    
+    console.log('Final rooms array:', rooms.value.length, 'rooms')
   } catch (error) {
     console.error('Error loading data:', error)
-    message.error('Không thể tải danh sách phòng: ' + (error.message || 'Unknown error'))
   } finally {
     loading.value = false
   }
-}
-
-function getFacilities(roomType) {
-  if (!roomType) return 'Tiện nghi cơ bản'
-  
-  const facilities = []
-  if (roomType.hasAirConditioner) facilities.push('Điều hòa')
-  if (roomType.hasWaterHeater) facilities.push('Nóng lạnh')
-  if (roomType.hasPrivateBathroom) facilities.push('WC riêng')
-  
-  return facilities.length > 0 ? facilities.join(', ') : 'Tiện nghi cơ bản'
 }
 
 const filteredRooms = computed(() => {
@@ -477,150 +492,468 @@ const filteredRooms = computed(() => {
     })
   }
 
+  if (filterChip.value !== 'all') {
+    if (['2', '4', '6'].includes(filterChip.value)) {
+      result = result.filter(r => r.capacity === parseInt(filterChip.value))
+    } else if (filterChip.value === 'wc') {
+      result = result.filter(r => r.amenities.some(a => a.includes('WC')))
+    } else if (filterChip.value === 'ac') {
+      result = result.filter(r => r.amenities.some(a => a.includes('Điều hòa') || a.includes('Máy lạnh')))
+    }
+  }
+
   return result
 })
 
-const formatPrice = (price) => {
+const paginatedRooms = computed(() => {
+  const start = (pagination.value.current - 1) * pagination.value.pageSize
+  const end = start + pagination.value.pageSize
+  return filteredRooms.value.slice(start, end)
+})
+
+function searchRooms() {
+  pagination.value.current = 1
+  filterChip.value = 'all' // Reset chip filter when using dropdowns
+}
+
+function resetFilters() {
+  filters.value = { building: null, roomType: null, priceRange: null }
+  filterChip.value = 'all'
+  pagination.value.current = 1
+}
+
+function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
-const searchRooms = () => {
-  // Filter is reactive, so this just triggers a re-render
-  console.log('Searching with filters:', filters.value)
+function viewRoomDetails(room) {
+  selectedRoom.value = room
+  detailsDialog.value = true
 }
 
-const openRegistrationDialog = (room) => {
-  // Kiểm tra xem user đã đăng nhập chưa
-  const token = localStorage.getItem('token')
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
-  
-  if (!token || !user) {
-    // Lưu thông tin phòng đã chọn vào localStorage để dùng sau khi login
-    localStorage.setItem('selectedRoom', JSON.stringify(room))
-    // Redirect đến trang login
-    router.push('/login')
-    return
-  }
-
-  // Nếu là sinh viên và đã đăng nhập, redirect đến trang đăng ký của sinh viên
-  if (user.role === 'Student') {
-    localStorage.setItem('selectedRoom', JSON.stringify(room))
-    router.push('/student/room-registration')
-    return
-  }
-
-  // Nếu không phải sinh viên, hiển thị thông báo
-  message.warning('Chỉ sinh viên mới có thể đăng ký phòng')
-}
-
-const submitRegistration = async () => {
-  const { valid } = await registrationForm.value.validate()
-  
-  if (valid) {
-    // TODO: Send registration data to API
-    console.log('Registration data:', {
-      ...registrationData.value,
-      roomId: selectedRoom.value.id,
-      roomName: selectedRoom.value.name
-    })
-
-    registrationDialog.value = false
-    successDialog.value = true
-
-    // Reset form
-    registrationData.value = {
-      fullName: '',
-      studentId: '',
-      phone: '',
-      email: '',
-      gender: '',
-      dateOfBirth: '',
-      address: '',
-      note: ''
-    }
-  }
+function registerRoom() {
+  localStorage.setItem('selectedRoom', JSON.stringify(selectedRoom.value))
+  router.push('/student/room-registration')
 }
 </script>
 
 <style scoped>
-.hero-section {
-  background: linear-gradient(135deg, rgba(255, 107, 0, 0.95), rgba(255, 136, 0, 0.9)), url('/images/hero_dormitory.png');
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  overflow: hidden;
-}
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
-  pointer-events: none;
-}
-.hero-overlay {
-  position: relative;
-  z-index: 1;
-  color: white;
-}
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
-  padding: 10px 24px;
-  border-radius: 50px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  border: 1px solid rgba(255,255,255,0.3);
-}
-.hero-title {
-  font-size: 3.5rem;
-  font-weight: 900;
-  line-height: 1.1;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  letter-spacing: -1px;
-}
-.hero-subtitle {
-  font-size: 1.3rem;
-  font-weight: 500;
-  opacity: 0.95;
-  line-height: 1.6;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+.room-registration-page {
+  background: #f5f5f5;
+  min-height: 100vh;
 }
 
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.hero-container {
+  padding-top: 80px !important;
+  padding-bottom: 80px !important;
+}
+
+.hero-badge {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 6px 14px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hero-title {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+
+
+.hero-subtitle {
+  font-size: 15px;
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+.stats-row .stat-number {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.stats-row .stat-label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* Filter Card */
+.filter-card {
+  background: white !important;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-title {
+  font-weight: 600;
+  color: #666;
+}
+
+.input-label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.search-btn {
+  background: #ff9800 !important;
+  color: white !important;
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* Custom Select Dropdown */
+.filter-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-select:hover {
+  border-color: #ff9800;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #ff9800;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
+}
+
+.filter-select option {
+  padding: 8px;
+}
+
+/* Announcement Bar */
+.announcement-bar {
+  background: #1a1a1a;
+  padding: 16px 0;
+}
+
+.announcement-content {
+  display: flex;
+  gap: 40px;
+  font-size: 13px;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.announcement-icon {
+  color: white !important;
+}
+
+.announcement-item {
+  color: white;
+  display: inline-flex;
+  align-items: center;
+}
+
+.announcement-deadline {
+  margin-left: auto;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Room List Section */
+.room-list-section {
+  background: #fafafa;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.section-subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.view-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn.active {
+  background: #ff9800;
+  color: white;
+  border-color: #ff9800;
+}
+
+/* Filter Chips */
+.filter-chips {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-chip.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+.chip-count {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.chip-count.orange {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+}
+
+/* Room Card */
 .room-card {
-  transition: all 0.3s ease;
+  border-radius: 12px !important;
+  overflow: hidden;
   height: 100%;
-  border: 2px solid transparent;
+  transition: transform 0.2s;
 }
 
 .room-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(255, 107, 0, 0.2) !important;
-  border-color: #ff6b00;
+  transform: translateY(-4px);
+}
+
+.room-image-wrapper {
+  position: relative;
+  background: #2c3e50;
 }
 
 .room-image {
-  position: relative;
-  overflow: hidden;
+  opacity: 0.7;
 }
 
 .room-badge {
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 1;
 }
 
-.opacity-70 {
-  opacity: 0.7;
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.opacity-80 {
+.badge.success {
+  background: #4caf50;
+  color: white;
+}
+
+.badge.error {
+  background: #f44336;
+  color: white;
+}
+
+.room-building {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  color: white;
+  font-size: 11px;
   opacity: 0.8;
+}
+
+.room-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.room-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.detail-item i {
+  width: 16px;
+  color: #666;
+}
+
+.room-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff9800;
+}
+
+.details-btn {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.details-btn:hover {
+  background: #34495e;
+}
+
+/* Loading & Empty */
+.loading-wrapper,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.loading-text {
+  margin-top: 16px;
+}
+
+/* Pagination */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+/* Dialog */
+.details-dialog .dialog-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.dialog-subtitle {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.price-highlight {
+  font-size: 18px;
+  color: #ff9800;
+}
+
+.amenities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.amenity-chip {
+  background: #f5f5f5;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  border: 1px solid #e0e0e0;
+}
+
+.register-btn {
+  background: #ff9800 !important;
+  color: white !important;
+  text-transform: none;
+  font-weight: 600;
 }
 </style>

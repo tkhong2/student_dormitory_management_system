@@ -158,10 +158,12 @@ public class AppDbContext : DbContext
             e.Property(x => x.ActionUrl).HasMaxLength(200);
             e.Property(x => x.IconType).HasMaxLength(10);
             e.Property(x => x.RelatedEntityType).HasMaxLength(50);
+            // Make User relationship optional since UserId can be from different service (StudentId)
             e.HasOne(x => x.User)
              .WithMany(x => x.Notifications)
              .HasForeignKey(x => x.UserId)
-             .OnDelete(DeleteBehavior.Cascade);
+             .OnDelete(DeleteBehavior.Cascade)
+             .IsRequired(false); // Allow UserId to not exist in Users table
         });
 
         // SystemSetting

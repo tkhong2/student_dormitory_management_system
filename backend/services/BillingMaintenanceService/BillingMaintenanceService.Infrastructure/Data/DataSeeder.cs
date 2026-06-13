@@ -55,6 +55,8 @@ public static class DataSeeder
                 Phone = "0903456789",
                 Role = "Student",
                 StudentCode = "SV001",
+                Faculty = "Công nghệ thông tin",
+                ClassCode = "K65-CNTT",
                 Gender = "Female",
                 DateOfBirth = new DateOnly(2003, 3, 10),
                 Address = "789 Đường Võ Văn Tần, Quận 3, TP.HCM",
@@ -80,6 +82,8 @@ public static class DataSeeder
                 existingUser.Phone = seedUser.Phone;
                 existingUser.Role = seedUser.Role;
                 existingUser.StudentCode = seedUser.StudentCode;
+                existingUser.Faculty = seedUser.Faculty;
+                existingUser.ClassCode = seedUser.ClassCode;
                 existingUser.Gender = seedUser.Gender;
                 existingUser.DateOfBirth = seedUser.DateOfBirth;
                 existingUser.Address = seedUser.Address;

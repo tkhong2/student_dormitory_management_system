@@ -22,6 +22,8 @@ public class User : BaseEntity
     // Ref ID sang ContractService (nếu Role = Student)
     public int? StudentId { get; set; }                         // ref → ContractDB.Students
     public string? StudentCode { get; set; }                    // Snapshot mã SV
+    public string? Faculty { get; set; }                        // Khoa (snapshot từ Student)
+    public string? ClassCode { get; set; }                      // Lớp (snapshot từ Student)
 
     // Trạng thái tài khoản
     public bool IsActive { get; set; } = true;

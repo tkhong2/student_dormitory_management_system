@@ -151,11 +151,17 @@
               <v-avatar :color="a.color" size="32" variant="tonal">
                 <v-icon size="16">{{ a.icon }}</v-icon>
               </v-avatar>
-              <div style="min-width:0">
-                <div class="text-body-2 font-weight-medium">{{ a.title }}</div>
+              <div style="min-width:0;flex:1">
+                <div class="text-body-2 font-weight-medium">
+                  {{ a.title }}
+                  <v-chip v-if="!a.isRead" size="x-small" color="primary" variant="flat" class="ml-1">Mới</v-chip>
+                </div>
                 <div class="text-caption text-medium-emphasis">{{ a.time }}</div>
               </div>
             </div>
+            <v-btn block variant="text" color="primary" size="small" @click="$router.push('/student/notifications')">
+              Xem tất cả
+            </v-btn>
           </template>
           
           <template v-else>
@@ -353,11 +359,17 @@ const fetchRoommates = async () => {
   loadingRoommates.value = true
   try {
     const userId = currentUser.value.id
+    console.log('=== FETCH ROOMMATES ===')
+    console.log('User ID:', userId)
+    
     if (!userId) return
 
     // Get active contract to find room
     const contracts = await contractService.getByUserId(userId)
+    console.log('User contracts:', contracts)
+    
     const activeContract = contracts.find(c => c.status === 'Active')
+    console.log('Active contract:', activeContract)
     
     if (!activeContract) {
       return // No room assigned yet
@@ -365,11 +377,16 @@ const fetchRoommates = async () => {
 
     // Get all contracts for the same room
     const allContracts = await contractService.getAll()
+    console.log('Current student ID:', activeContract.studentId)
+    console.log('All contracts in room:', allContracts.filter(c => c.roomId === activeContract.roomId && c.status === 'Active'))
+    
     const sameRoomContracts = allContracts.filter(c => 
       c.roomId === activeContract.roomId && 
       c.status === 'Active' &&
-      c.studentId !== userId // Exclude current user
+      c.studentId !== activeContract.studentId // Exclude current user by studentId, not userId
     )
+    console.log('Roommate contracts found:', sameRoomContracts.length)
+    console.log('Roommate contracts:', sameRoomContracts)
 
     // Fetch student details for each contract
     const roommatePromises = sameRoomContracts.map(async (contract) => {
@@ -400,31 +417,51 @@ const fetchRoommates = async () => {
   }
 }
 
-// Fetch announcements from BuildingAnnouncements API
+// Fetch notifications from Notifications API
 const fetchAnnouncements = async () => {
   try {
-    // Get announcements from RoomBuildingService
-    const response = await axios.get('http://localhost:5003/api/buildingannouncements', {
+    const userId = currentUser.value.id
+    console.log('=== FETCH ANNOUNCEMENTS ===')
+    console.log('User ID:', userId)
+    
+    if (!userId) return
+
+    // Get student ID from active contract (since notifications use studentId, not userId)
+    const contracts = await contractService.getByUserId(userId)
+    console.log('User contracts:', contracts)
+    
+    const activeContract = contracts.find(c => c.status === 'Active')
+    console.log('Active contract:', activeContract)
+    
+    if (!activeContract) {
+      console.log('No active contract found, cannot fetch notifications')
+      return
+    }
+
+    const studentId = activeContract.studentId
+    console.log('Fetching notifications for studentId:', studentId)
+
+    // Get notifications from BillingMaintenanceService using studentId
+    const response = await axios.get(`http://localhost:5002/api/notifications/user/${studentId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
 
-    // Take only the 4 most recent active announcements
+    // Take only the 4 most recent notifications
     announcements.value = response.data
-      .filter(a => a.isActive !== false)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 4)
-      .map(a => ({
-        id: a.id,
-        title: a.title,
-        time: getRelativeTime(a.createdAt),
-        icon: getAnnouncementIcon(a.type),
-        color: getAnnouncementColor(a.priority)
+      .map(n => ({
+        id: n.id,
+        title: n.title,
+        time: getRelativeTime(n.createdAt),
+        icon: getAnnouncementIcon(n.type),
+        color: getAnnouncementColor(n.iconType),
+        isRead: n.isRead
       }))
   } catch (error) {
-    console.error('Error fetching announcements:', error)
-    // Keep empty if no announcements
+    console.error('Error fetching notifications:', error)
+    // Keep empty if no notifications
   }
 }
 
@@ -447,24 +484,26 @@ const getRelativeTime = (dateString) => {
 // Helper function to get icon based on type
 const getAnnouncementIcon = (type) => {
   const iconMap = {
-    'Payment': 'mdi-cash-clock',
-    'Inspection': 'mdi-calendar-check',
-    'Rule': 'mdi-book-open',
-    'Maintenance': 'mdi-wrench',
-    'Event': 'mdi-calendar-star',
-    'Emergency': 'mdi-alert'
+    'System': 'mdi-information',
+    'ApplicationApproved': 'mdi-check-circle',
+    'InvoiceCreated': 'mdi-receipt-text',
+    'MaintenanceDone': 'mdi-tools',
+    'ContractExpiring': 'mdi-calendar-alert',
+    'PaymentReceived': 'mdi-cash-check',
+    'RoomAssigned': 'mdi-door-open'
   }
-  return iconMap[type] || 'mdi-information'
+  return iconMap[type] || 'mdi-bell'
 }
 
-// Helper function to get color based on priority
-const getAnnouncementColor = (priority) => {
+// Helper function to get color based on icon type
+const getAnnouncementColor = (iconType) => {
   const colorMap = {
-    'High': 'error',
-    'Medium': 'warning',
-    'Low': 'info'
+    'success': 'success',
+    'warning': 'warning',
+    'error': 'error',
+    'info': 'info'
   }
-  return colorMap[priority] || 'primary'
+  return colorMap[iconType] || 'primary'
 }
 
 // Fetch all data on mount

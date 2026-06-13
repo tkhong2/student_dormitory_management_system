@@ -294,7 +294,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   PlusOutlined,
   SearchOutlined,
@@ -307,6 +308,7 @@ import billService from '@/services/billService'
 import { paymentService } from '@/services/paymentService'
 import dayjs from 'dayjs'
 
+const route = useRoute()
 const loading = ref(false)
 const payments = ref([])
 const invoices = ref([])
@@ -481,11 +483,47 @@ const showCreateDialog = async () => {
       note: ''
     }
     formErrors.value = {}
+    
+    // Auto-select invoice if invoiceId is provided in query params
+    const queryInvoiceId = route.query.invoiceId
+    if (queryInvoiceId) {
+      const invoiceId = parseInt(queryInvoiceId)
+      const targetInvoice = invoices.value.find(inv => inv.id === invoiceId)
+      if (targetInvoice) {
+        editedItem.value.invoiceId = invoiceId
+        onInvoiceChange(invoiceId)
+        message.info(`Đã chọn phiếu thu: ${targetInvoice.invoiceCode}`)
+      }
+    }
+    
+    // Auto-filter by studentId if provided
+    const queryStudentId = route.query.studentId
+    const queryStudentName = route.query.studentName
+    if (queryStudentId) {
+      const studentId = parseInt(queryStudentId)
+      invoices.value = invoices.value.filter(inv => inv.studentId === studentId)
+      if (queryStudentName) {
+        message.info(`Hiển thị công nợ của: ${queryStudentName}`)
+      }
+      // Auto-select first invoice if available
+      if (invoices.value.length > 0 && !queryInvoiceId) {
+        editedItem.value.invoiceId = invoices.value[0].id
+        onInvoiceChange(invoices.value[0].id)
+      }
+    }
+    
     dialog.value = true
   } catch (error) {
     message.error('Không thể tải danh sách phiếu thu')
   }
 }
+
+// Watch for route changes to auto-open dialog
+watch(() => route.query.invoiceId, (newVal) => {
+  if (newVal && !dialog.value) {
+    showCreateDialog()
+  }
+}, { immediate: true })
 
 const viewPayment = async (record) => {
   try {

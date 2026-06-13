@@ -230,7 +230,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { CreditCardOutlined, EyeOutlined } from '@ant-design/icons-vue'
-import billService from '@/services/billService'
+import axios from 'axios'
 
 const loading = ref(false)
 const invoices = ref([])
@@ -341,91 +341,29 @@ const fetchInvoices = async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     console.log('User info:', user)
     
-    // Always show demo data for now until backend is ready
-    console.log('Loading demo data for testing UI')
-    invoices.value = [
-      {
-        id: 1,
-        invoiceCode: 'PTT202406001',
-        billingMonth: 6,
-        billingYear: 2024,
-        roomNumber: '101-A',
-        buildingName: 'Tòa A',
-        totalAmount: 800000,
-        paidAmount: 800000,
-        debtAmount: 0,
-        status: 'Paid',
-        dueDate: '2024-06-20',
-        rentAmount: 600000,
-        electricityAmount: 100000,
-        waterAmount: 50000,
-        serviceAmount: 50000,
-        previousDebt: 0,
-        discount: 0,
-        overdueDays: 0,
-        notes: 'Đã thanh toán đầy đủ',
-        items: []
-      },
-      {
-        id: 2,
-        invoiceCode: 'PTT202405001',
-        billingMonth: 5,
-        billingYear: 2024,
-        roomNumber: '101-A',
-        buildingName: 'Tòa A',
-        totalAmount: 850000,
-        paidAmount: 0,
-        debtAmount: 850000,
-        status: 'Overdue',
-        dueDate: '2024-05-20',
-        rentAmount: 600000,
-        electricityAmount: 120000,
-        waterAmount: 60000,
-        serviceAmount: 70000,
-        previousDebt: 0,
-        discount: 0,
-        overdueDays: 22,
-        notes: 'Vui lòng thanh toán sớm',
-        items: []
-      },
-      {
-        id: 3,
-        invoiceCode: 'PTT202404001',
-        billingMonth: 4,
-        billingYear: 2024,
-        roomNumber: '101-A',
-        buildingName: 'Tòa A',
-        totalAmount: 800000,
-        paidAmount: 400000,
-        debtAmount: 400000,
-        status: 'PartialPaid',
-        dueDate: '2024-04-20',
-        rentAmount: 600000,
-        electricityAmount: 100000,
-        waterAmount: 50000,
-        serviceAmount: 50000,
-        previousDebt: 0,
-        discount: 0,
-        overdueDays: 0,
-        notes: 'Đã thanh toán một phần',
-        items: []
-      }
-    ]
-    
-    /* Uncomment when backend is ready
     if (user.studentId) {
-      const data = await billService.getByStudentId(user.studentId)
-      console.log('Invoices loaded from API:', data)
-      invoices.value = data || []
+      // Call real API
+      const response = await axios.get(`http://localhost:5002/api/invoices/student/${user.studentId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      console.log('Invoices loaded from API:', response.data)
+      invoices.value = response.data || []
       
       if (invoices.value.length === 0) {
         message.info('Bạn chưa có phiếu thu nào')
       }
+    } else {
+      message.warning('Không tìm thấy thông tin sinh viên. Vui lòng đăng nhập lại.')
+      invoices.value = []
     }
-    */
   } catch (error) {
     console.error('Error loading invoices:', error)
-    message.error(error.message || 'Lỗi tải dữ liệu')
+    const errorMsg = error.response?.data?.message || error.message || 'Lỗi tải dữ liệu'
+    message.error(errorMsg)
+    invoices.value = []
   } finally {
     loading.value = false
   }
@@ -433,10 +371,15 @@ const fetchInvoices = async () => {
 
 const viewInvoiceDetail = async (record) => {
   try {
-    const data = await billService.getById(record.id)
-    detailTarget.value = data
+    const response = await axios.get(`http://localhost:5002/api/invoices/${record.id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    detailTarget.value = response.data
     detailDialog.value = true
   } catch (error) {
+    console.error('Error loading invoice detail:', error)
     message.error('Không thể tải chi tiết phiếu thu')
   }
 }

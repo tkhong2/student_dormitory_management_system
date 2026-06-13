@@ -28,6 +28,7 @@ const routes = [
       { path: 'my-contract', name: 'my-contract', meta: { title: 'Hợp đồng' }, component: () => import('../views/student/MyContractView.vue') },
       { path: 'my-payments', name: 'my-payments', meta: { title: 'Thanh toán' }, component: () => import('../views/student/MyPaymentsView.vue') },
       { path: 'maintenance', name: 'student-maintenance', meta: { title: 'Yêu cầu sửa chữa' }, component: () => import('../views/student/StudentMaintenanceView.vue') },
+      { path: 'notifications', name: 'student-notifications', meta: { title: 'Thông báo' }, component: () => import('../views/student/NotificationsView.vue') },
       { path: 'profile', name: 'student-profile', meta: { title: 'Hồ sơ cá nhân' }, component: () => import('../views/student/StudentProfileView.vue') },
     ],
   },
@@ -50,6 +51,7 @@ const routes = [
       
       // Quản lý hợp đồng & Chuyển phòng
       { path: 'contracts', name: 'staff-contracts', meta: { title: 'Hợp đồng' }, component: () => import('../views/contracts/ContractListView.vue') },
+      { path: 'contract-extensions', name: 'staff-contract-extensions', meta: { title: 'Gia hạn hợp đồng' }, component: () => import('../views/contracts/ContractExtensionsView.vue') },
       { path: 'room-transfers', name: 'staff-room-transfers', meta: { title: 'Chuyển phòng' }, component: () => import('../views/contracts/RoomTransfersView.vue') },
       
       // Check-in / Check-out
@@ -117,6 +119,7 @@ const routes = [
       
       // === THÔNG BÁO ===
       { path: 'announcements', name: 'announcements', meta: { title: 'Thông báo' }, component: () => import('../views/announcements/AnnouncementListView.vue') },
+      { path: 'notifications', name: 'notifications', meta: { title: 'Gửi thông báo' }, component: () => import('../views/notifications/NotificationManagementView.vue') },
     ],
   },
 
@@ -149,18 +152,25 @@ router.beforeEach((to, from, next) => {
   const publicPaths = ['/', '/about', '/rooms', '/news', '/rules', '/contact', '/login']
   const isPublicRoute = publicPaths.includes(to.path) || to.path.startsWith('/public')
   
-  // Allow access to public routes
-  if (isPublicRoute) {
-    // If logged in user tries to access login page, redirect to their dashboard
-    if (to.path === '/login' && token && user) {
-      if (user.role === 'Student') {
-        return next('/student')
-      } else if (user.role === 'Staff') {
-        return next('/staff/dashboard')
-      } else {
-        return next('/admin')
-      }
+  // If user is logged in and tries to access public HOME page (not login), redirect to dashboard
+  if (token && user && to.path === '/') {
+    if (user.role === 'Student') {
+      return next('/student')
+    } else if (user.role === 'Staff') {
+      return next('/staff/dashboard')
+    } else if (user.role === 'Admin') {
+      return next('/admin')
     }
+  }
+  
+  // Allow access to login page regardless of authentication status
+  // This allows users to logout and login again
+  if (to.path === '/login') {
+    return next()
+  }
+  
+  // Allow access to other public routes
+  if (isPublicRoute) {
     return next()
   }
 

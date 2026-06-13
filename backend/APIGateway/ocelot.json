@@ -296,7 +296,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/students",
@@ -308,7 +308,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/students/{everything}",
@@ -320,7 +320,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/contracts",
@@ -332,7 +332,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/contracts/{everything}",
@@ -344,7 +344,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/roomapplications",
@@ -356,7 +356,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/roomapplications/{everything}",
@@ -368,7 +368,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/contractextensions",
@@ -380,7 +380,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/contractextensions/{everything}",
@@ -392,7 +392,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/roomtransfers",
@@ -404,7 +404,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/roomtransfers/{everything}",
@@ -416,7 +416,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/studentdocuments",
@@ -428,7 +428,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5059
+          "Port": 5001
         }
       ],
       "UpstreamPathTemplate": "/api/studentdocuments/{everything}",
@@ -554,6 +554,30 @@
       ],
       "UpstreamPathTemplate": "/api/maintenancerequests/{everything}",
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/notifications",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/notifications",
+      "UpstreamHttpMethod": [ "Get", "Post" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/notifications/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/notifications/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
     }
   ],
   "GlobalConfiguration": {
@@ -561,3 +585,4 @@
     "RequestIdKey": "OcRequestId"
   }
 }
+

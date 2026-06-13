@@ -62,84 +62,112 @@
       </a-row>
     </a-card>
 
-    <!-- Room List Card -->
-    <a-card :bordered="false" :loading="loading">
-      <a-row :gutter="[16, 16]">
-        <a-col v-for="room in filteredRooms" :key="room.id" :xs="24" :sm="12" :lg="8" :xl="6">
-          <a-card hoverable class="room-card" :bordered="false" style="border: 1px solid #f0f0f0;">
-            <template #cover>
-              <div style="position: relative; height: 180px; overflow: hidden;">
-                <img :src="room.image" :alt="room.name" style="width: 100%; height: 100%; object-fit: cover;" />
-                <a-tag 
-                  v-if="room.available > 0" 
-                  color="success" 
-                  style="position: absolute; top: 12px; right: 12px; font-weight: 600;"
-                >
-                  {{ room.available }} chỗ trống
-                </a-tag>
-                <a-tag 
-                  v-else 
-                  color="error" 
-                  style="position: absolute; top: 12px; right: 12px; font-weight: 600;"
-                >
-                  Đã đầy
-                </a-tag>
-              </div>
-            </template>
-            
-            <a-card-meta>
-              <template #title>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 16px; font-weight: 600;">{{ room.name }}</span>
-                  <a-tag color="blue">{{ room.building }}</a-tag>
-                </div>
-              </template>
-              <template #description>
-                <a-space direction="vertical" size="small" style="width: 100%; margin-top: 8px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <UserOutlined style="color: #1890ff;" />
-                    <span style="font-size: 13px;">{{ room.capacity }} người/phòng</span>
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <ExpandOutlined style="color: #1890ff;" />
-                    <span style="font-size: 13px;">{{ room.area }} m²</span>
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <ThunderboltOutlined style="color: #1890ff;" />
-                    <span style="font-size: 13px;">{{ room.facilities }}</span>
-                  </div>
-                  <a-divider style="margin: 8px 0;" />
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                      <div style="font-size: 11px; color: #8c8c8c;">Giá/tháng</div>
-                      <div style="font-size: 16px; font-weight: 700; color: #ff9800;">
-                        {{ formatPrice(room.price) }}
-                      </div>
-                    </div>
-                    <a-button 
-                      type="primary" 
-                      :disabled="room.available === 0"
-                      @click="openRegistrationDialog(room)"
-                      style="background: #ff9800; border-color: #ff9800;"
-                    >
-                      Đăng ký
-                    </a-button>
-                  </div>
-                </a-space>
-              </template>
-            </a-card-meta>
-          </a-card>
-        </a-col>
-      </a-row>
-
-      <!-- Empty State -->
-      <a-empty 
-        v-if="!loading && filteredRooms.length === 0" 
-        description="Không tìm thấy phòng phù hợp"
-        style="padding: 60px 0;"
+    <!-- Room List Table -->
+    <a-card :bordered="false">
+      <a-table
+        :columns="columns"
+        :data-source="filteredRooms"
+        :loading="loading"
+        :pagination="{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: filteredRooms.length,
+          showTotal: (total) => `Tổng ${total} phòng`,
+          showSizeChanger: true,
+          pageSizeOptions: ['8', '12', '16', '24'],
+          onChange: (page, pageSize) => {
+            pagination.current = page
+            pagination.pageSize = pageSize
+          }
+        }"
+        :scroll="{ x: 1200 }"
       >
-        <a-button type="primary" @click="resetFilters">Xem tất cả phòng</a-button>
-      </a-empty>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'roomNumber'">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img 
+                :src="record.image" 
+                :alt="record.name"
+                style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"
+              />
+              <div>
+                <div style="font-weight: 600; font-size: 15px;">{{ record.name }}</div>
+                <div style="font-size: 12px; color: #8c8c8c;">{{ record.roomTypeName }}</div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'building'">
+            <a-tag color="blue">{{ record.building }}</a-tag>
+          </template>
+
+          <template v-else-if="column.key === 'capacity'">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <UserOutlined style="color: #1890ff;" />
+              <span>{{ record.capacity }} người</span>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'area'">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <ExpandOutlined style="color: #1890ff;" />
+              <span>{{ record.area }} m²</span>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'facilities'">
+            <a-tooltip :title="record.facilities">
+              <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <ThunderboltOutlined style="color: #1890ff; margin-right: 6px;" />
+                {{ record.facilities }}
+              </div>
+            </a-tooltip>
+          </template>
+
+          <template v-else-if="column.key === 'price'">
+            <div style="font-weight: 700; color: #ff9800; font-size: 15px;">
+              {{ formatPrice(record.price) }}
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'available'">
+            <a-tag 
+              v-if="record.available > 0" 
+              color="success"
+              style="font-weight: 600;"
+            >
+              {{ record.available }} chỗ trống
+            </a-tag>
+            <a-tag 
+              v-else 
+              color="error"
+              style="font-weight: 600;"
+            >
+              Đã đầy
+            </a-tag>
+          </template>
+
+          <template v-else-if="column.key === 'action'">
+            <a-button 
+              type="primary" 
+              size="small"
+              :disabled="record.available === 0"
+              @click="openRegistrationDialog(record)"
+              style="background: #ff9800; border-color: #ff9800; color: white;"
+            >
+              Đăng ký
+            </a-button>
+          </template>
+        </template>
+
+        <template #emptyText>
+          <a-empty description="Không tìm thấy phòng phù hợp">
+            <a-button type="primary" @click="resetFilters" style="background: #ff9800; border-color: #ff9800; color: white;">
+              Xem tất cả phòng
+            </a-button>
+          </a-empty>
+        </template>
+      </a-table>
     </a-card>
   </div>
 </template>
@@ -169,6 +197,58 @@ const filters = ref({
   roomType: undefined,
   priceRange: undefined
 })
+
+const pagination = ref({
+  current: 1,
+  pageSize: 8
+})
+
+const columns = [
+  {
+    title: 'Phòng',
+    key: 'roomNumber',
+    width: 220,
+    fixed: 'left'
+  },
+  {
+    title: 'Tòa nhà',
+    key: 'building',
+    width: 120
+  },
+  {
+    title: 'Sức chứa',
+    key: 'capacity',
+    width: 120
+  },
+  {
+    title: 'Diện tích',
+    key: 'area',
+    width: 110
+  },
+  {
+    title: 'Tiện nghi',
+    key: 'facilities',
+    width: 200
+  },
+  {
+    title: 'Giá/tháng',
+    key: 'price',
+    width: 140,
+    sorter: (a, b) => a.price - b.price
+  },
+  {
+    title: 'Trạng thái',
+    key: 'available',
+    width: 130,
+    sorter: (a, b) => a.available - b.available
+  },
+  {
+    title: 'Thao tác',
+    key: 'action',
+    width: 110,
+    fixed: 'right'
+  }
+]
 
 const rooms = ref([])
 const buildings = ref([])
@@ -251,6 +331,12 @@ async function loadData() {
     }
     
     rooms.value = roomsData
+      .filter(room => {
+        // Chỉ hiển thị phòng Available (còn chỗ) và Maintenance (bảo trì)
+        // Loại bỏ phòng Full (đầy) và các trạng thái khác
+        const available = room.maxOccupants - room.currentOccupants
+        return (available > 0 && room.status === 'Available') || room.status === 'Maintenance'
+      })
       .map(room => {
         const roomType = roomTypesData.find(rt => rt.id === room.roomTypeId)
         const building = buildingsData.find(b => b.id === room.buildingId)
@@ -326,6 +412,7 @@ function resetFilters() {
     roomType: undefined,
     priceRange: undefined
   }
+  pagination.value.current = 1
 }
 
 const formatPrice = (price) => {
@@ -351,21 +438,20 @@ function openRegistrationDialog(room) {
 </script>
 
 <style scoped>
-.room-card {
-  transition: all 0.3s ease;
-  height: 100%;
+:deep(.ant-table) {
+  font-size: 14px;
 }
 
-.room-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+:deep(.ant-table-thead > tr > th) {
+  background: #fafafa;
+  font-weight: 600;
 }
 
-:deep(.ant-card-body) {
-  padding: 16px;
+:deep(.ant-table-tbody > tr:hover) {
+  background: #f5f5f5;
 }
 
-:deep(.ant-card-meta-title) {
-  margin-bottom: 0 !important;
+:deep(.ant-table-cell) {
+  padding: 12px 16px;
 }
 </style>

@@ -76,6 +76,8 @@ namespace BillingMaintenanceService.API.Controllers
                 Role = dto.Role,
                 StudentId = dto.StudentId,
                 StudentCode = dto.StudentCode,
+                Faculty = dto.Faculty,
+                ClassCode = dto.ClassCode,
                 Gender = dto.Gender,
                 DateOfBirth = dto.DateOfBirth,
                 Address = dto.Address,
@@ -98,6 +100,8 @@ namespace BillingMaintenanceService.API.Controllers
             user.Role = dto.Role;
             user.AvatarUrl = dto.AvatarUrl;
             user.StudentCode = dto.StudentCode;
+            user.Faculty = dto.Faculty;
+            user.ClassCode = dto.ClassCode;
             user.Gender = dto.Gender;
             user.DateOfBirth = dto.DateOfBirth;
             user.Address = dto.Address;
@@ -141,6 +145,8 @@ namespace BillingMaintenanceService.API.Controllers
                 AvatarUrl = user.AvatarUrl,
                 StudentId = user.StudentId,
                 StudentCode = user.StudentCode,
+                Faculty = user.Faculty,
+                ClassCode = user.ClassCode,
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
                 Address = user.Address,

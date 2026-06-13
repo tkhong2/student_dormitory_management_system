@@ -18,11 +18,70 @@
       </a-tag>
     </div>
     
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm số phòng..."
+            allow-clear
+            @search="handleSearch"
+          >
+            <template #prefix><SearchOutlined /></template>
+          </a-input-search>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="buildingFilter"
+            placeholder="Tòa nhà"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả tòa nhà</a-select-option>
+            <a-select-option v-for="building in buildings" :key="building.id" :value="building.id">
+              {{ building.name }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="statusFilter"
+            placeholder="Trạng thái"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả trạng thái</a-select-option>
+            <a-select-option value="Available">Trống</a-select-option>
+            <a-select-option value="Occupied">Đang ở</a-select-option>
+            <a-select-option value="Full">Đầy</a-select-option>
+            <a-select-option value="Maintenance">Bảo trì</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="roomTypeFilter"
+            placeholder="Loại phòng"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả loại</a-select-option>
+            <a-select-option v-for="rt in roomTypes" :key="rt.id" :value="rt.id">
+              {{ rt.name }}
+            </a-select-option>
+          </a-select>
+        </a-col>
+      </a-row>
+    </a-card>
+    
     <!-- Statistics and Table Card -->
     <a-card :bordered="false" :loading="loading">
       <div style="margin-bottom: 16px;">
         <p style="font-size: 14px; color: #595959; margin: 0;">
-          Tổng: <strong>{{ rooms.length }}</strong> phòng —  
+          Tổng: <strong>{{ filteredRooms.length }}</strong> phòng —  
           <span style="color: #16a34a">{{ countByStatus('Available') }} trống</span> ·
           <span style="color: #2563eb">{{ countByStatus('Occupied') }} đang ở</span> ·
           <span style="color: #dc2626">{{ countByStatus('Full') }} đầy</span> ·
@@ -31,7 +90,7 @@
       </div>
       
       <a-table 
-        :dataSource="rooms" 
+        :dataSource="filteredRooms" 
         :columns="columns" 
         :rowKey="r => r.id"
         :pagination="{ pageSize: 15, showTotal: (total) => `Tổng ${total} phòng` }"
@@ -163,6 +222,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { SearchOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
@@ -181,6 +241,12 @@ const dialog = ref(false)
 const deleteDialog = ref(false)
 const editTarget = ref(null)
 const deleteTarget = ref(null)
+
+// Filter states
+const search = ref('')
+const buildingFilter = ref('')
+const statusFilter = ref('')
+const roomTypeFilter = ref('')
 
 const form = ref({
   roomNumber: '',
@@ -206,6 +272,39 @@ const filteredRoomTypes = computed(() => {
   if (!form.value.buildingId) return []
   return roomTypes.value.filter(rt => rt.buildingId === form.value.buildingId)
 })
+
+// Filtered rooms based on search and filters
+const filteredRooms = computed(() => {
+  let result = rooms.value
+
+  // Search by room number
+  if (search.value) {
+    result = result.filter(r => 
+      r.roomNumber.toLowerCase().includes(search.value.toLowerCase())
+    )
+  }
+
+  // Filter by building
+  if (buildingFilter.value) {
+    result = result.filter(r => r.buildingId === buildingFilter.value)
+  }
+
+  // Filter by status
+  if (statusFilter.value) {
+    result = result.filter(r => r.status === statusFilter.value)
+  }
+
+  // Filter by room type
+  if (roomTypeFilter.value) {
+    result = result.filter(r => r.roomTypeId === roomTypeFilter.value)
+  }
+
+  return result
+})
+
+function handleSearch() {
+  // Trigger computed property re-evaluation
+}
 
 async function loadRooms() {
   loading.value = true
@@ -250,7 +349,7 @@ async function onBuildingChange(buildingId) {
 }
 
 function countByStatus(status) {
-  return rooms.value.filter(r => r.status === status).length
+  return filteredRooms.value.filter(r => r.status === status).length
 }
 
 function getBuildingName(id) {

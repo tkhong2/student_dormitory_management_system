@@ -59,4 +59,18 @@ namespace BillingMaintenanceService.Application.Interfaces
         Task UpdateAsync(BuildingAssignment assignment);
         Task DeleteAsync(BuildingAssignment assignment);
     }
+
+    public interface INotificationRepository
+    {
+        Task<Notification?> GetByIdAsync(int id);
+        Task<IEnumerable<Notification>> GetAllAsync();
+        Task<IEnumerable<Notification>> GetByUserIdAsync(int userId);
+        Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(int userId);
+        Task<int> GetUnreadCountByUserIdAsync(int userId);
+        Task<Notification> AddAsync(Notification notification);
+        Task UpdateAsync(Notification notification);
+        Task DeleteAsync(Notification notification);
+        Task MarkAsReadAsync(int id);
+        Task MarkAllAsReadAsync(int userId);
+    }
 }

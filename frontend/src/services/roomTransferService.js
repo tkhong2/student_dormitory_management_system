@@ -13,6 +13,10 @@ export const roomTransferService = {
     return api.get(`/roomtransfers/contract/${contractId}`)
   },
 
+  getByStudentId(studentId) {
+    return api.get(`/roomtransfers/student/${studentId}`)
+  },
+
   getByStatus(status) {
     return api.get(`/roomtransfers/status/${status}`)
   },

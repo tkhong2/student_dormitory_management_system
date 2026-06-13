@@ -12,6 +12,8 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? AvatarUrl { get; set; }
         public int? StudentId { get; set; }
         public string? StudentCode { get; set; }
+        public string? Faculty { get; set; }
+        public string? ClassCode { get; set; }
         public string? Gender { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? Address { get; set; }
@@ -30,6 +32,8 @@ namespace BillingMaintenanceService.Application.DTOs
         public string Role { get; set; } = string.Empty;
         public int? StudentId { get; set; }
         public string? StudentCode { get; set; }
+        public string? Faculty { get; set; }
+        public string? ClassCode { get; set; }
         public string? Gender { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? Address { get; set; }
@@ -220,6 +224,33 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? ImageUrls { get; set; }
     }
 
+    public class AssignMaintenanceRequest
+    {
+        public int AssignedToUserId { get; set; }
+        public string AssignedToName { get; set; } = string.Empty;
+        public DateOnly? ExpectedCompletionDate { get; set; }
+        public decimal? EstimatedCost { get; set; }
+    }
+
+    public class ResolveMaintenanceRequest
+    {
+        public string ResolutionNote { get; set; } = string.Empty;
+        public decimal? ActualCost { get; set; }
+        public string? AfterImageUrls { get; set; }
+    }
+
+    public class RejectMaintenanceRequest
+    {
+        public string RejectedReason { get; set; } = string.Empty;
+        public int RejectedByUserId { get; set; }
+    }
+
+    public class RateMaintenanceRequest
+    {
+        public int Rating { get; set; }
+        public string? Feedback { get; set; }
+    }
+
     // ===== Notification DTOs =====
     public class NotificationDto
     {
@@ -247,33 +278,5 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? IconType { get; set; }
         public int? RelatedEntityId { get; set; }
         public string? RelatedEntityType { get; set; }
-    }
-
-    // ===== Request/Response DTOs =====
-    public class AssignMaintenanceRequest
-    {
-        public int AssignedToUserId { get; set; }
-        public string AssignedToName { get; set; } = string.Empty;
-        public DateOnly? ExpectedCompletionDate { get; set; }
-        public decimal? EstimatedCost { get; set; }
-    }
-
-    public class ResolveMaintenanceRequest
-    {
-        public string ResolutionNote { get; set; } = string.Empty;
-        public decimal? ActualCost { get; set; }
-        public string? AfterImageUrls { get; set; }
-    }
-
-    public class RejectMaintenanceRequest
-    {
-        public string RejectedReason { get; set; } = string.Empty;
-        public int RejectedByUserId { get; set; }
-    }
-
-    public class RateMaintenanceRequest
-    {
-        public int Rating { get; set; } // 1-5
-        public string? Feedback { get; set; }
     }
 }

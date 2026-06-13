@@ -17,10 +17,6 @@ export const contractExtensionService = {
     return api.post('/contractextensions', data)
   },
 
-  update(id, data) {
-    return api.put(`/contractextensions/${id}`, data)
-  },
-
   delete(id) {
     return api.delete(`/contractextensions/${id}`)
   },

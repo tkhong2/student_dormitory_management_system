@@ -96,6 +96,7 @@
           :data-source="filteredStudents"
           row-key="id"
           :pagination="{ pageSize: 10 }"
+          :scroll="{ x: 1200 }"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'fullName'">
@@ -175,18 +176,30 @@
         </a-row>
         <a-row :gutter="16">
           <a-col :span="8">
-            <a-form-item label="Phòng" required :validate-status="formErrors.roomNumber ? 'error' : ''" :help="formErrors.roomNumber">
+            <a-form-item label="Lớp" :validate-status="formErrors.classCode ? 'error' : ''" :help="formErrors.classCode">
+              <a-input v-model:value="form.classCode" placeholder="VD: K65-CNTT" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="16">
+            <a-form-item label="Khoa" :validate-status="formErrors.faculty ? 'error' : ''" :help="formErrors.faculty">
+              <a-input v-model:value="form.faculty" placeholder="VD: Công nghệ thông tin" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="Phòng" :validate-status="formErrors.roomNumber ? 'error' : ''" :help="formErrors.roomNumber">
               <a-input v-model:value="form.roomNumber" />
             </a-form-item>
           </a-col>
           <a-col :span="8">
-            <a-form-item label="Tòa" required :validate-status="formErrors.buildingName ? 'error' : ''" :help="formErrors.buildingName">
+            <a-form-item label="Tòa" :validate-status="formErrors.buildingName ? 'error' : ''" :help="formErrors.buildingName">
               <a-input v-model:value="form.buildingName" />
             </a-form-item>
           </a-col>
           <a-col :span="8">
-            <a-form-item label="Lớp" required :validate-status="formErrors.className ? 'error' : ''" :help="formErrors.className">
-              <a-input v-model:value="form.className" />
+            <a-form-item label="Năm học">
+              <a-input-number v-model:value="form.academicYear" style="width: 100%" :min="1" :max="6" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -235,33 +248,19 @@ import { studentService } from "@/services/studentService";
 
 const studentColumns = [
   { title: "Sinh viên", dataIndex: "fullName", key: "fullName", width: 260 },
-  { title: "Mã SV", dataIndex: "studentCode", key: "studentCode" },
-  {
-    title: "Phòng",
-    dataIndex: "roomNumber",
-    key: "roomNumber",
-    align: "center",
-  },
-  {
-    title: "Tòa",
-    dataIndex: "buildingName",
-    key: "buildingName",
-    align: "center",
-  },
-  { title: "Lớp", dataIndex: "className", key: "className" },
-  {
-    title: "Ngày vào",
-    dataIndex: "joinDate",
-    key: "joinDate",
-    align: "center",
-  },
-  { title: "Trạng thái", dataIndex: "status", key: "status", align: "center" },
+  { title: "Mã SV", dataIndex: "studentCode", key: "studentCode", width: 120 },
+  { title: "Khoa", dataIndex: "faculty", key: "faculty", width: 180, ellipsis: true },
+  { title: "Lớp", dataIndex: "classCode", key: "classCode", width: 120 },
+  { title: "Email", dataIndex: "email", key: "email", width: 200, ellipsis: true },
+  { title: "Số điện thoại", dataIndex: "phone", key: "phone", width: 130 },
+  { title: "Trạng thái", dataIndex: "status", key: "status", align: "center", width: 120 },
   {
     title: "Thao tác",
     dataIndex: "actions",
     key: "actions",
     align: "center",
     width: 160,
+    fixed: 'right'
   },
 ];
 const statusOptions = [
@@ -296,7 +295,7 @@ const buildingOptions = computed(() => [
 ]);
 
 const classOptions = computed(() =>
-  [...new Set(students.value.map((item) => item.className))]
+  [...new Set(students.value.map((item) => item.classCode))]
     .filter(Boolean)
     .sort(),
 );
@@ -307,14 +306,15 @@ const filteredStudents = computed(() => {
     const matchesText =
       !keyword ||
       item.fullName.toLowerCase().includes(keyword) ||
-      item.studentCode.toLowerCase().includes(keyword);
+      item.studentCode.toLowerCase().includes(keyword) ||
+      (item.email && item.email.toLowerCase().includes(keyword));
     const matchesBuilding =
       buildingFilter.value === "all" ||
       item.buildingName === buildingFilter.value;
     const matchesStatus =
       statusFilter.value === "all" || item.status === statusFilter.value;
     const matchesClass =
-      classFilter.value === "all" || item.className === classFilter.value;
+      classFilter.value === "all" || item.classCode === classFilter.value;
     const matchesGender =
       !genderFilter.value || item.gender === genderFilter.value;
     return (
@@ -344,9 +344,12 @@ function defaultForm() {
     address: "",
     dateOfBirth: null,
     gender: "",
+    faculty: "",
+    classCode: "",
+    academicYear: 1,
+    major: "",
     roomNumber: "",
     buildingName: "",
-    className: "",
     joinDate: "",
     status: "Active",
   };

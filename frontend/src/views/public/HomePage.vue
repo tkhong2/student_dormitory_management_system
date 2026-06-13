@@ -101,109 +101,78 @@
       </v-row>
     </v-container>
 
-    <!-- ═══ NEWS & ANNOUNCEMENTS ═══ -->
+    <!-- ═══ REGISTRATION PROCESS ═══ -->
     <section class="bg-slate-50 py-16">
       <v-container style="max-width: 1280px">
+        <div class="text-center mb-12">
+          <h2 class="section-title mb-4">QUY TRÌNH ĐĂNG KÝ Ở KTX</h2>
+          <p class="text-body-1 text-medium-emphasis">
+            4 bước đơn giản để trở thành cư dân KTX Đại học Đại Nam
+          </p>
+        </div>
+
         <v-row>
-          <!-- Left: Featured News -->
-          <v-col cols="12" md="8">
-            <div class="d-flex align-center justify-space-between mb-8">
-              <h2 class="section-title">TIN TỨC & SỰ KIỆN</h2>
-              <v-btn
-                variant="text"
-                color="primary"
-                class="font-weight-bold"
-                append-icon="mdi-arrow-right"
-                >TẤT CẢ TIN TỨC</v-btn
-              >
-            </div>
-
-            <v-row>
-              <v-col cols="12" sm="6" v-for="n in news" :key="n.id">
-                <v-card
-                  flat
-                  border
-                  class="news-card rounded-xl overflow-hidden"
-                >
-                  <v-img :src="n.image" height="200" cover>
-                    <template v-slot:placeholder>
-                      <div
-                        class="d-flex align-center justify-center fill-height bg-grey-lighten-4"
-                      >
-                        <v-icon size="48" color="grey-lighten-2"
-                          >mdi-image</v-icon
-                        >
-                      </div>
-                    </template>
-                  </v-img>
-                  <v-card-text class="pa-6">
-                    <div
-                      class="text-caption text-primary font-weight-bold mb-2"
-                    >
-                      {{ n.category }}
-                    </div>
-                    <h3 class="news-title mb-2">{{ n.title }}</h3>
-                    <p
-                      class="text-body-2 text-medium-emphasis mb-4 line-clamp-3"
-                    >
-                      {{ n.desc }}
-                    </p>
-                    <div
-                      class="d-flex align-center text-caption text-medium-emphasis border-t pt-4 mt-4"
-                    >
-                      <v-icon size="14" class="mr-1">mdi-calendar-range</v-icon>
-                      {{ n.date }}
-                      <v-spacer />
-                      <v-btn
-                        variant="text"
-                        color="primary"
-                        size="small"
-                        class="font-weight-bold pa-0"
-                        >ĐỌC TIẾP</v-btn
-                      >
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
+          <v-col
+            v-for="(step, index) in registrationSteps"
+            :key="step.id"
+            cols="12"
+            sm="6"
+            md="3"
+          >
+            <v-card flat border class="process-card pa-6 rounded-xl h-100 text-center">
+              <div class="step-number mb-4 mx-auto">{{ index + 1 }}</div>
+              <v-icon :color="step.color" size="48" class="mb-4">{{ step.icon }}</v-icon>
+              <h3 class="text-h6 font-weight-bold mb-3">{{ step.title }}</h3>
+              <p class="text-body-2 text-medium-emphasis">{{ step.desc }}</p>
+            </v-card>
           </v-col>
+        </v-row>
 
-          <!-- Right: Notifications -->
-          <v-col cols="12" md="4">
-            <h2 class="section-title mb-8">THÔNG BÁO</h2>
-            <v-card flat border class="pa-6 rounded-xl bg-white">
-              <div
-                v-for="notif in notices"
-                :key="notif.id"
-                class="mb-6 last:mb-0"
-              >
-                <div class="d-flex ga-4">
-                  <div class="notif-date">
-                    <div class="notif-day">{{ notif.day }}</div>
-                    <div class="notif-month">TH{{ notif.month }}</div>
-                  </div>
-                  <div class="min-w-0">
-                    <h4 class="text-body-2 font-weight-bold line-clamp-2 mb-1">
-                      {{ notif.title }}
-                    </h4>
-                    <v-chip
-                      size="x-small"
-                      :color="notif.urgent ? 'error' : 'primary'"
-                      variant="flat"
-                      class="font-weight-bold px-2"
-                    >
-                      {{ notif.urgent ? "KHẨN" : "THÔNG BÁO" }}
-                    </v-chip>
-                  </div>
+        <div class="text-center mt-8">
+          <v-btn
+            color="primary"
+            size="large"
+            class="font-weight-bold px-8 rounded-lg text-white"
+            to="/rooms"
+          >
+            BẮT ĐẦU ĐĂNG KÝ
+            <v-icon class="ml-2">mdi-arrow-right</v-icon>
+          </v-btn>
+        </div>
+      </v-container>
+    </section>
+
+    <!-- ═══ FACILITIES & AMENITIES ═══ -->
+    <section class="py-16 bg-white">
+      <v-container style="max-width: 1280px">
+        <div class="text-center mb-12">
+          <h2 class="section-title mb-4">TIỆN ÍCH & DỊCH VỤ</h2>
+          <p class="text-body-1 text-medium-emphasis">
+            Đầy đủ tiện nghi phục vụ sinh hoạt và học tập
+          </p>
+        </div>
+
+        <v-row>
+          <v-col
+            v-for="facility in facilities"
+            :key="facility.id"
+            cols="12"
+            sm="6"
+            md="4"
+          >
+            <v-card flat border class="facility-card rounded-xl overflow-hidden h-100">
+              <v-img :src="facility.image" height="200" cover>
+                <div class="facility-overlay">
+                  <v-icon size="48" color="white">{{ facility.icon }}</v-icon>
                 </div>
-              </div>
-              <v-btn
-                block
-                variant="outlined"
-                color="primary"
-                class="mt-8 font-weight-bold rounded-lg"
-                >XEM TẤT CẢ THÔNG BÁO</v-btn
-              >
+              </v-img>
+              <v-card-text class="pa-6">
+                <h3 class="text-h6 font-weight-bold mb-2">{{ facility.title }}</h3>
+                <p class="text-body-2 text-medium-emphasis">{{ facility.desc }}</p>
+                <v-chip size="small" :color="facility.color" variant="flat" class="mt-3 free">
+                  {{ facility.available }}
+                </v-chip>
+              </v-card-text>
             </v-card>
           </v-col>
         </v-row>
@@ -237,7 +206,7 @@
           <v-btn
             color="primary"
             size="x-large"
-            class="font-weight-bold px-10 rounded-xl"
+            class="font-weight-bold px-10 rounded-xl text-white"
             height="64"
             to="/login"
             >ĐĂNG KÝ NGAY</v-btn
@@ -297,54 +266,91 @@ const quickInfos = [
   },
 ];
 
-const news = [
+const registrationSteps = [
   {
     id: 1,
-    category: "TIN TỨC KTX",
-    title: "Hướng dẫn quy trình đăng ký ở KTX cho tân sinh viên khóa mới",
-    desc: "Ban quản lý KTX Đại học Đại Nam hướng dẫn chi tiết các bước đăng ký, nộp hồ sơ và làm thủ tục nhận phòng cho sinh viên khóa mới nhập học năm 2026...",
-    date: "15/05/2026",
-    image: "/images/student_life.png",
+    title: "Đăng nhập hệ thống",
+    desc: "Sử dụng mã sinh viên và mật khẩu được cấp để truy cập hệ thống quản lý KTX",
+    icon: "mdi-login",
+    color: "primary",
   },
   {
     id: 2,
-    category: "SỰ KIỆN",
-    title: "Giải bóng đá Nam - Nữ KTX Đại Nam Cup 2026 chính thức khởi tranh",
-    desc: "Nhằm tạo sân chơi lành mạnh, tăng cường đoàn kết giữa các sinh viên nội trú, giải bóng đá truyền thống KTX sẽ diễn ra vào cuối tuần này...",
-    date: "12/05/2026",
-    image: "/images/football_match.png",
-  },
-];
-
-const notices = [
-  {
-    id: 1,
-    day: "18",
-    month: "05",
-    title:
-      "Thông báo về việc phun thuốc diệt côn trùng định kỳ tại các tòa nhà",
-    urgent: false,
-  },
-  {
-    id: 2,
-    day: "16",
-    month: "05",
-    title: "Nhắc nộp lệ phí KTX tháng 05/2026 cho tất cả các phòng",
-    urgent: true,
+    title: "Chọn phòng",
+    desc: "Xem danh sách phòng trống, thông tin chi tiết và chọn phòng phù hợp",
+    icon: "mdi-home-search",
+    color: "success",
   },
   {
     id: 3,
-    day: "14",
-    month: "05",
-    title: "Thông báo lịch kiểm tra phòng định kỳ học kỳ II năm 2026",
-    urgent: false,
+    title: "Nộp hồ sơ",
+    desc: "Điền thông tin cá nhân, upload giấy tờ cần thiết và gửi đơn đăng ký",
+    icon: "mdi-file-upload",
+    color: "warning",
   },
   {
     id: 4,
-    day: "10",
-    month: "05",
-    title: "Về việc đảm bảo an ninh trật tự và phòng chống cháy nổ tại KTX",
-    urgent: true,
+    title: "Nhận phòng",
+    desc: "Sau khi được duyệt, đến KTX làm thủ tục nhận phòng và ký hợp đồng",
+    icon: "mdi-key",
+    color: "info",
+  },
+];
+
+const facilities = [
+  {
+    id: 1,
+    title: "Phòng ở đầy đủ tiện nghi",
+    desc: "Giường tủ cá nhân, máy lạnh, nước nóng, Internet tốc độ cao miễn phí",
+    icon: "mdi-bed",
+    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80",
+    color: "primary",
+    available: "Sẵn có",
+  },
+  {
+    id: 2,
+    title: "Khu vực học tập chung",
+    desc: "Không gian yên tĩnh, bàn ghế ergonomic, điều hòa mát mẻ",
+    icon: "mdi-book-open-page-variant",
+    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80",
+    color: "info",
+    available: "24/7",
+  },
+  {
+    id: 3,
+    title: "Phòng gym & thể thao",
+    desc: "Trang thiết bị hiện đại, sân bóng, sân cầu lông, bàn bóng bàn",
+    icon: "mdi-dumbbell",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
+    color: "success",
+    available: "Miễn phí",
+  },
+  {
+    id: 4,
+    title: "Căng tin & Minimart",
+    desc: "Đa dạng món ăn, giá sinh viên, mở cửa từ sáng đến tối",
+    icon: "mdi-food",
+    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800&q=80",
+    color: "warning",
+    available: "6:00 - 22:00",
+  },
+  {
+    id: 5,
+    title: "Giặt ủi tự động",
+    desc: "Máy giặt, máy sấy công nghiệp, thanh toán qua thẻ tiện lợi",
+    icon: "mdi-washing-machine",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=800&q=80",
+    color: "error",
+    available: "Có phí",
+  },
+  {
+    id: 6,
+    title: "An ninh 24/7",
+    desc: "Bảo vệ túc trực, camera giám sát, kiểm soát ra vào nghiêm ngặt",
+    icon: "mdi-shield-check",
+    image: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&q=80",
+    color: "deep-purple",
+    available: "24/7",
   },
 ];
 
@@ -412,7 +418,9 @@ const statsItems = [
   line-height: 1.7;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
-
+.free{
+  color:white;
+}
 /* Hero Stats */
 .hero-stats {
   display: flex;
@@ -518,5 +526,56 @@ const statsItems = [
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Registration Process Styles */
+.process-card {
+  transition: all 0.3s ease;
+  position: relative;
+  border: 2px solid transparent;
+}
+.process-card:hover {
+  transform: translateY(-8px);
+  border-color: #ff6b00;
+  box-shadow: 0 12px 40px rgba(255, 107, 0, 0.15) !important;
+}
+.step-number {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b00, #ff8800);
+  color: white;
+  font-size: 2rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(255, 107, 0, 0.3);
+}
+
+/* Facilities Styles */
+.facility-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.facility-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
+}
+.facility-card:hover .facility-overlay {
+  opacity: 1;
+}
+.facility-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 107, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 </style>

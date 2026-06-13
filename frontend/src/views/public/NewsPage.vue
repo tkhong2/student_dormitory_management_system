@@ -77,9 +77,12 @@
 
 <script setup>
 const news = [
-  { id: 1, category: 'TIN TỨC KTX', title: 'Hướng dẫn quy trình đăng ký ở KTX cho tân sinh viên khóa mới', desc: 'Ban quản lý KTX Đại học Đại Nam hướng dẫn chi tiết các bước đăng ký, nộp hồ sơ và làm thủ tục nhận phòng cho sinh viên khóa mới nhập học năm 2026...', date: '15/05/2026', image: '/images/student_life.png' },
-  { id: 2, category: 'SỰ KIỆN', title: 'Giải bóng đá Nam - Nữ KTX Đại Nam Cup 2026 chính thức khởi tranh', desc: 'Nhằm tạo sân chơi lành mạnh, tăng cường đoàn kết giữa các sinh viên nội trú, giải bóng đá truyền thống KTX sẽ diễn ra vào cuối tuần này...', date: '12/05/2026', image: '/images/football_match.png' },
-  { id: 3, category: 'THÔNG BÁO', title: 'Lịch bảo trì hệ thống điện lưới và mạng wifi tại các tòa nhà khu A', desc: 'Để nâng cao chất lượng phục vụ, BQL phối hợp cùng bộ phận kỹ thuật tiến hành bảo trì hệ thống định kỳ...', date: '10/05/2026', image: '/images/hero_dormitory.png' },
+  { id: 1, category: 'TIN TỨC KTX', title: 'Hướng dẫn quy trình đăng ký ở KTX cho tân sinh viên khóa mới', desc: 'Ban quản lý KTX Đại học Đại Nam hướng dẫn chi tiết các bước đăng ký, nộp hồ sơ và làm thủ tục nhận phòng cho sinh viên khóa mới nhập học năm 2026...', date: '15/05/2026', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80' },
+ 
+  { id: 2, category: 'THÔNG BÁO', title: 'Lịch bảo trì hệ thống điện lưới và mạng wifi tại các tòa nhà khu A', desc: 'Để nâng cao chất lượng phục vụ, BQL phối hợp cùng bộ phận kỹ thuật tiến hành bảo trì hệ thống định kỳ...', date: '10/05/2026', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80' },
+  { id: 3, category: 'HOẠT ĐỘNG SV', title: 'Chương trình "Sinh nhật tập thể" tháng 5 cho sinh viên nội trú', desc: 'Chương trình được tổ chức hàng tháng, tạo không khí vui vẻ, gắn kết giữa các sinh viên có sinh nhật trong tháng...', date: '08/05/2026', image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80' },
+  { id: 4, category: 'TIN TỨC KTX', title: 'KTX trang bị thêm khu vực học tập chung hiện đại tại tòa B', desc: 'Đáp ứng nhu cầu học tập của sinh viên, KTX đầu tư nâng cấp khu học tập với trang thiết bị hiện đại, không gian yên tĩnh...', date: '05/05/2026', image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80' },
+  { id: 5, category: 'THÔNG BÁO', title: 'Triển khai thanh toán phí KTX qua VNPay và Momo', desc: 'Từ tháng 6/2026, sinh viên có thể thanh toán phí KTX qua ví điện tử VNPay và Momo, thuận tiện và nhanh chóng hơn...', date: '01/05/2026', image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80' },
 ]
 
 const categories = ['Tất cả tin tức', 'Thông báo chung', 'Tin tức sự kiện', 'Hoạt động SV', 'Quy định - Thủ tục']

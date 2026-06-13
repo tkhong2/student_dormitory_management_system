@@ -15,17 +15,61 @@
       </a-button>
     </div>
     
+    <!-- Filters Card -->
+    <a-card style="margin-bottom: 16px" :bordered="false">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="12" :md="12">
+          <a-input-search
+            v-model:value="search"
+            placeholder="Tìm tên tiện nghi..."
+            allow-clear
+            @search="handleSearch"
+          >
+            <template #prefix><SearchOutlined /></template>
+          </a-input-search>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="categoryFilter"
+            placeholder="Danh mục"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả</a-select-option>
+            <a-select-option value="Electric">Điện tử</a-select-option>
+            <a-select-option value="Furniture">Nội thất</a-select-option>
+            <a-select-option value="Sanitary">Vệ sinh</a-select-option>
+            <a-select-option value="Other">Khác</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-select
+            v-model:value="statusFilter"
+            placeholder="Trạng thái"
+            allow-clear
+            style="width: 100%"
+            @change="handleSearch"
+          >
+            <a-select-option value="">Tất cả</a-select-option>
+            <a-select-option value="active">Đang dùng</a-select-option>
+            <a-select-option value="inactive">Ngừng dùng</a-select-option>
+          </a-select>
+        </a-col>
+      </a-row>
+    </a-card>
+    
     <!-- Table Card -->
     <a-card :bordered="false" :loading="loading">
       <div style="margin-bottom: 16px;">
         <p style="font-size: 14px; color: #595959; margin: 0;">
-          Tổng: <strong>{{ amenities.length }}</strong> tiện nghi
+          Tổng: <strong>{{ filteredAmenities.length }}</strong> tiện nghi
         </p>
       </div>
       
       <!-- Table -->
       <a-table 
-        :dataSource="amenities" 
+        :dataSource="filteredAmenities" 
         :columns="columns" 
         :rowKey="r => r.id"
         :pagination="{ pageSize: 10, showTotal: (total) => `Tổng ${total} tiện nghi` }"
@@ -96,14 +140,50 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import { SearchOutlined } from '@ant-design/icons-vue'
 import { amenityService } from '@/services/amenityService'
 
 const amenities = ref([])
 const loading = ref(false)
 const dialog = ref(false)
 const deleteDialog = ref(false)
+
+// Filter states
+const search = ref('')
+const categoryFilter = ref('')
+const statusFilter = ref('')
+
+// Filtered amenities
+const filteredAmenities = computed(() => {
+  let result = amenities.value
+
+  // Search by name
+  if (search.value) {
+    result = result.filter(a => 
+      a.name.toLowerCase().includes(search.value.toLowerCase())
+    )
+  }
+
+  // Filter by category
+  if (categoryFilter.value) {
+    result = result.filter(a => a.category === categoryFilter.value)
+  }
+
+  // Filter by status
+  if (statusFilter.value === 'active') {
+    result = result.filter(a => a.isActive === true)
+  } else if (statusFilter.value === 'inactive') {
+    result = result.filter(a => a.isActive === false)
+  }
+
+  return result
+})
+
+function handleSearch() {
+  // Trigger computed property re-evaluation
+}
 const editTarget = ref(null)
 const deleteTarget = ref(null)
 

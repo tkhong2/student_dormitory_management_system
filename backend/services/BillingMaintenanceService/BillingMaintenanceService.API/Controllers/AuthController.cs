@@ -90,6 +90,8 @@ public class AuthController : ControllerBase
                     Role = user.Role,
                     AvatarUrl = user.AvatarUrl,
                     StudentCode = user.StudentCode,
+                    Faculty = user.Faculty,
+                    ClassCode = user.ClassCode,
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Address = user.Address

@@ -19,6 +19,10 @@ const lightTheme = {
     warning: '#f97316',
     'on-background': '#0f172a',
     'on-surface': '#0f172a',
+    'on-primary': '#ffffff',
+    'on-secondary': '#ffffff',
+    'on-error': '#ffffff',
+    'on-warning': '#ffffff',
   },
 }
 

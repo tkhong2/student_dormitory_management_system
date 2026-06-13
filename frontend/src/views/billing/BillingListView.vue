@@ -112,23 +112,31 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'code'">
-            <a-typography-text strong copyable>{{ record.code }}</a-typography-text>
+            <a-typography-text strong copyable>{{ record.invoiceCode }}</a-typography-text>
+          </template>
+
+          <template v-else-if="column.key === 'period'">
+            <a-tag color="blue">{{ record.billingMonth }}/{{ record.billingYear }}</a-tag>
           </template>
 
           <template v-else-if="column.key === 'amount'">
             <a-typography-text strong style="color: #1890ff">
-              {{ formatCurrency(record.amount) }}
+              {{ formatCurrency(record.totalAmount) }}
             </a-typography-text>
           </template>
 
+          <template v-else-if="column.key === 'due'">
+            {{ formatDate(record.dueDate) }}
+          </template>
+
           <template v-else-if="column.key === 'status'">
-            <a-tag :color="sColor(record.status)">{{ record.status }}</a-tag>
+            <a-tag :color="sColor(record.status)">{{ sLabel(record.status) }}</a-tag>
           </template>
 
           <template v-else-if="column.key === 'actions'">
             <a-space>
               <a-button
-                v-if="record.status !== 'Đã TT'"
+                v-if="record.status !== 'Paid'"
                 type="primary"
                 size="small"
                 @click="payBill(record)"
@@ -155,6 +163,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   SearchOutlined,
   ArrowUpOutlined,
@@ -164,47 +173,32 @@ import {
 import { message } from 'ant-design-vue'
 import billService from '@/services/billService'
 
+const router = useRouter()
 const loading = ref(false)
 const bills = ref([])
 const search = ref('')
 const monthFilter = ref('all')
 const statusFilter = ref('all')
 
-const months = ['Tháng 5/2026', 'Tháng 4/2026', 'Tháng 3/2026', 'Tháng 2/2026']
+const months = ref([])
 
 const statusFilterOptions = [
   { label: 'Tất cả', value: 'all' },
-  { label: 'Đã TT', value: 'Đã TT' },
-  { label: 'Chưa TT', value: 'Chưa TT' },
-  { label: 'Quá hạn', value: 'Quá hạn' }
+  { label: 'Đã TT', value: 'Paid' },
+  { label: 'Chưa TT', value: 'Unpaid' },
+  { label: 'Quá hạn', value: 'Overdue' }
 ]
 
 const billingColumns = [
-  { title: 'Mã HĐ', key: 'code', dataIndex: 'code', width: 120 },
-  { title: 'Sinh viên', dataIndex: 'student', key: 'student', width: 150 },
-  { title: 'Phòng', dataIndex: 'room', key: 'room', width: 80, align: 'center' },
-  { title: 'Mô tả', dataIndex: 'description', key: 'description' },
-  { title: 'Số tiền', key: 'amount', dataIndex: 'amount', width: 140, align: 'right' },
-  { title: 'Hạn TT', dataIndex: 'due', key: 'due', width: 120, align: 'center' },
+  { title: 'Mã Phiếu Thu', key: 'code', dataIndex: 'invoiceCode', width: 140 },
+  { title: 'Sinh viên', dataIndex: 'studentName', key: 'studentName', width: 150 },
+  { title: 'Phòng', dataIndex: 'roomNumber', key: 'roomNumber', width: 80, align: 'center' },
+  { title: 'Kỳ thanh toán', key: 'period', width: 120, align: 'center' },
+  { title: 'Tổng tiền', key: 'amount', dataIndex: 'totalAmount', width: 140, align: 'right' },
+  { title: 'Hạn TT', key: 'due', width: 120, align: 'center' },
   { title: 'Trạng thái', key: 'status', dataIndex: 'status', width: 130, align: 'center' },
   { title: 'Thao tác', key: 'actions', width: 180, align: 'center', fixed: 'right' }
 ]
-
-const studentMap = {
-  '30000000-0000-0000-0000-000000000001': 'Nguyễn Văn A',
-  '30000000-0000-0000-0000-000000000002': 'Trần Thị B',
-  '30000000-0000-0000-0000-000000000003': 'Lê Văn C',
-  '30000000-0000-0000-0000-000000000004': 'Phạm Thị D',
-  '30000000-0000-0000-0000-000000000005': 'Hoàng Anh E'
-}
-
-const roomMap = {
-  '40000000-0000-0000-0000-000000000101': 'A101',
-  '40000000-0000-0000-0000-000000000102': 'A102',
-  '40000000-0000-0000-0000-000000000103': 'A103',
-  '40000000-0000-0000-0000-000000000104': 'A104',
-  '40000000-0000-0000-0000-000000000105': 'A105'
-}
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -213,35 +207,47 @@ const formatCurrency = (value) => {
   }).format(value)
 }
 
-const sColor = (s) =>
-  ({ 'Đã TT': 'success', 'Chưa TT': 'warning', 'Quá hạn': 'error' })[s] || 'default'
+const formatDate = (dateString) => {
+  if (!dateString) return '---'
+  return new Date(dateString).toLocaleDateString('vi-VN')
+}
+
+const sColor = (s) => {
+  const colors = {
+    'Paid': 'success',
+    'Unpaid': 'warning',
+    'PartialPaid': 'processing',
+    'Overdue': 'error',
+    'Cancelled': 'default'
+  }
+  return colors[s] || 'default'
+}
+
+const sLabel = (s) => {
+  const labels = {
+    'Paid': 'Đã TT',
+    'Unpaid': 'Chưa TT',
+    'PartialPaid': 'TT 1 phần',
+    'Overdue': 'Quá hạn',
+    'Cancelled': 'Đã hủy'
+  }
+  return labels[s] || s
+}
 
 async function loadData() {
   loading.value = true
   try {
     const loaded = await billService.getAll()
-    bills.value = loaded.map((b, index) => {
-      const roomId = b.roomId || b.RoomId || ''
-      const studentId = b.studentId || b.StudentId || ''
-      const dueDate = new Date(b.dueDate)
-      return {
-        id: b.id,
-        code: `HD${String(index + 1).padStart(4, '0')}`,
-        student: studentMap[studentId] || 'Không xác định',
-        room: roomMap[roomId] || 'N/A',
-        description: b.description || 'Hóa đơn tiền phòng',
-        amount: b.amount || 0,
-        due: dueDate.toLocaleDateString('vi-VN'),
-        dueDate: dueDate.toISOString(),
-        monthLabel: `Tháng ${dueDate.getMonth() + 1}/${dueDate.getFullYear()}`,
-        status:
-          b.status === 'Paid'
-            ? 'Đã TT'
-            : b.status === 'Overdue'
-              ? 'Quá hạn'
-              : 'Chưa TT'
-      }
+    bills.value = loaded
+    
+    // Extract unique months from bills
+    const monthsSet = new Set()
+    loaded.forEach(bill => {
+      const monthLabel = `Tháng ${bill.billingMonth}/${bill.billingYear}`
+      monthsSet.add(monthLabel)
     })
+    months.value = Array.from(monthsSet).sort().reverse()
+    
   } catch (err) {
     console.error('Lỗi tải hóa đơn:', err)
     message.error(err.message || 'Lỗi tải dữ liệu')
@@ -250,43 +256,58 @@ async function loadData() {
   }
 }
 
+// Calculate statistics from ACTUAL invoice data
 const totalRevenue = computed(() =>
   bills.value
-    .filter((b) => b.status === 'Đã TT')
-    .reduce((sum, b) => sum + b.amount, 0)
+    .filter((b) => b.status === 'Paid')
+    .reduce((sum, b) => sum + (b.totalAmount || 0), 0)
 )
 
 const unpaidAmount = computed(() =>
   bills.value
-    .filter((b) => b.status === 'Chưa TT')
-    .reduce((sum, b) => sum + b.amount, 0)
+    .filter((b) => b.status === 'Unpaid' || b.status === 'PartialPaid')
+    .reduce((sum, b) => sum + (b.debtAmount || 0), 0)
 )
 
 const overdueAmount = computed(() =>
   bills.value
-    .filter((b) => b.status === 'Quá hạn')
-    .reduce((sum, b) => sum + b.amount, 0)
+    .filter((b) => b.status === 'Overdue')
+    .reduce((sum, b) => sum + (b.debtAmount || 0), 0)
 )
 
-const unpaidCount = computed(() => bills.value.filter((b) => b.status === 'Chưa TT').length)
-const overdueCount = computed(() => bills.value.filter((b) => b.status === 'Quá hạn').length)
+const unpaidCount = computed(() => 
+  bills.value.filter((b) => b.status === 'Unpaid' || b.status === 'PartialPaid').length
+)
+
+const overdueCount = computed(() => 
+  bills.value.filter((b) => b.status === 'Overdue').length
+)
 
 const filteredBills = computed(() => {
   const keyword = search.value.trim().toLowerCase()
   return bills.value.filter((item) => {
     const matchesText =
       !keyword ||
-      item.code.toLowerCase().includes(keyword) ||
-      item.student.toLowerCase().includes(keyword) ||
-      item.room.toLowerCase().includes(keyword)
+      item.invoiceCode?.toLowerCase().includes(keyword) ||
+      item.studentName?.toLowerCase().includes(keyword) ||
+      item.studentCode?.toLowerCase().includes(keyword) ||
+      item.roomNumber?.toLowerCase().includes(keyword)
+    
     const matchesStatus = statusFilter.value === 'all' || item.status === statusFilter.value
-    const matchesMonth = monthFilter.value === 'all' || item.monthLabel === monthFilter.value
+    
+    const itemMonthLabel = `Tháng ${item.billingMonth}/${item.billingYear}`
+    const matchesMonth = monthFilter.value === 'all' || itemMonthLabel === monthFilter.value
+    
     return matchesText && matchesStatus && matchesMonth
   })
 })
 
 function payBill(record) {
-  message.info(`Thu tiền cho hóa đơn: ${record.code}`)
+  // Navigate to payment page with selected invoice
+  router.push({
+    name: 'payments',
+    query: { invoiceId: record.id }
+  })
 }
 
 onMounted(loadData)

@@ -217,7 +217,7 @@
           {{ selectedRequest.buildingName }}
         </a-descriptions-item>
         <a-descriptions-item label="Người báo cáo">
-          {{ selectedRequest.reportedByName }}
+          {{ selectedRequest.requestedByStudentName }}
         </a-descriptions-item>
         <a-descriptions-item label="Ngày báo cáo">
           {{ formatDate(selectedRequest.createdAt) }}
@@ -231,22 +231,22 @@
         <a-descriptions-item v-if="selectedRequest.resolvedAt" label="Ngày hoàn thành">
           {{ formatDate(selectedRequest.resolvedAt) }}
         </a-descriptions-item>
-        <a-descriptions-item v-if="selectedRequest.resolutionNotes" label="Ghi chú xử lý" :span="2">
-          {{ selectedRequest.resolutionNotes }}
+        <a-descriptions-item v-if="selectedRequest.resolutionNote" label="Ghi chú xử lý" :span="2">
+          {{ selectedRequest.resolutionNote }}
         </a-descriptions-item>
       </a-descriptions>
 
       <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
         <a-button @click="detailModalVisible = false">Đóng</a-button>
         <a-button
-          v-if="selectedRequest.status === 'Pending'"
+          v-if="selectedRequest.status === 'New'"
           type="primary"
           @click="openAssignModal(selectedRequest)"
         >
           Phân công
         </a-button>
         <a-button
-          v-if="selectedRequest.status === 'InProgress'"
+          v-if="selectedRequest.status === 'Assigned' || selectedRequest.status === 'InProgress'"
           type="primary"
           @click="openResolveModal(selectedRequest)"
         >
@@ -332,8 +332,8 @@ import {
   WarningOutlined, CalendarOutlined, HomeOutlined, UserOutlined, UserAddOutlined
 } from '@ant-design/icons-vue'
 import PageHeaderAnt from '@/components/common/PageHeaderAnt.vue'
-import maintenanceService from '@/services/maintenanceService'
 import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
 import dayjs from 'dayjs'
 
 const authStore = useAuthStore()
@@ -360,10 +360,10 @@ const resolveForm = ref({
 })
 
 const stats = computed(() => ({
-  pending: maintenanceRequests.value.filter(r => r.status === 'Pending').length,
-  inProgress: maintenanceRequests.value.filter(r => r.status === 'InProgress').length,
-  completed: maintenanceRequests.value.filter(r => r.status === 'Resolved').length,
-  urgent: maintenanceRequests.value.filter(r => r.priority === 'Urgent' && r.status !== 'Resolved').length
+  pending: maintenanceRequests.value.filter(r => r.status === 'New').length,
+  inProgress: maintenanceRequests.value.filter(r => r.status === 'Assigned' || r.status === 'InProgress').length,
+  completed: maintenanceRequests.value.filter(r => r.status === 'Done').length,
+  urgent: maintenanceRequests.value.filter(r => r.priority === 'Urgent' && r.status !== 'Done').length
 }))
 
 const filteredRequests = computed(() => {
@@ -375,21 +375,27 @@ const filteredRequests = computed(() => {
       r.title?.toLowerCase().includes(search) ||
       r.description?.toLowerCase().includes(search) ||
       r.roomNumber?.toLowerCase().includes(search) ||
-      r.reportedByName?.toLowerCase().includes(search)
+      r.requestedByStudentName?.toLowerCase().includes(search)
     )
   }
 
   return {
-    pending: filtered.filter(r => r.status === 'Pending'),
-    inProgress: filtered.filter(r => r.status === 'InProgress'),
-    completed: filtered.filter(r => r.status === 'Resolved')
+    pending: filtered.filter(r => r.status === 'New'),
+    inProgress: filtered.filter(r => r.status === 'Assigned' || r.status === 'InProgress'),
+    completed: filtered.filter(r => r.status === 'Done')
   }
 })
 
 const loadMaintenanceRequests = async () => {
   loading.value = true
   try {
-    maintenanceRequests.value = await maintenanceService.getAll()
+    const response = await axios.get('http://localhost:5002/api/maintenancerequests', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    maintenanceRequests.value = response.data
+    
     // Sort by priority and created date
     maintenanceRequests.value.sort((a, b) => {
       if (a.priority === 'Urgent' && b.priority !== 'Urgent') return -1
@@ -406,12 +412,13 @@ const loadMaintenanceRequests = async () => {
 
 const loadStaffList = async () => {
   try {
-    // TODO: Call API to get staff list
-    // For now, use mock data
-    staffList.value = [
-      { id: 1, fullName: 'Nguyễn Văn A', phone: '0123456789' },
-      { id: 2, fullName: 'Trần Thị B', phone: '0987654321' }
-    ]
+    const response = await axios.get('http://localhost:5002/api/users', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    // Filter staff and admin only
+    staffList.value = response.data.filter(u => u.role === 'Staff' || u.role === 'Admin')
   } catch (error) {
     console.error('Lỗi tải danh sách nhân viên:', error)
   }
@@ -456,12 +463,15 @@ const handleAssign = async () => {
   try {
     const staff = staffList.value.find(s => s.id === assignForm.value.assignedToUserId)
     
-    await maintenanceService.assign(selectedRequest.value.id, {
+    await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/assign`, {
       assignedToUserId: assignForm.value.assignedToUserId,
       assignedToName: staff?.fullName,
-      assignedByUserId: authStore.user.id,
-      assignedByName: authStore.user.fullName,
-      notes: assignForm.value.notes
+      expectedCompletionDate: new Date().toISOString().split('T')[0],
+      estimatedCost: 0
+    }, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
     })
 
     message.success('Đã phân công xử lý yêu cầu')
@@ -482,11 +492,14 @@ const handleResolve = async () => {
 
   resolving.value = true
   try {
-    await maintenanceService.resolve(selectedRequest.value.id, {
-      resolutionNotes: resolveForm.value.resolutionNotes,
-      cost: resolveForm.value.cost || 0,
-      resolvedByUserId: authStore.user.id,
-      resolvedByName: authStore.user.fullName
+    await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/resolve`, {
+      resolutionNote: resolveForm.value.resolutionNotes,
+      actualCost: resolveForm.value.cost || 0,
+      afterImageUrls: null
+    }, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
     })
 
     message.success('Đã hoàn thành xử lý yêu cầu')
@@ -501,10 +514,11 @@ const handleResolve = async () => {
 
 const getCategoryColor = (category) => {
   const colors = {
-    Electrical: 'orange',
+    Electric: 'orange',
     Plumbing: 'blue',
     Furniture: 'purple',
-    Cleaning: 'green',
+    Network: 'green',
+    Structure: 'red',
     Other: 'default'
   }
   return colors[category] || 'default'
@@ -512,10 +526,11 @@ const getCategoryColor = (category) => {
 
 const getCategoryText = (category) => {
   const texts = {
-    Electrical: 'Điện',
+    Electric: 'Điện',
     Plumbing: 'Nước',
     Furniture: 'Nội thất',
-    Cleaning: 'Vệ sinh',
+    Network: 'Mạng',
+    Structure: 'Kết cấu',
     Other: 'Khác'
   }
   return texts[category] || category
@@ -523,18 +538,24 @@ const getCategoryText = (category) => {
 
 const getStatusColor = (status) => {
   const colors = {
-    Pending: 'orange',
+    New: 'orange',
+    Assigned: 'blue',
     InProgress: 'blue',
-    Resolved: 'green'
+    Done: 'green',
+    Cancelled: 'grey',
+    Rejected: 'red'
   }
   return colors[status] || 'default'
 }
 
 const getStatusText = (status) => {
   const texts = {
-    Pending: 'Chờ xử lý',
+    New: 'Chờ xử lý',
+    Assigned: 'Đã phân công',
     InProgress: 'Đang xử lý',
-    Resolved: 'Đã hoàn thành'
+    Done: 'Đã hoàn thành',
+    Cancelled: 'Đã hủy',
+    Rejected: 'Từ chối'
   }
   return texts[status] || status
 }

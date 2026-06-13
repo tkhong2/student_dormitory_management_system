@@ -113,20 +113,81 @@
         </div>
 
         <!-- Notification bell -->
-        <v-btn icon variant="text" class="mr-1" style="color:#475569;">
-          <v-badge dot color="error">
+        <v-btn icon variant="text" class="mr-1" style="color:#475569;" @click="$router.push('/student/notifications')">
+          <v-badge 
+            :content="unreadNotificationCount" 
+            :model-value="unreadNotificationCount > 0"
+            color="error"
+          >
             <v-icon>mdi-bell-outline</v-icon>
           </v-badge>
         </v-btn>
 
-        <!-- Avatar -->
-        <v-avatar
-          size="38"
-          class="cursor-pointer"
-          style="border: 2px solid #6366f1; box-shadow: 0 2px 10px rgba(99,102,241,0.3);"
-        >
-          <v-img :src="userAvatarUrl" />
-        </v-avatar>
+        <!-- Avatar with Menu -->
+        <v-menu offset-y>
+          <template v-slot:activator="{ props }">
+            <v-avatar
+              v-bind="props"
+              size="38"
+              class="cursor-pointer"
+              style="border: 2px solid #6366f1; box-shadow: 0 2px 10px rgba(99,102,241,0.3);"
+            >
+              <v-img :src="userAvatarUrl" />
+            </v-avatar>
+          </template>
+          
+          <v-list class="pa-2" min-width="220" elevation="8" rounded="lg">
+            <!-- User Info Header -->
+            <v-list-item class="px-3 mb-2">
+              <div class="d-flex align-center ga-3">
+                <v-avatar size="40">
+                  <v-img :src="userAvatarUrl" />
+                </v-avatar>
+                <div style="flex: 1; min-width: 0;">
+                  <div class="text-body-2 font-weight-bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ currentUser.fullName }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ currentUser.studentCode }}
+                  </div>
+                </div>
+              </div>
+            </v-list-item>
+
+            <v-divider class="my-2" />
+
+            <!-- Menu Items -->
+            <v-list-item
+              prepend-icon="mdi-account-circle-outline"
+              title="Hồ sơ cá nhân"
+              @click="$router.push('/student/profile')"
+              class="rounded-lg"
+            />
+            
+            <v-list-item
+              prepend-icon="mdi-key-outline"
+              title="Đổi mật khẩu"
+              @click="showChangePasswordDialog = true"
+              class="rounded-lg"
+            />
+
+            <v-list-item
+              prepend-icon="mdi-cog-outline"
+              title="Cài đặt"
+              @click="showSettingsDialog = true"
+              class="rounded-lg"
+            />
+
+            <v-divider class="my-2" />
+
+            <v-list-item
+              prepend-icon="mdi-logout"
+              title="Đăng xuất"
+              @click="logout"
+              class="rounded-lg text-error"
+            />
+          </v-list>
+        </v-menu>
       </div>
     </v-app-bar>
 
@@ -141,6 +202,124 @@
         </router-view>
       </v-container>
     </v-main>
+
+    <!-- Change Password Dialog -->
+    <v-dialog v-model="showChangePasswordDialog" max-width="450" persistent>
+      <v-card rounded="xl">
+        <v-card-title class="d-flex align-center pa-6 bg-indigo-darken-4 text-white">
+          <v-icon start>mdi-key-outline</v-icon>
+          Đổi mật khẩu
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <v-form ref="passwordForm">
+            <v-text-field
+              label="Mật khẩu hiện tại"
+              type="password"
+              variant="outlined"
+              density="comfortable"
+              prepend-inner-icon="mdi-lock-outline"
+              class="mb-4"
+            />
+            
+            <v-text-field
+              label="Mật khẩu mới"
+              type="password"
+              variant="outlined"
+              density="comfortable"
+              prepend-inner-icon="mdi-lock-reset"
+              class="mb-4"
+            />
+            
+            <v-text-field
+              label="Xác nhận mật khẩu mới"
+              type="password"
+              variant="outlined"
+              density="comfortable"
+              prepend-inner-icon="mdi-lock-check"
+            />
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions class="pa-6 pt-0">
+          <v-spacer />
+          <v-btn 
+            variant="text" 
+            @click="showChangePasswordDialog = false"
+          >
+            Hủy
+          </v-btn>
+          <v-btn 
+            color="primary" 
+            variant="flat"
+            @click="handleChangePassword"
+          >
+            Đổi mật khẩu
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Settings Dialog -->
+    <v-dialog v-model="showSettingsDialog" max-width="500" persistent>
+      <v-card rounded="xl">
+        <v-card-title class="d-flex align-center pa-6 bg-indigo-darken-4 text-white">
+          <v-icon start>mdi-cog-outline</v-icon>
+          Cài đặt
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <v-list class="pa-0">
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon>mdi-bell-outline</v-icon>
+              </template>
+              <v-list-item-title>Thông báo</v-list-item-title>
+              <template v-slot:append>
+                <v-switch color="primary" hide-details inset />
+              </template>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon>mdi-email-outline</v-icon>
+              </template>
+              <v-list-item-title>Nhận email thông báo</v-list-item-title>
+              <template v-slot:append>
+                <v-switch color="primary" hide-details inset />
+              </template>
+            </v-list-item>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon>mdi-theme-light-dark</v-icon>
+              </template>
+              <v-list-item-title>Chế độ tối</v-list-item-title>
+              <template v-slot:append>
+                <v-switch color="primary" hide-details inset />
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+
+        <v-card-actions class="pa-6 pt-0">
+          <v-spacer />
+          <v-btn 
+            variant="text" 
+            @click="showSettingsDialog = false"
+          >
+            Đóng
+          </v-btn>
+          <v-btn 
+            color="primary" 
+            variant="flat"
+            @click="handleSaveSettings"
+          >
+            Lưu
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -150,11 +329,15 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { contractService } from '@/services/contractService'
 import { roomApplicationService } from '@/services/roomApplicationService'
+import axios from 'axios'
 
 const drawer = ref(true) // Always keep drawer open
 const router = useRouter()
 const authStore = useAuthStore()
 const roomLabel = ref('Chưa xếp phòng')
+const unreadNotificationCount = ref(0)
+const showChangePasswordDialog = ref(false)
+const showSettingsDialog = ref(false)
 
 // Get current user from auth store
 const currentUser = computed(() => authStore.user || {
@@ -175,26 +358,77 @@ const userAvatarUrl = computed(() => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.value.fullName || 'SV')}&background=6366f1&color=fff&size=128`
 })
 
+// Check if student has room
+const hasRoom = ref(false)
+
+onMounted(async () => {
+  await checkStudentRoom()
+})
+
+async function checkStudentRoom() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!user.id) return
+    
+    // Check contracts
+    const contracts = await contractService.getByUserId(user.id)
+    const activeContract = contracts.find(c => c.status === 'Active' || c.status === 'Pending')
+    
+    if (activeContract) {
+      hasRoom.value = true
+      return
+    }
+    
+    // Check applications
+    const applications = await roomApplicationService.getByUserId(user.id)
+    const appWithRoom = applications.find(app => 
+      app.status === 'Approved' && app.assignedRoomId
+    )
+    
+    hasRoom.value = !!appWithRoom
+  } catch (error) {
+    console.error('Error checking room:', error)
+    hasRoom.value = false
+  }
+}
+
 // Get student info text (StudentCode · Class)
 const studentInfo = computed(() => {
   const code = currentUser.value.studentCode || 'SV???'
-  // Try to get class from user or default
-  return `${code}`
+  const classCode = currentUser.value.classCode
+  return classCode ? `${code} · ${classCode}` : code
 })
 
-const menu = [
+const menu = computed(() => [
   { title: 'Trang chủ', icon: 'mdi-home-outline', to: '/student' },
-  { title: 'Đăng ký phòng', icon: 'mdi-home-search', to: '/student/rooms' },
+  { 
+    title: hasRoom.value ? 'Chuyển phòng' : 'Đăng ký phòng', 
+    icon: hasRoom.value ? 'mdi-swap-horizontal' : 'mdi-home-search', 
+    to: '/student/rooms' 
+  },
   { title: 'Phòng của tôi', icon: 'mdi-door-closed', to: '/student/my-room' },
   { title: 'Hợp đồng', icon: 'mdi-file-document-outline', to: '/student/my-contract' },
   { title: 'Thanh toán', icon: 'mdi-credit-card-outline', to: '/student/my-payments' },
   { title: 'Yêu cầu sửa chữa', icon: 'mdi-wrench-outline', to: '/student/maintenance' },
+  { title: 'Thông báo', icon: 'mdi-bell-outline', to: '/student/notifications' },
   { title: 'Hồ sơ cá nhân', icon: 'mdi-account-outline', to: '/student/profile' },
-]
+])
 
 const logout = () => { 
   authStore.logout()
   router.push('/login') 
+}
+
+const handleChangePassword = () => {
+  // TODO: Implement change password logic
+  console.log('Change password')
+  showChangePasswordDialog.value = false
+}
+
+const handleSaveSettings = () => {
+  // TODO: Implement save settings logic
+  console.log('Save settings')
+  showSettingsDialog.value = false
 }
 
 // Prevent drawer toggle
@@ -233,8 +467,32 @@ const fetchRoomNumber = async () => {
   }
 }
 
+// Fetch unread notification count
+const fetchUnreadNotificationCount = async () => {
+  try {
+    const userId = currentUser.value.id
+    if (!userId) return
+
+    const response = await axios.get(`http://localhost:5002/api/notifications/user/${userId}/unread/count`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    unreadNotificationCount.value = response.data.count || 0
+  } catch (error) {
+    console.error('Error fetching unread notification count:', error)
+  }
+}
+
 onMounted(() => {
   fetchRoomNumber()
+  fetchUnreadNotificationCount()
+  
+  // Poll for new notifications every 30 seconds
+  setInterval(() => {
+    fetchUnreadNotificationCount()
+  }, 30000)
 })
 </script>
 

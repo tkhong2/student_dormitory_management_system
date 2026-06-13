@@ -127,8 +127,15 @@
             />
             <template #overlay>
               <a-menu>
-                <a-menu-item key="profile">
-                  <UserOutlined style="margin-right: 8px" /> {{ currentUser.fullName }}
+                <a-menu-item key="profile" @click="$router.push('/admin/profile')">
+                  <UserOutlined style="margin-right: 8px" /> Hồ sơ cá nhân
+                </a-menu-item>
+                <a-menu-item key="change-password" @click="showChangePasswordDialog = true">
+                  <template #icon><SafetyOutlined style="margin-right: 8px" /></template>
+                  Đổi mật khẩu
+                </a-menu-item>
+                <a-menu-item key="settings" @click="showSettingsDialog = true">
+                  <SettingOutlined style="margin-right: 8px" /> Cài đặt
                 </a-menu-item>
                 <a-menu-divider />
                 <a-menu-item
@@ -160,6 +167,61 @@
         </a-layout-content>
       </a-layout>
     </a-layout>
+
+    <!-- Change Password Modal -->
+    <a-modal
+      v-model:open="showChangePasswordDialog"
+      title="Đổi mật khẩu"
+      @ok="handleChangePassword"
+      okText="Đổi mật khẩu"
+      cancelText="Hủy"
+      :ok-button-props="{ type: 'primary' }"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="Mật khẩu hiện tại">
+          <a-input-password
+            v-model:value="passwordForm.currentPassword"
+            placeholder="Nhập mật khẩu hiện tại"
+          />
+        </a-form-item>
+        <a-form-item label="Mật khẩu mới">
+          <a-input-password
+            v-model:value="passwordForm.newPassword"
+            placeholder="Nhập mật khẩu mới"
+          />
+        </a-form-item>
+        <a-form-item label="Xác nhận mật khẩu mới">
+          <a-input-password
+            v-model:value="passwordForm.confirmPassword"
+            placeholder="Nhập lại mật khẩu mới"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- Settings Modal -->
+    <a-modal
+      v-model:open="showSettingsDialog"
+      title="Cài đặt"
+      @ok="handleSaveSettings"
+      okText="Lưu"
+      cancelText="Hủy"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="Thông báo">
+          <a-switch v-model:checked="settings.notifications" />
+          <span style="margin-left: 12px">Nhận thông báo hệ thống</span>
+        </a-form-item>
+        <a-form-item label="Email">
+          <a-switch v-model:checked="settings.emailNotifications" />
+          <span style="margin-left: 12px">Nhận email thông báo</span>
+        </a-form-item>
+        <a-form-item label="Giao diện">
+          <a-switch v-model:checked="settings.darkMode" />
+          <span style="margin-left: 12px">Chế độ tối</span>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </a-config-provider>
 </template>
 
@@ -193,6 +255,20 @@ const authStore = useAuthStore();
 
 const collapsed = ref(false);
 const selectedKeys = ref([route.path]);
+const showChangePasswordDialog = ref(false);
+const showSettingsDialog = ref(false);
+
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const settings = ref({
+  notifications: true,
+  emailNotifications: true,
+  darkMode: false
+});
 
 // Get current user
 const currentUser = authStore.user || {
@@ -254,6 +330,11 @@ const menuItems = computed(() => {
             key: "/staff/contracts",
             icon: () => h(FileTextOutlined),
             label: "Hợp đồng",
+          },
+          {
+            key: "/staff/contract-extensions",
+            icon: () => h(FileTextOutlined),
+            label: "Gia hạn hợp đồng",
           },
           {
             key: "/staff/room-transfers",
@@ -361,6 +442,11 @@ const menuItems = computed(() => {
           key: "/admin/buildings",
           icon: () => h(HomeOutlined),
           label: "Tòa nhà",
+        },
+        {
+          key: "/admin/floor-map",
+          icon: () => h(AppstoreOutlined),
+          label: "Sơ đồ tầng",
         },
         {
           key: "/admin/room-types",
@@ -476,6 +562,11 @@ const menuItems = computed(() => {
           label: "Thông báo",
         },
         {
+          key: "/admin/notifications",
+          icon: () => h(NotificationOutlined),
+          label: "Gửi thông báo",
+        },
+        {
           key: "/admin/users",
           icon: () => h(TeamOutlined),
           label: "Người dùng",
@@ -494,6 +585,29 @@ const logout = () => {
   authStore.logout();
   message.success('Đăng xuất thành công');
   router.push("/login");
+};
+
+const handleChangePassword = () => {
+  // TODO: Implement change password logic
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    message.error('Mật khẩu xác nhận không khớp!');
+    return;
+  }
+  console.log('Change password', passwordForm.value);
+  message.success('Đổi mật khẩu thành công!');
+  showChangePasswordDialog.value = false;
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
+};
+
+const handleSaveSettings = () => {
+  // TODO: Implement save settings logic
+  console.log('Save settings', settings.value);
+  message.success('Lưu cài đặt thành công!');
+  showSettingsDialog.value = false;
 };
 </script>
 

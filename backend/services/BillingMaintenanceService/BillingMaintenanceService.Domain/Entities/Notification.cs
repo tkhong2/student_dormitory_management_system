@@ -6,7 +6,7 @@ namespace BillingMaintenanceService.Domain.Entities;
 /// </summary>
 public class Notification : BaseEntity
 {
-    public int UserId { get; set; }                             // Người nhận
+    public int UserId { get; set; }                             // Người nhận (có thể là UserId hoặc StudentId từ service khác)
     public string Title { get; set; } = null!;                  // Tiêu đề thông báo
     public string Body { get; set; } = null!;                   // Nội dung
     public string Type { get; set; } = null!;                   // ApplicationApproved / InvoiceCreated / MaintenanceDone / ContractExpiring / System
@@ -19,8 +19,8 @@ public class Notification : BaseEntity
     public int? RelatedEntityId { get; set; }                   // ID của entity liên quan (InvoiceId, RequestId...)
     public string? RelatedEntityType { get; set; }              // Invoice / MaintenanceRequest / Contract / Application
 
-    // Navigation
-    public User User { get; set; } = null!;
+    // Navigation - made optional since UserId can be from different service (StudentId)
+    public User? User { get; set; }
 }
 
 /// <summary>

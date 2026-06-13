@@ -46,6 +46,14 @@ namespace ContractStudentService.API.Controllers
             return Ok(dtos);
         }
 
+        [HttpGet("contract/{contractId}")]
+        public async Task<ActionResult<IEnumerable<RoomTransferDto>>> GetByContractId(int contractId)
+        {
+            var transfers = await _transferRepository.GetByContractIdAsync(contractId);
+            var dtos = transfers.Select(MapToDto);
+            return Ok(dtos);
+        }
+
         [HttpGet("status/{status}")]
         public async Task<ActionResult<IEnumerable<RoomTransferDto>>> GetByStatus(string status)
         {

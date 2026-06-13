@@ -62,9 +62,9 @@
           <v-card flat border class="pa-8 rounded-xl mt-12 bg-slate-50">
             <h4 class="text-subtitle-1 font-weight-black mb-4">Mạng xã hội</h4>
             <div class="d-flex ga-4">
-              <v-btn icon="mdi-facebook" color="primary" variant="flat" class="rounded-lg" />
-              <v-btn icon="mdi-youtube" color="error" variant="flat" class="rounded-lg" />
-              <v-btn icon="mdi-web" color="info" variant="flat" class="rounded-lg" />
+              <v-btn icon="mdi-facebook" color="primary" variant="flat" class="rounded-lg fb" />
+              <v-btn icon="mdi-youtube" color="error" variant="flat" class="rounded-lg yt" />
+              <v-btn icon="mdi-web" color="info" variant="flat" class="rounded-lg web" />
             </div>
           </v-card>
         </v-col>
@@ -89,7 +89,7 @@
                   <v-textarea label="Nội dung tin nhắn" variant="outlined" color="primary" rounded="lg" rows="5" />
                 </v-col>
                 <v-col cols="12">
-                  <v-btn block color="primary" size="large" class="font-weight-bold rounded-lg" height="56">GỬI YÊU CẦU</v-btn>
+                  <v-btn block color="primary" size="large" class="send font-weight-bold rounded-lg" height="56">GỬI YÊU CẦU</v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -116,6 +116,12 @@
 </script>
 
 <style scoped>
+.send{
+  color:white;
+}
+.fb{
+  color:blue;
+}
 .banner { 
   background: linear-gradient(135deg, rgba(255, 107, 0, 0.95), rgba(255, 136, 0, 0.9)), url('/images/hero_dormitory.png');
   background-size: cover;
