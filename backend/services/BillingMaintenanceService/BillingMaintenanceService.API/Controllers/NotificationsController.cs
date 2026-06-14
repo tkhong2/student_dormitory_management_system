@@ -192,12 +192,15 @@ namespace BillingMaintenanceService.API.Controllers
         [HttpPost("broadcast")]
         public async Task<ActionResult<object>> Broadcast([FromBody] BroadcastNotificationDto dto)
         {
+            // Note: Skip user validation since studentId comes from different service (ContractStudentService)
+            // We trust the caller to provide valid user IDs
             var createdNotifications = new List<Notification>();
 
             foreach (var userId in dto.UserIds)
             {
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null) continue; // Skip invalid users
+                // Skip validation - studentIds come from ContractStudentService
+                // var user = await _userRepository.GetByIdAsync(userId);
+                // if (user == null) continue;
 
                 var notification = new Notification
                 {

@@ -7,7 +7,7 @@ namespace ContractStudentService.Domain.Entities;
 public class Contract : BaseEntity
 {
     public int StudentId { get; set; }
-    public int ApplicationId { get; set; }
+    public int? ApplicationId { get; set; }                 // Nullable - cho phép tạo hợp đồng thủ công
     public int? ContractTemplateId { get; set; }            // Mẫu hợp đồng sử dụng
 
     // Ref IDs sang RoomService (không FK cứng)

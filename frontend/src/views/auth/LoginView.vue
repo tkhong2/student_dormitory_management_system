@@ -93,6 +93,7 @@ import {
   LockOutlined,
   UserOutlined
 } from '@ant-design/icons-vue'
+import { notification } from 'ant-design-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -121,10 +122,14 @@ const handleLogin = async () => {
       router.push('/admin')
     }
   } catch (error) {
-    // Show error message
+    // Show error notification
     console.error('Login failed:', error)
-    // You can add ant-design-vue message here if you want
-    alert(error.message || 'Đăng nhập thất bại')
+    notification.error({
+      message: 'Đăng nhập thất bại',
+      description: error.message || 'Vui lòng kiểm tra lại thông tin đăng nhập của bạn.',
+      duration: 4,
+      placement: 'topRight'
+    })
   } finally {
     loading.value = false
   }

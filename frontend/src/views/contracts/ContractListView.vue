@@ -7,6 +7,10 @@
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0">Quản lý hợp đồng KTX của sinh viên</p>
       </div>
       <a-space>
+        <a-button @click="handleExport" :loading="exporting">
+          <template #icon><DownloadOutlined /></template>
+          Xuất Excel
+        </a-button>
         <a-button @click="showApprovedApplications" :type="viewMode === 'applications' ? 'primary' : 'default'">
           <template #icon><FileAddOutlined /></template>
           Đơn đã duyệt ({{ approvedApplications.length }})
@@ -179,6 +183,11 @@
           
           <template v-else-if="column.key === 'actions'">
             <a-space>
+              <a-tooltip title="In hợp đồng">
+                <a-button type="text" size="small" @click="printContractHandler(record)" :loading="printing">
+                  <template #icon><PrinterOutlined /></template>
+                </a-button>
+              </a-tooltip>
               <a-tooltip title="Xem chi tiết">
                 <a-button type="text" size="small" @click="viewDetail(record)">
                   <template #icon><EyeOutlined /></template>
@@ -447,12 +456,19 @@ import {
   ClockCircleOutlined,
   CloseCircleOutlined,
   FileAddOutlined,
-  EyeOutlined
+  EyeOutlined,
+  DownloadOutlined,
+  PrinterOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { contractService } from '@/services/contractService'
 import { roomApplicationService } from '@/services/roomApplicationService'
+import { useExcelExport } from '@/composables/useExcelExport'
+import { usePrintPDF } from '@/composables/usePrintPDF'
+
+const { exporting, exportToExcel } = useExcelExport()
+const { printing, printContract } = usePrintPDF()
 
 const columns = [
   { title: 'Mã HĐ', dataIndex: 'code', key: 'code', width: 120 },
@@ -630,6 +646,46 @@ function formatPrice(value) {
 
 function formatDate(value) {
   return value ? dayjs(value).format('DD/MM/YYYY') : ''
+}
+
+// Export to Excel function
+const handleExport = () => {
+  const columnMapping = {
+    code: 'Mã hợp đồng',
+    studentName: 'Sinh viên',
+    studentCode: 'Mã SV',
+    roomNumber: 'Phòng',
+    buildingName: 'Tòa nhà',
+    roomTypeName: 'Loại phòng',
+    startDate: 'Ngày bắt đầu',
+    endDate: 'Ngày kết thúc',
+    price: 'Giá thuê/tháng',
+    depositAmount: 'Tiền cọc',
+    displayStatus: 'Trạng thái',
+    createdAt: 'Ngày tạo'
+  }
+  
+  const dataToExport = filteredContracts.value.map(c => ({
+    code: c.code,
+    studentName: c.studentName,
+    studentCode: c.studentCode,
+    roomNumber: c.roomNumber,
+    buildingName: c.buildingName,
+    roomTypeName: c.roomTypeName,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    price: c.price,
+    depositAmount: c.depositAmount,
+    displayStatus: c.displayStatus,
+    createdAt: formatDate(c.createdAt)
+  }))
+  
+  exportToExcel(dataToExport, columnMapping, 'Danh_sach_hop_dong', 'Hợp đồng')
+}
+
+// Print contract PDF
+const printContractHandler = async (record) => {
+  await printContract(record)
 }
 
 function openCreate() {

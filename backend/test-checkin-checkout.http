@@ -1,0 +1,145 @@
+### Test Check-in/Check-out API
+### Requires: REST Client extension in VS Code
+
+@baseUrl = http://localhost:5000/api/checkin-checkout
+@contractServiceUrl = http://localhost:5001/api
+
+### 1. Get Pending Check-ins
+GET {{baseUrl}}/pending-checkins
+Accept: application/json
+
+###
+
+### 2. Get Pending Check-outs
+GET {{baseUrl}}/pending-checkouts
+Accept: application/json
+
+###
+
+### 3. Get All Check-ins
+GET {{baseUrl}}/checkins
+Accept: application/json
+
+###
+
+### 4. Get All Check-outs
+GET {{baseUrl}}/checkouts
+Accept: application/json
+
+###
+
+### 5. Get Check-in by Contract ID
+GET {{baseUrl}}/checkin/contract/1
+Accept: application/json
+
+###
+
+### 6. Get Check-out by Contract ID
+GET {{baseUrl}}/checkout/contract/1
+Accept: application/json
+
+###
+
+### 7. Create Check-in
+POST {{baseUrl}}/checkin
+Content-Type: application/json
+
+{
+  "contractId": 1,
+  "studentId": 1,
+  "roomId": 1,
+  "roomNumber": "101",
+  "buildingName": "Tòa A",
+  "checkInDate": "2026-06-14T10:00:00Z",
+  "checkedInByUserId": 1,
+  "checkedInByName": "Admin",
+  "idCardImageUrls": "[\"http://example.com/id1.jpg\", \"http://example.com/id2.jpg\"]",
+  "isDepositPaid": true,
+  "depositAmount": 1000000,
+  "depositPaidAt": "2026-06-14T10:00:00Z",
+  "roomConditionChecklist": "[\"walls\", \"doors\", \"electric\", \"water\", \"furniture\", \"clean\"]",
+  "roomImageUrls": "[\"http://example.com/room1.jpg\", \"http://example.com/room2.jpg\"]",
+  "roomCondition": "Good",
+  "notes": "Phòng sạch sẽ, đầy đủ nội thất",
+  "initialElectricityReading": 100.5,
+  "initialWaterReading": 50.2,
+  "keysProvided": "1 chìa khóa phòng + 1 thẻ từ",
+  "keyCount": 2
+}
+
+###
+
+### 8. Create Check-out
+POST {{baseUrl}}/checkout
+Content-Type: application/json
+
+{
+  "contractId": 1,
+  "studentId": 1,
+  "roomId": 1,
+  "roomNumber": "101",
+  "buildingName": "Tòa A",
+  "checkOutDate": "2026-12-14T10:00:00Z",
+  "checkedOutByUserId": 1,
+  "checkedOutByName": "Admin",
+  "currentRoomImageUrls": "[\"http://example.com/checkout1.jpg\", \"http://example.com/checkout2.jpg\"]",
+  "roomCondition": "Good",
+  "damageDescription": null,
+  "depositAmount": 1000000,
+  "compensationCost": 0,
+  "refundAmount": 1000000,
+  "compensationDetails": null,
+  "finalElectricityReading": 150.8,
+  "finalWaterReading": 75.6,
+  "isKeyReturned": true,
+  "isDepositRefunded": true,
+  "depositRefundedAt": "2026-12-14T10:00:00Z",
+  "refundMethod": "Cash",
+  "notes": "Phòng sạch sẽ, không hư hỏng"
+}
+
+###
+
+### 9. Create Check-out with Damage
+POST {{baseUrl}}/checkout
+Content-Type: application/json
+
+{
+  "contractId": 2,
+  "studentId": 2,
+  "roomId": 2,
+  "roomNumber": "102",
+  "buildingName": "Tòa A",
+  "checkOutDate": "2026-12-14T10:00:00Z",
+  "checkedOutByUserId": 1,
+  "checkedOutByName": "Admin",
+  "currentRoomImageUrls": "[\"http://example.com/damage1.jpg\", \"http://example.com/damage2.jpg\"]",
+  "roomCondition": "Minor",
+  "damageDescription": "Tường bị trầy xước, bàn bị vỡ một góc",
+  "depositAmount": 1000000,
+  "compensationCost": 200000,
+  "refundAmount": 800000,
+  "compensationDetails": "Sửa tường: 100,000 VND, Thay bàn: 100,000 VND",
+  "finalElectricityReading": 145.3,
+  "finalWaterReading": 72.1,
+  "isKeyReturned": true,
+  "isDepositRefunded": true,
+  "depositRefundedAt": "2026-12-14T10:00:00Z",
+  "refundMethod": "BankTransfer",
+  "refundReference": "TF20261214001",
+  "notes": "Đã khấu trừ 200,000 VND để sửa chữa"
+}
+
+###
+
+### Helper: Get All Contracts (to check status updates)
+GET {{contractServiceUrl}}/Contracts
+Accept: application/json
+
+###
+
+### Helper: Get Contract by ID
+GET {{contractServiceUrl}}/Contracts/1
+Accept: application/json
+
+###

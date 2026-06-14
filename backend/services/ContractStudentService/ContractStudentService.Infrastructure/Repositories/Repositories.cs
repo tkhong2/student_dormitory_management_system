@@ -53,13 +53,20 @@ namespace ContractStudentService.Infrastructure.Repositories
         public StudentDocumentRepository(AppDbContext context) => _context = context;
 
         public async Task<StudentDocument?> GetByIdAsync(int id) => 
-            await _context.StudentDocuments.FindAsync(id);
+            await _context.StudentDocuments
+                .Include(d => d.Student)
+                .FirstOrDefaultAsync(d => d.Id == id);
 
         public async Task<IEnumerable<StudentDocument>> GetAllAsync() => 
-            await _context.StudentDocuments.ToListAsync();
+            await _context.StudentDocuments
+                .Include(d => d.Student)
+                .ToListAsync();
 
         public async Task<IEnumerable<StudentDocument>> GetByStudentIdAsync(int studentId) => 
-            await _context.StudentDocuments.Where(d => d.StudentId == studentId).ToListAsync();
+            await _context.StudentDocuments
+                .Include(d => d.Student)
+                .Where(d => d.StudentId == studentId)
+                .ToListAsync();
 
         public async Task AddAsync(StudentDocument document) 
         { 
@@ -431,6 +438,124 @@ namespace ContractStudentService.Infrastructure.Repositories
         public async Task DeleteAsync(ContractTerm term) 
         { 
             _context.ContractTerms.Remove(term); 
+            await _context.SaveChangesAsync(); 
+        }
+    }
+
+    public class CheckInRepository : ICheckInRepository
+    {
+        private readonly AppDbContext _context;
+        public CheckInRepository(AppDbContext context) => _context = context;
+
+        public async Task<CheckIn?> GetByIdAsync(int id) => 
+            await _context.CheckIns
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+        public async Task<IEnumerable<CheckIn>> GetAllAsync() => 
+            await _context.CheckIns
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .OrderByDescending(c => c.CheckInDate)
+                .ToListAsync();
+
+        public async Task<CheckIn?> GetByContractIdAsync(int contractId) => 
+            await _context.CheckIns
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .FirstOrDefaultAsync(c => c.ContractId == contractId);
+
+        public async Task<IEnumerable<CheckIn>> GetByStudentIdAsync(int studentId) => 
+            await _context.CheckIns
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .Where(c => c.StudentId == studentId)
+                .OrderByDescending(c => c.CheckInDate)
+                .ToListAsync();
+
+        public async Task<IEnumerable<CheckIn>> GetByRoomIdAsync(int roomId) => 
+            await _context.CheckIns
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .Where(c => c.RoomId == roomId)
+                .OrderByDescending(c => c.CheckInDate)
+                .ToListAsync();
+
+        public async Task AddAsync(CheckIn checkIn) 
+        { 
+            await _context.CheckIns.AddAsync(checkIn); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task UpdateAsync(CheckIn checkIn) 
+        { 
+            _context.CheckIns.Update(checkIn); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task DeleteAsync(CheckIn checkIn) 
+        { 
+            _context.CheckIns.Remove(checkIn); 
+            await _context.SaveChangesAsync(); 
+        }
+    }
+
+    public class CheckOutRepository : ICheckOutRepository
+    {
+        private readonly AppDbContext _context;
+        public CheckOutRepository(AppDbContext context) => _context = context;
+
+        public async Task<CheckOut?> GetByIdAsync(int id) => 
+            await _context.CheckOuts
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+        public async Task<IEnumerable<CheckOut>> GetAllAsync() => 
+            await _context.CheckOuts
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .OrderByDescending(c => c.CheckOutDate)
+                .ToListAsync();
+
+        public async Task<CheckOut?> GetByContractIdAsync(int contractId) => 
+            await _context.CheckOuts
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .FirstOrDefaultAsync(c => c.ContractId == contractId);
+
+        public async Task<IEnumerable<CheckOut>> GetByStudentIdAsync(int studentId) => 
+            await _context.CheckOuts
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .Where(c => c.StudentId == studentId)
+                .OrderByDescending(c => c.CheckOutDate)
+                .ToListAsync();
+
+        public async Task<IEnumerable<CheckOut>> GetByRoomIdAsync(int roomId) => 
+            await _context.CheckOuts
+                .Include(c => c.Contract)
+                .Include(c => c.Student)
+                .Where(c => c.RoomId == roomId)
+                .OrderByDescending(c => c.CheckOutDate)
+                .ToListAsync();
+
+        public async Task AddAsync(CheckOut checkOut) 
+        { 
+            await _context.CheckOuts.AddAsync(checkOut); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task UpdateAsync(CheckOut checkOut) 
+        { 
+            _context.CheckOuts.Update(checkOut); 
+            await _context.SaveChangesAsync(); 
+        }
+
+        public async Task DeleteAsync(CheckOut checkOut) 
+        { 
+            _context.CheckOuts.Remove(checkOut); 
             await _context.SaveChangesAsync(); 
         }
     }

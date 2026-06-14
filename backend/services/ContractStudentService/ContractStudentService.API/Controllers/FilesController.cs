@@ -16,31 +16,26 @@ namespace ContractStudentService.API.Controllers
         }
 
         [HttpPost("upload")]
-        public async Task<ActionResult<UploadResponse>> Upload([FromForm] IFormFile file)
+        public async Task<ActionResult<FileUploadResult>> Upload(IFormFile file, [FromForm] string? folder = "documents")
         {
             if (file == null || file.Length == 0)
-                return BadRequest(new { message = "Không có file nào được tải lên" });
-
-            // Validate file type
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(extension))
-                return BadRequest(new { message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp, svg)" });
-
-            // Validate file size (5MB max)
-            if (file.Length > 5 * 1024 * 1024)
-                return BadRequest(new { message = "Kích thước file không được vượt quá 5MB" });
+                return BadRequest(new { message = "Không có file được chọn" });
 
             try
             {
+                // Validate file size (max 10MB)
+                if (file.Length > 10 * 1024 * 1024)
+                    return BadRequest(new { message = "File quá lớn. Tối đa 10MB" });
+
                 // Create uploads directory if not exists
-                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads");
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", folder);
                 if (!Directory.Exists(uploadsPath))
                     Directory.CreateDirectory(uploadsPath);
 
                 // Generate unique filename
-                var fileName = $"{Guid.NewGuid()}{extension}";
-                var filePath = Path.Combine(uploadsPath, fileName);
+                var extension = Path.GetExtension(file.FileName);
+                var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsPath, uniqueFileName);
 
                 // Save file
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -48,56 +43,78 @@ namespace ContractStudentService.API.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                // Return URL
-                var url = $"/uploads/{fileName}";
-                return Ok(new UploadResponse
+                // Return relative URL
+                var fileUrl = $"/uploads/{folder}/{uniqueFileName}";
+
+                _logger.LogInformation($"File uploaded successfully: {fileUrl}");
+
+                return Ok(new FileUploadResult
                 {
-                    Url = url,
-                    FileName = fileName,
-                    OriginalFileName = file.FileName,
-                    Size = file.Length
+                    FileUrl = fileUrl,
+                    FileName = file.FileName,
+                    FileType = file.ContentType,
+                    FileSizeBytes = file.Length
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading file");
-                return StatusCode(500, new { message = "Lỗi khi tải file lên" });
+                return StatusCode(500, new { message = "Lỗi khi upload file", error = ex.Message });
             }
         }
 
-        [HttpDelete("delete")]
-        public ActionResult Delete([FromQuery] string url)
+        [HttpGet("download")]
+        public IActionResult Download([FromQuery] string fileUrl)
         {
-            if (string.IsNullOrWhiteSpace(url))
-                return BadRequest(new { message = "URL không hợp lệ" });
-
             try
             {
-                // Extract filename from URL
-                var fileName = Path.GetFileName(url);
-                var filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+                var filePath = Path.Combine(_environment.WebRootPath, fileUrl.TrimStart('/'));
+                
+                if (!System.IO.File.Exists(filePath))
+                    return NotFound(new { message = "File không tồn tại" });
 
-                if (System.IO.File.Exists(filePath))
+                var memory = new MemoryStream();
+                using (var stream = new FileStream(filePath, FileMode.Open))
                 {
-                    System.IO.File.Delete(filePath);
-                    return Ok(new { message = "Đã xóa file" });
+                    stream.CopyTo(memory);
                 }
+                memory.Position = 0;
 
-                return NotFound(new { message = "Không tìm thấy file" });
+                var contentType = GetContentType(filePath);
+                var fileName = Path.GetFileName(filePath);
+
+                return File(memory, contentType, fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting file");
-                return StatusCode(500, new { message = "Lỗi khi xóa file" });
+                _logger.LogError(ex, "Error downloading file");
+                return StatusCode(500, new { message = "Lỗi khi tải file" });
             }
+        }
+
+        private string GetContentType(string path)
+        {
+            var types = new Dictionary<string, string>
+            {
+                {".pdf", "application/pdf"},
+                {".doc", "application/msword"},
+                {".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+                {".jpg", "image/jpeg"},
+                {".jpeg", "image/jpeg"},
+                {".png", "image/png"},
+                {".gif", "image/gif"}
+            };
+
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return types.ContainsKey(ext) ? types[ext] : "application/octet-stream";
         }
     }
 
-    public class UploadResponse
+    public class FileUploadResult
     {
-        public string Url { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
-        public string OriginalFileName { get; set; } = string.Empty;
-        public long Size { get; set; }
+        public string FileType { get; set; } = string.Empty;
+        public long FileSizeBytes { get; set; }
     }
 }

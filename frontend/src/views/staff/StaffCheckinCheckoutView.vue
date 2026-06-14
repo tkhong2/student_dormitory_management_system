@@ -352,7 +352,11 @@ import {
 } from '@ant-design/icons-vue'
 import PageHeaderAnt from '@/components/common/PageHeaderAnt.vue'
 import dayjs from 'dayjs'
+import { checkInCheckOutService } from '@/services/checkInCheckOutService'
+import { fileService } from '@/services/fileService'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const loading = ref(false)
 const processing = ref(false)
 const viewMode = ref('checkin')
@@ -362,7 +366,7 @@ const checkinStep = ref(0)
 const checkoutStep = ref(0)
 const selectedRecord = ref(null)
 
-// Mock data
+// Real data from API
 const checkinList = ref([])
 const checkoutList = ref([])
 
@@ -441,13 +445,57 @@ const handleCheckoutImagesUpload = ({ fileList }) => {
 const handleCheckin = async () => {
   processing.value = true
   try {
-    // TODO: Call API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Upload images if any
+    let idCardImageUrls = null
+    if (checkinForm.value.idCardImages.length > 0) {
+      const urls = []
+      for (const file of checkinForm.value.idCardImages) {
+        const fileObj = file.originFileObj || file
+        const result = await fileService.uploadFile(fileObj, 'checkin-images')
+        urls.push(result.fileUrl)
+      }
+      idCardImageUrls = JSON.stringify(urls)
+    }
+
+    let roomImageUrls = null
+    if (checkinForm.value.roomImages.length > 0) {
+      const urls = []
+      for (const file of checkinForm.value.roomImages) {
+        const fileObj = file.originFileObj || file
+        const result = await fileService.uploadFile(fileObj, 'checkin-images')
+        urls.push(result.fileUrl)
+      }
+      roomImageUrls = JSON.stringify(urls)
+    }
+
+    const checkInData = {
+      contractId: selectedRecord.value.contractId,
+      studentId: selectedRecord.value.studentId,
+      roomId: selectedRecord.value.roomId,
+      roomNumber: selectedRecord.value.roomNumber,
+      buildingName: selectedRecord.value.buildingName,
+      checkInDate: new Date().toISOString(),
+      checkedInByUserId: authStore.user?.id || 1,
+      checkedInByName: authStore.user?.username || 'Admin',
+      idCardImageUrls,
+      isDepositPaid: checkinForm.value.depositPaid,
+      depositAmount: selectedRecord.value.depositAmount,
+      depositPaidAt: checkinForm.value.depositPaid ? new Date().toISOString() : null,
+      roomConditionChecklist: JSON.stringify(checkinForm.value.checklist),
+      roomImageUrls,
+      roomCondition: 'Good',
+      notes: checkinForm.value.notes,
+      keysProvided: 'Key + Access Card',
+      keyCount: 2
+    }
+
+    await checkInCheckOutService.createCheckIn(checkInData)
     message.success('Check-in thành công!')
     checkinModalVisible.value = false
-    // Reload data
+    await loadCheckinList()
   } catch (error) {
-    message.error('Lỗi check-in')
+    console.error('Check-in error:', error)
+    message.error(error.response?.data?.message || error.message || 'Lỗi check-in')
   } finally {
     processing.value = false
   }
@@ -456,13 +504,48 @@ const handleCheckin = async () => {
 const handleCheckout = async () => {
   processing.value = true
   try {
-    // TODO: Call API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Upload images if any
+    let currentRoomImageUrls = null
+    if (checkoutForm.value.currentImages.length > 0) {
+      const urls = []
+      for (const file of checkoutForm.value.currentImages) {
+        const fileObj = file.originFileObj || file
+        const result = await fileService.uploadFile(fileObj, 'checkout-images')
+        urls.push(result.fileUrl)
+      }
+      currentRoomImageUrls = JSON.stringify(urls)
+    }
+
+    const checkOutData = {
+      contractId: selectedRecord.value.contractId,
+      studentId: selectedRecord.value.studentId,
+      roomId: selectedRecord.value.roomId,
+      roomNumber: selectedRecord.value.roomNumber,
+      buildingName: selectedRecord.value.buildingName,
+      checkOutDate: new Date().toISOString(),
+      checkedOutByUserId: authStore.user?.id || 1,
+      checkedOutByName: authStore.user?.username || 'Admin',
+      currentRoomImageUrls,
+      roomCondition: checkoutForm.value.roomCondition,
+      damageDescription: checkoutForm.value.damageDescription,
+      depositAmount: selectedRecord.value.depositAmount,
+      compensationCost: checkoutForm.value.compensationCost || 0,
+      refundAmount: calculateRefund(),
+      compensationDetails: checkoutForm.value.roomCondition !== 'good' ? checkoutForm.value.damageDescription : null,
+      isKeyReturned: checkoutForm.value.keyReturned,
+      isDepositRefunded: checkoutForm.value.depositRefunded,
+      depositRefundedAt: checkoutForm.value.depositRefunded ? new Date().toISOString() : null,
+      refundMethod: 'Cash',
+      notes: null
+    }
+
+    await checkInCheckOutService.createCheckOut(checkOutData)
     message.success('Check-out thành công!')
     checkoutModalVisible.value = false
-    // Reload data
+    await loadCheckoutList()
   } catch (error) {
-    message.error('Lỗi check-out')
+    console.error('Check-out error:', error)
+    message.error(error.response?.data?.message || error.message || 'Lỗi check-out')
   } finally {
     processing.value = false
   }
@@ -486,8 +569,34 @@ const isOverdue = (date) => {
   return dayjs(date).isBefore(dayjs(), 'day')
 }
 
+async function loadCheckinList() {
+  loading.value = true
+  try {
+    const data = await checkInCheckOutService.getPendingCheckIns()
+    checkinList.value = data
+  } catch (error) {
+    console.error('Error loading check-in list:', error)
+    message.error('Không thể tải danh sách check-in')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadCheckoutList() {
+  loading.value = true
+  try {
+    const data = await checkInCheckOutService.getPendingCheckOuts()
+    checkoutList.value = data
+  } catch (error) {
+    console.error('Error loading check-out list:', error)
+    message.error('Không thể tải danh sách check-out')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  // Load data
-  message.info('Tính năng Check-in/Check-out đang được phát triển')
+  loadCheckinList()
+  loadCheckoutList()
 })
 </script>

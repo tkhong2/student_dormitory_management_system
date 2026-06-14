@@ -1,5 +1,6 @@
 using ContractStudentService.Domain.Entities;
 using ContractStudentService.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ContractStudentService.Infrastructure.Data;
 
@@ -49,6 +50,49 @@ public static class DataSeeder
             await context.SaveChangesAsync();
 
             Console.WriteLine("✓ Seeded Students");
+        }
+
+        // Seed Student Documents
+        if (!context.StudentDocuments.Any())
+        {
+            var student = await context.Students.FirstOrDefaultAsync();
+            if (student != null)
+            {
+                var documents = new List<StudentDocument>
+                {
+                    new StudentDocument
+                    {
+                        StudentId = student.Id,
+                        DocumentType = "CMND/CCCD",
+                        DocumentName = "Chứng minh nhân dân - Trần Thị Bình",
+                        FileUrl = "/uploads/documents/cmnd-sv001.pdf",
+                        FileType = "application/pdf",
+                        FileSizeBytes = 512000,
+                        IsVerified = true,
+                        VerifiedByUserId = 1,
+                        VerifiedAt = DateTime.UtcNow,
+                        Notes = "Đã xác minh",
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new StudentDocument
+                    {
+                        StudentId = student.Id,
+                        DocumentType = "Giấy xác nhận sinh viên",
+                        DocumentName = "Giấy xác nhận SV - K65-CNTT",
+                        FileUrl = "/uploads/documents/xacnhan-sv001.pdf",
+                        FileType = "application/pdf",
+                        FileSizeBytes = 256000,
+                        IsVerified = false,
+                        Notes = "Chờ xác minh",
+                        CreatedAt = DateTime.UtcNow
+                    }
+                };
+
+                await context.StudentDocuments.AddRangeAsync(documents);
+                await context.SaveChangesAsync();
+
+                Console.WriteLine("✓ Seeded Student Documents");
+            }
         }
 
         Console.WriteLine("\n=== ContractStudentService Data Seeding Complete ===\n");

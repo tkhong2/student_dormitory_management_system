@@ -313,9 +313,12 @@ const getIconColor = (iconType) => {
   return colorMap[iconType] || '#1890ff'
 }
 
-// Format time
+// Format time - Fixed timezone issue
 const formatTime = (dateString) => {
-  const date = new Date(dateString)
+  // Parse UTC datetime correctly
+  // If string doesn't have 'Z', add it to indicate UTC
+  const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+  const date = new Date(utcString)
   const now = new Date()
   const diffMs = now - date
   const diffMins = Math.floor(diffMs / 60000)

@@ -198,6 +198,7 @@ import {
 import { message } from 'ant-design-vue'
 import { studentDocumentService } from '@/services/studentDocumentService'
 import { studentService } from '@/services/studentService'
+import { fileService } from '@/services/fileService'
 
 const columns = [
   { title: 'Tài liệu', key: 'documentName', width: 300 },
@@ -263,8 +264,12 @@ function resetFilters() {
 async function loadDocuments() {
   loading.value = true
   try {
-    documents.value = await studentDocumentService.getAll()
+    const data = await studentDocumentService.getAll()
+    console.log('Loaded documents:', data)
+    documents.value = data
+    console.log('Total documents:', documents.value.length)
   } catch (err) {
+    console.error('Error loading documents:', err)
     message.error(err.message || 'Không thể tải danh sách tài liệu')
   } finally {
     loading.value = false
@@ -273,7 +278,9 @@ async function loadDocuments() {
 
 async function loadStudents() {
   try {
-    students.value = await studentService.getAll()
+    const data = await studentService.getAll()
+    console.log('Loaded students for documents:', data)
+    students.value = data
   } catch (err) {
     console.error('Không thể tải danh sách sinh viên', err)
   }
@@ -303,23 +310,34 @@ async function handleUpload() {
 
   saving.value = true
   try {
-    const fileObj = uploadForm.value.file[0]
-    // TODO: Upload file to server first, then create document record
-    // For now, create with mock URL
-    await studentDocumentService.create({
+    const fileObj = uploadForm.value.file[0].originFileObj || uploadForm.value.file[0]
+    
+    console.log('Step 1: Uploading file to server...')
+    
+    // Upload file to server first
+    const uploadResult = await fileService.uploadFile(fileObj, 'documents')
+    console.log('File uploaded:', uploadResult)
+    
+    console.log('Step 2: Creating document record...')
+    
+    // Create document record with uploaded file URL
+    const result = await studentDocumentService.create({
       studentId: uploadForm.value.studentId,
       documentType: uploadForm.value.documentType,
       documentName: uploadForm.value.documentName.trim(),
-      fileUrl: '/uploads/documents/' + fileObj.name,
-      fileType: fileObj.type,
-      fileSizeBytes: fileObj.size,
+      fileUrl: uploadResult.fileUrl,
+      fileType: uploadResult.fileType,
+      fileSizeBytes: uploadResult.fileSizeBytes,
       notes: uploadForm.value.notes?.trim() || null,
     })
+    
+    console.log('Document created:', result)
     message.success('Tải tài liệu lên thành công')
     uploadDialog.value = false
     await loadDocuments()
   } catch (err) {
-    message.error(err.message || 'Có lỗi xảy ra')
+    console.error('Error uploading document:', err)
+    message.error(err.response?.data?.message || err.message || 'Có lỗi xảy ra')
   } finally {
     saving.value = false
   }
@@ -341,7 +359,10 @@ async function verifyDocument(item) {
 }
 
 function viewDocument(item) {
-  window.open(item.fileUrl, '_blank')
+  // Use fileService to get full URL
+  const fullUrl = fileService.getFileUrl(item.fileUrl);
+  console.log('Opening document:', fullUrl);
+  window.open(fullUrl, '_blank');
 }
 
 function confirmDelete(item) {

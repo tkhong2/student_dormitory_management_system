@@ -13,17 +13,20 @@ namespace ContractStudentService.API.Controllers
         private readonly IStudentRepository _studentRepository;
         private readonly IContractRepository _contractRepository;
         private readonly IContractTemplateRepository _templateRepository;
+        private readonly ContractStudentService.Application.Services.IRoomServiceClient _roomServiceClient;
 
         public RoomApplicationsController(
             IRoomApplicationRepository applicationRepository,
             IStudentRepository studentRepository,
             IContractRepository contractRepository,
-            IContractTemplateRepository templateRepository)
+            IContractTemplateRepository templateRepository,
+            ContractStudentService.Application.Services.IRoomServiceClient roomServiceClient)
         {
             _applicationRepository = applicationRepository;
             _studentRepository = studentRepository;
             _contractRepository = contractRepository;
             _templateRepository = templateRepository;
+            _roomServiceClient = roomServiceClient;
         }
 
         [HttpGet]
@@ -242,6 +245,18 @@ namespace ContractStudentService.API.Controllers
             };
 
             await _contractRepository.AddAsync(contract);
+
+            // Cập nhật số người trong phòng (+1 sinh viên) và trạng thái phòng
+            var roomUpdateSuccess = await _roomServiceClient.UpdateRoomOccupancyAsync(
+                application.AssignedRoomId.Value, 
+                increment: 1 // Thêm 1 người
+            );
+
+            if (!roomUpdateSuccess)
+            {
+                // Log warning nhưng không fail transaction
+                Console.WriteLine($"[WARNING] Không thể cập nhật occupancy cho phòng {application.AssignedRoomNumber}");
+            }
 
             return Ok(new { message = "Đã duyệt đơn và tạo hợp đồng nháp thành công", application = MapToDto(application) });
         }

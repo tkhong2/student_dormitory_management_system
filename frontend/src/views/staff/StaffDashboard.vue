@@ -200,6 +200,223 @@
         </a-col>
       </a-row>
     </a-card>
+
+    <!-- Quick Payment Modal -->
+    <a-modal
+      v-model:open="paymentModalVisible"
+      title="💰 Thu tiền nhanh"
+      width="700px"
+      @ok="handleQuickPayment"
+      :confirmLoading="processingPayment"
+      okText="Xác nhận thanh toán"
+      cancelText="Hủy"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="Tìm sinh viên *" required>
+          <a-input-search
+            v-model:value="paymentForm.studentSearch"
+            placeholder="Nhập mã SV hoặc tên sinh viên..."
+            @search="searchStudentForPayment"
+            :loading="searchingStudent"
+          >
+            <template #enterButton>
+              <a-button type="primary">Tìm</a-button>
+            </template>
+          </a-input-search>
+        </a-form-item>
+
+        <a-alert
+          v-if="paymentForm.selectedStudent"
+          type="success"
+          :message="`Sinh viên: ${paymentForm.selectedStudent.fullName}`"
+          style="margin-bottom: 16px;"
+        >
+          <template #description>
+            <div><strong>Mã SV:</strong> {{ paymentForm.selectedStudent.studentCode }}</div>
+            <div><strong>Phòng:</strong> {{ paymentForm.selectedStudent.roomNumber || 'Chưa có' }}</div>
+            <div><strong>Lớp:</strong> {{ paymentForm.selectedStudent.classCode || 'N/A' }}</div>
+          </template>
+        </a-alert>
+
+        <a-form-item label="Phiếu thu chưa thanh toán" v-if="unpaidInvoices.length > 0">
+          <a-select
+            v-model:value="paymentForm.selectedInvoiceId"
+            placeholder="Chọn phiếu thu"
+            style="width: 100%"
+            @change="onInvoiceSelected"
+          >
+            <a-select-option
+              v-for="invoice in unpaidInvoices"
+              :key="invoice.id"
+              :value="invoice.id"
+            >
+              {{ invoice.invoiceCode }} - {{ formatCurrency(invoice.debtAmount) }} VNĐ
+              ({{ invoice.billingMonth }}/{{ invoice.billingYear }})
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+
+        <a-alert
+          v-if="paymentForm.selectedStudent && unpaidInvoices.length === 0"
+          type="info"
+          message="Sinh viên không có phiếu thu chưa thanh toán"
+          style="margin-bottom: 16px;"
+        />
+
+        <a-form-item label="Số tiền thanh toán *" required v-if="paymentForm.selectedInvoiceId">
+          <a-input-number
+            v-model:value="paymentForm.amount"
+            :min="0"
+            :max="paymentForm.maxAmount"
+            style="width: 100%"
+            :formatter="value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+            :parser="value => value.replace(/\$\s?|(,*)/g, '')"
+          >
+            <template #addonAfter>VNĐ</template>
+          </a-input-number>
+          <div style="margin-top: 4px; font-size: 12px; color: #8c8c8c;">
+            Còn nợ: {{ formatCurrency(paymentForm.maxAmount) }} VNĐ
+          </div>
+        </a-form-item>
+
+        <a-form-item label="Phương thức thanh toán *" v-if="paymentForm.selectedInvoiceId">
+          <a-radio-group v-model:value="paymentForm.paymentMethod">
+            <a-radio value="Cash">Tiền mặt</a-radio>
+            <a-radio value="BankTransfer">Chuyển khoản</a-radio>
+            <a-radio value="Card">Thẻ</a-radio>
+          </a-radio-group>
+        </a-form-item>
+
+        <a-form-item label="Ghi chú" v-if="paymentForm.selectedInvoiceId">
+          <a-textarea
+            v-model:value="paymentForm.notes"
+            :rows="2"
+            placeholder="Ghi chú thêm (nếu có)..."
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- Student Lookup Modal -->
+    <a-modal
+      v-model:open="lookupModalVisible"
+      title="🔍 Tra cứu sinh viên"
+      width="900px"
+      :footer="null"
+    >
+      <a-input-search
+        v-model:value="lookupSearch"
+        placeholder="Nhập mã SV, tên, số điện thoại, email..."
+        size="large"
+        @search="performStudentLookup"
+        :loading="lookingUp"
+        style="margin-bottom: 16px;"
+      >
+        <template #enterButton>
+          <a-button type="primary" size="large">Tìm kiếm</a-button>
+        </template>
+      </a-input-search>
+
+      <!-- Search Results -->
+      <div v-if="lookupResults.length > 0">
+        <a-list :data-source="lookupResults" :pagination="{ pageSize: 5 }">
+          <template #renderItem="{ item }">
+            <a-list-item>
+              <a-list-item-meta>
+                <template #avatar>
+                  <a-avatar :src="item.avatarUrl" :size="64">
+                    {{ item.fullName?.charAt(0) }}
+                  </a-avatar>
+                </template>
+                <template #title>
+                  <strong>{{ item.fullName }}</strong>
+                  <a-tag :color="item.isActive ? 'green' : 'red'" style="margin-left: 8px;">
+                    {{ item.isActive ? 'Đang ở' : 'Đã chuyển đi' }}
+                  </a-tag>
+                </template>
+                <template #description>
+                  <a-space direction="vertical" size="small">
+                    <div><strong>Mã SV:</strong> {{ item.studentCode }}</div>
+                    <div><strong>Email:</strong> {{ item.email }}</div>
+                    <div><strong>Điện thoại:</strong> {{ item.phone || 'N/A' }}</div>
+                    <div><strong>Lớp:</strong> {{ item.classCode || 'N/A' }}</div>
+                    <div><strong>Khoa:</strong> {{ item.faculty || 'N/A' }}</div>
+                    <div v-if="item.roomNumber"><strong>Phòng:</strong> {{ item.roomNumber }} - {{ item.buildingName }}</div>
+                  </a-space>
+                </template>
+              </a-list-item-meta>
+              <template #actions>
+                <a-button size="small" @click="viewStudentDetail(item)">
+                  Chi tiết
+                </a-button>
+              </template>
+            </a-list-item>
+          </template>
+        </a-list>
+      </div>
+
+      <a-empty v-else-if="hasSearched && lookupResults.length === 0" description="Không tìm thấy sinh viên" />
+    </a-modal>
+
+    <!-- Student Detail Modal -->
+    <a-modal
+      v-model:open="studentDetailVisible"
+      title="Chi tiết sinh viên"
+      width="800px"
+      :footer="null"
+    >
+      <a-descriptions v-if="selectedStudentDetail" bordered :column="2" size="small">
+        <a-descriptions-item label="Họ tên" :span="2">
+          <strong>{{ selectedStudentDetail.fullName }}</strong>
+        </a-descriptions-item>
+        <a-descriptions-item label="Mã sinh viên">
+          {{ selectedStudentDetail.studentCode }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Trạng thái">
+          <a-tag :color="selectedStudentDetail.isActive ? 'green' : 'red'">
+            {{ selectedStudentDetail.isActive ? 'Đang ở' : 'Đã chuyển đi' }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Email">
+          {{ selectedStudentDetail.email }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Điện thoại">
+          {{ selectedStudentDetail.phone || 'N/A' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Lớp">
+          {{ selectedStudentDetail.classCode || 'N/A' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Khoa">
+          {{ selectedStudentDetail.faculty || 'N/A' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Phòng hiện tại" :span="2">
+          <span v-if="selectedStudentDetail.roomNumber">
+            {{ selectedStudentDetail.roomNumber }} - {{ selectedStudentDetail.buildingName }}
+          </span>
+          <span v-else style="color: #8c8c8c;">Chưa có phòng</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="Hợp đồng" :span="2">
+          <div v-if="selectedStudentDetail.contractInfo">
+            <div>Từ: {{ formatDate(selectedStudentDetail.contractInfo.startDate) }}</div>
+            <div>Đến: {{ formatDate(selectedStudentDetail.contractInfo.endDate) }}</div>
+            <div>Trạng thái: <a-tag>{{ selectedStudentDetail.contractInfo.status }}</a-tag></div>
+          </div>
+          <span v-else style="color: #8c8c8c;">Không có hợp đồng</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="Tổng nợ" :span="2">
+          <strong :style="{ color: selectedStudentDetail.totalDebt > 0 ? '#ff4d4f' : '#52c41a' }">
+            {{ formatCurrency(selectedStudentDetail.totalDebt || 0) }} VNĐ
+          </strong>
+        </a-descriptions-item>
+      </a-descriptions>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <a-button @click="studentDetailVisible = false">Đóng</a-button>
+        <a-button type="primary" @click="quickPayForStudent(selectedStudentDetail)">
+          Thu tiền
+        </a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -218,6 +435,8 @@ import { invoiceService } from '@/services/invoiceService'
 import { paymentService } from '@/services/paymentService'
 import { roomService } from '@/services/roomService'
 import { contractService } from '@/services/contractService'
+import axios from 'axios'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 
@@ -239,8 +458,36 @@ const stats = ref({
 
 const alerts = ref([])
 
+// Quick Payment
+const paymentModalVisible = ref(false)
+const processingPayment = ref(false)
+const searchingStudent = ref(false)
+const unpaidInvoices = ref([])
+const paymentForm = ref({
+  studentSearch: '',
+  selectedStudent: null,
+  selectedInvoiceId: null,
+  amount: 0,
+  maxAmount: 0,
+  paymentMethod: 'Cash',
+  notes: ''
+})
+
+// Student Lookup
+const lookupModalVisible = ref(false)
+const studentDetailVisible = ref(false)
+const lookingUp = ref(false)
+const hasSearched = ref(false)
+const lookupSearch = ref('')
+const lookupResults = ref([])
+const selectedStudentDetail = ref(null)
+
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN').format(value)
+}
+
+const formatDate = (dateStr) => {
+  return dateStr ? dayjs(dateStr).format('DD/MM/YYYY') : 'N/A'
 }
 
 const refreshData = async () => {
@@ -421,11 +668,233 @@ const handleAlert = (item) => {
 }
 
 const showPaymentModal = () => {
-  message.info('Chức năng thu tiền nhanh đang được phát triển')
+  paymentModalVisible.value = true
+  paymentForm.value = {
+    studentSearch: '',
+    selectedStudent: null,
+    selectedInvoiceId: null,
+    amount: 0,
+    maxAmount: 0,
+    paymentMethod: 'Cash',
+    notes: ''
+  }
+  unpaidInvoices.value = []
+}
+
+const searchStudentForPayment = async () => {
+  if (!paymentForm.value.studentSearch.trim()) {
+    message.warning('Vui lòng nhập mã sinh viên hoặc tên')
+    return
+  }
+
+  searchingStudent.value = true
+  try {
+    // Search users with role Student
+    const response = await axios.get('http://localhost:5002/api/users', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    const students = response.data.filter(u => u.role === 'Student')
+    const searchTerm = paymentForm.value.studentSearch.toLowerCase()
+    
+    const found = students.find(s => 
+      s.studentCode?.toLowerCase().includes(searchTerm) ||
+      s.fullName?.toLowerCase().includes(searchTerm)
+    )
+
+    if (!found) {
+      message.error('Không tìm thấy sinh viên')
+      paymentForm.value.selectedStudent = null
+      unpaidInvoices.value = []
+      return
+    }
+
+    paymentForm.value.selectedStudent = found
+
+    // Load unpaid invoices for this student
+    const allInvoices = await invoiceService.getAll()
+    unpaidInvoices.value = allInvoices.filter(inv => 
+      inv.studentId === found.id && 
+      (inv.status === 'Unpaid' || inv.status === 'PartialPaid') &&
+      inv.debtAmount > 0
+    )
+
+    if (unpaidInvoices.value.length === 0) {
+      message.info('Sinh viên không có khoản nợ')
+    } else {
+      message.success(`Tìm thấy ${unpaidInvoices.value.length} phiếu thu chưa thanh toán`)
+    }
+  } catch (error) {
+    console.error('Error searching student:', error)
+    message.error('Lỗi tìm kiếm sinh viên')
+  } finally {
+    searchingStudent.value = false
+  }
+}
+
+const onInvoiceSelected = () => {
+  const invoice = unpaidInvoices.value.find(inv => inv.id === paymentForm.value.selectedInvoiceId)
+  if (invoice) {
+    paymentForm.value.maxAmount = invoice.debtAmount
+    paymentForm.value.amount = invoice.debtAmount
+  }
+}
+
+const handleQuickPayment = async () => {
+  if (!paymentForm.value.selectedStudent) {
+    message.warning('Vui lòng tìm sinh viên trước')
+    return
+  }
+
+  if (!paymentForm.value.selectedInvoiceId) {
+    message.warning('Vui lòng chọn phiếu thu')
+    return
+  }
+
+  if (!paymentForm.value.amount || paymentForm.value.amount <= 0) {
+    message.warning('Vui lòng nhập số tiền thanh toán')
+    return
+  }
+
+  if (paymentForm.value.amount > paymentForm.value.maxAmount) {
+    message.warning('Số tiền thanh toán không được lớn hơn số tiền còn nợ')
+    return
+  }
+
+  processingPayment.value = true
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    
+    await paymentService.create({
+      invoiceId: paymentForm.value.selectedInvoiceId,
+      amount: paymentForm.value.amount,
+      paymentMethod: paymentForm.value.paymentMethod,
+      paymentDate: new Date().toISOString(),
+      notes: paymentForm.value.notes,
+      createdByUserId: user.id,
+      createdByName: user.fullName
+    })
+
+    message.success('Thanh toán thành công')
+    paymentModalVisible.value = false
+    await refreshData()
+  } catch (error) {
+    console.error('Payment error:', error)
+    message.error(error.response?.data?.message || 'Lỗi thanh toán')
+  } finally {
+    processingPayment.value = false
+  }
 }
 
 const showStudentLookup = () => {
-  message.info('Chức năng tra cứu sinh viên đang được phát triển')
+  lookupModalVisible.value = true
+  lookupSearch.value = ''
+  lookupResults.value = []
+  hasSearched.value = false
+}
+
+const performStudentLookup = async () => {
+  if (!lookupSearch.value.trim()) {
+    message.warning('Vui lòng nhập thông tin tìm kiếm')
+    return
+  }
+
+  lookingUp.value = true
+  hasSearched.value = true
+  try {
+    // Get all users
+    const usersResponse = await axios.get('http://localhost:5002/api/users', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    // Get all contracts to map room info
+    const contractsData = await contractService.getAll()
+
+    const students = usersResponse.data.filter(u => u.role === 'Student')
+    const searchTerm = lookupSearch.value.toLowerCase()
+
+    // Search in multiple fields
+    const results = students.filter(s =>
+      s.studentCode?.toLowerCase().includes(searchTerm) ||
+      s.fullName?.toLowerCase().includes(searchTerm) ||
+      s.email?.toLowerCase().includes(searchTerm) ||
+      s.phone?.toLowerCase().includes(searchTerm) ||
+      s.classCode?.toLowerCase().includes(searchTerm)
+    )
+
+    // Enrich with contract/room info
+    lookupResults.value = results.map(student => {
+      const activeContract = contractsData.find(c => 
+        c.studentId === student.id && c.status === 'Active'
+      )
+      return {
+        ...student,
+        roomNumber: activeContract?.roomNumber,
+        buildingName: activeContract?.buildingName,
+        isActive: !!activeContract
+      }
+    })
+
+    if (lookupResults.value.length === 0) {
+      message.info('Không tìm thấy sinh viên phù hợp')
+    } else {
+      message.success(`Tìm thấy ${lookupResults.value.length} sinh viên`)
+    }
+  } catch (error) {
+    console.error('Lookup error:', error)
+    message.error('Lỗi tra cứu sinh viên')
+  } finally {
+    lookingUp.value = false
+  }
+}
+
+const viewStudentDetail = async (student) => {
+  try {
+    // Get contract info
+    const contracts = await contractService.getAll()
+    const activeContract = contracts.find(c => 
+      c.studentId === student.id && c.status === 'Active'
+    )
+
+    // Get unpaid invoices to calculate debt
+    const allInvoices = await invoiceService.getAll()
+    const unpaidInvoices = allInvoices.filter(inv => 
+      inv.studentId === student.id && 
+      (inv.status === 'Unpaid' || inv.status === 'PartialPaid')
+    )
+
+    const totalDebt = unpaidInvoices.reduce((sum, inv) => sum + (inv.debtAmount || 0), 0)
+
+    selectedStudentDetail.value = {
+      ...student,
+      roomNumber: activeContract?.roomNumber,
+      buildingName: activeContract?.buildingName,
+      contractInfo: activeContract,
+      totalDebt
+    }
+
+    studentDetailVisible.value = true
+  } catch (error) {
+    console.error('Error loading student details:', error)
+    message.error('Lỗi tải thông tin chi tiết')
+  }
+}
+
+const quickPayForStudent = (student) => {
+  studentDetailVisible.value = false
+  lookupModalVisible.value = false
+  
+  paymentForm.value.studentSearch = student.studentCode
+  showPaymentModal()
+  
+  // Trigger search automatically
+  setTimeout(() => {
+    searchStudentForPayment()
+  }, 100)
 }
 
 onMounted(() => {

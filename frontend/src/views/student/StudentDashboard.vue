@@ -519,9 +519,11 @@ const fetchAnnouncements = async () => {
   }
 }
 
-// Helper function to get relative time
+// Helper function to get relative time - Fixed timezone issue
 const getRelativeTime = (dateString) => {
-  const date = new Date(dateString)
+  // Parse UTC datetime correctly
+  const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+  const date = new Date(utcString)
   const now = new Date()
   const diffMs = now - date
   const diffMins = Math.floor(diffMs / 60000)

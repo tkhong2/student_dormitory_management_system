@@ -14,19 +14,22 @@ namespace ContractStudentService.API.Controllers
         private readonly IRoomApplicationRepository _applicationRepository;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
+        private readonly ContractStudentService.Application.Services.IRoomServiceClient _roomServiceClient;
 
         public ContractsController(
             IContractRepository contractRepository,
             IStudentRepository studentRepository,
             IRoomApplicationRepository applicationRepository,
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ContractStudentService.Application.Services.IRoomServiceClient roomServiceClient)
         {
             _contractRepository = contractRepository;
             _studentRepository = studentRepository;
             _applicationRepository = applicationRepository;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+            _roomServiceClient = roomServiceClient;
         }
 
         [HttpGet]
@@ -88,12 +91,16 @@ namespace ContractStudentService.API.Controllers
             if (student == null)
                 return BadRequest(new { message = "Sinh viên không tồn tại" });
 
-            var application = await _applicationRepository.GetByIdAsync(dto.ApplicationId);
-            if (application == null)
-                return BadRequest(new { message = "Đơn đăng ký không tồn tại" });
+            // ApplicationId là optional - chỉ validate nếu được cung cấp
+            if (dto.ApplicationId.HasValue && dto.ApplicationId.Value > 0)
+            {
+                var application = await _applicationRepository.GetByIdAsync(dto.ApplicationId.Value);
+                if (application == null)
+                    return BadRequest(new { message = "Đơn đăng ký không tồn tại" });
 
-            if (application.Status != "Approved")
-                return BadRequest(new { message = "Đơn đăng ký chưa được duyệt" });
+                if (application.Status != "Approved")
+                    return BadRequest(new { message = "Đơn đăng ký chưa được duyệt" });
+            }
 
             var existing = await _contractRepository.GetByContractCodeAsync(dto.ContractCode);
             if (existing != null)
@@ -254,6 +261,17 @@ namespace ContractStudentService.API.Controllers
             contract.DepositDeductionReason = request.DepositDeductionReason;
 
             await _contractRepository.UpdateAsync(contract);
+
+            // Giảm số người trong phòng (-1 sinh viên) và tự động cập nhật trạng thái
+            var roomUpdateSuccess = await _roomServiceClient.UpdateRoomOccupancyAsync(
+                contract.RoomId, 
+                increment: -1 // Giảm 1 người
+            );
+
+            if (!roomUpdateSuccess)
+            {
+                Console.WriteLine($"[WARNING] Không thể cập nhật occupancy cho phòng {contract.RoomNumber}");
+            }
 
             return NoContent();
         }

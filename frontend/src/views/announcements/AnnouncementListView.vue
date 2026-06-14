@@ -110,6 +110,11 @@
           
           <template v-else-if="column.key === 'actions'">
             <a-space>
+              <a-tooltip title="Gửi thông báo">
+                <a-button type="primary" size="small" @click="sendNotification(record)" style="background: #52c41a; border-color: #52c41a;">
+                  <template #icon><SendOutlined /></template>
+                </a-button>
+              </a-tooltip>
               <a-tooltip title="Xem chi tiết">
                 <a-button type="text" size="small" @click="viewDetail(record)">
                   <template #icon><EyeOutlined /></template>
@@ -212,11 +217,13 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
-  PushpinOutlined
+  PushpinOutlined,
+  SendOutlined
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import { buildingAnnouncementService } from '@/services/buildingAnnouncementService'
 import { buildingService } from '@/services/buildingService'
+import axios from 'axios'
 
 const announcements = ref([])
 const buildings = ref([])
@@ -247,7 +254,7 @@ const columns = [
   { title: 'Tòa nhà', key: 'buildingName', width: 140, align: 'center' },
   { title: 'Người đăng', dataIndex: 'createdByName', key: 'createdByName', width: 150 },
   { title: 'Ngày tạo', key: 'createdAt', width: 130, align: 'center' },
-  { title: 'Thao tác', key: 'actions', width: 150, align: 'center', fixed: 'right' }
+  { title: 'Thao tác', key: 'actions', width: 200, align: 'center', fixed: 'right' }
 ]
 
 const filteredAnnouncements = computed(() => {
@@ -400,6 +407,100 @@ function getCategoryColor(c) {
 function formatDate(d) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('vi-VN')
+}
+
+async function sendNotification(announcement) {
+  Modal.confirm({
+    title: 'Xác nhận gửi thông báo',
+    content: announcement.buildingId 
+      ? `Gửi thông báo "${announcement.title}" đến tất cả sinh viên ở ${announcement.buildingName}?`
+      : `Gửi thông báo "${announcement.title}" đến tất cả sinh viên trong KTX?`,
+    okText: 'Gửi',
+    okType: 'primary',
+    cancelText: 'Hủy',
+    async onOk() {
+      try {
+        // Step 1: Get students based on building filter
+        let targetStudents = []
+        
+        if (announcement.buildingId) {
+          // Get contracts for specific building
+          const contractsResponse = await axios.get(`http://localhost:5001/api/contracts`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
+          
+          console.log('All contracts:', contractsResponse.data)
+          console.log('Contracts in building:', contractsResponse.data.filter(c => c.buildingId === announcement.buildingId))
+          
+          // Filter contracts in the building
+          // Exclude only: Terminated, Expired, Cancelled
+          const invalidStatuses = ['Terminated', 'Expired', 'Cancelled']
+          const validContracts = contractsResponse.data.filter(c => 
+            !invalidStatuses.includes(c.status) && 
+            c.buildingId === announcement.buildingId
+          )
+          
+          console.log('Valid contracts:', validContracts)
+          console.log('Valid contracts details:', validContracts.map(c => ({ 
+            id: c.id, 
+            studentId: c.studentId, 
+            studentName: c.studentName,
+            status: c.status,
+            buildingId: c.buildingId,
+            buildingName: c.buildingName
+          })))
+          
+          // Get unique student IDs
+          targetStudents = [...new Set(validContracts.map(c => c.studentId))]
+          
+          console.log(`Found ${targetStudents.length} students in ${announcement.buildingName}`)
+          console.log('Student IDs:', targetStudents)
+        } else {
+          // Get all contracts (all students in KTX)
+          const contractsResponse = await axios.get(`http://localhost:5001/api/contracts`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
+          
+          // Exclude only: Terminated, Expired, Cancelled
+          const invalidStatuses = ['Terminated', 'Expired', 'Cancelled']
+          const validContracts = contractsResponse.data.filter(c => !invalidStatuses.includes(c.status))
+          targetStudents = [...new Set(validContracts.map(c => c.studentId))]
+          
+          console.log(`Found ${targetStudents.length} students in all buildings`)
+        }
+        
+        if (targetStudents.length === 0) {
+          message.warning('Không tìm thấy sinh viên nào để gửi thông báo')
+          return
+        }
+        
+        // Step 2: Send notification using broadcast API
+        const notificationData = {
+          userIds: targetStudents,
+          title: `📢 ${announcement.title}`,
+          body: announcement.content,
+          type: 'System',
+          iconType: announcement.priority === 'Urgent' ? 'error' : 
+                    announcement.priority === 'High' ? 'warning' : 'info',
+          actionUrl: null
+        }
+        
+        console.log('Sending notification:', notificationData)
+        
+        await axios.post('http://localhost:5002/api/notifications/broadcast', notificationData, {
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        message.success(`Đã gửi thông báo đến ${targetStudents.length} sinh viên`)
+      } catch (error) {
+        console.error('Error sending notification:', error)
+        message.error(error.response?.data?.message || 'Lỗi gửi thông báo')
+      }
+    }
+  })
 }
 
 onMounted(() => {

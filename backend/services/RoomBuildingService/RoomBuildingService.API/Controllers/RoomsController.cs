@@ -150,6 +150,28 @@ namespace RoomBuildingService.API.Controllers
             if (floor == null)
                 return BadRequest(new { message = "Tầng không tồn tại" });
 
+            var building = await _buildingRepository.GetByIdAsync(floor.BuildingId);
+            if (building == null)
+                return BadRequest(new { message = "Tòa nhà không tồn tại" });
+
+            // Kiểm tra số lượng phòng hiện tại của tòa nhà
+            var currentRoomCount = await _roomRepository.GetByBuildingIdAsync(building.Id);
+            if (currentRoomCount.Count() >= building.TotalRooms)
+            {
+                return BadRequest(new 
+                { 
+                    message = $"Không thể thêm phòng. Tòa {building.Name} đã đủ {building.TotalRooms} phòng (hiện có {currentRoomCount.Count()} phòng)" 
+                });
+            }
+
+            // Kiểm tra trùng số phòng trong cùng tầng
+            var existingRoom = (await _roomRepository.GetAllAsync())
+                .FirstOrDefault(r => r.FloorId == dto.FloorId && r.RoomNumber == dto.RoomNumber);
+            if (existingRoom != null)
+            {
+                return BadRequest(new { message = $"Phòng {dto.RoomNumber} đã tồn tại ở tầng này" });
+            }
+
             var room = new Room
             {
                 RoomNumber = dto.RoomNumber,
@@ -270,6 +292,57 @@ namespace RoomBuildingService.API.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Cập nhật số người ở trong phòng và tự động cập nhật trạng thái
+        /// </summary>
+        [HttpPut("{id}/occupancy")]
+        public async Task<ActionResult> UpdateOccupancy(int id, [FromBody] UpdateOccupancyRequest request)
+        {
+            var room = await _roomRepository.GetByIdAsync(id);
+            if (room == null)
+                return NotFound(new { message = "Không tìm thấy phòng" });
+
+            // Cập nhật số người
+            var newOccupants = room.CurrentOccupants + request.Increment;
+            
+            // Validate
+            if (newOccupants < 0)
+                newOccupants = 0;
+            if (newOccupants > room.MaxOccupants)
+                return BadRequest(new { message = $"Phòng chỉ chứa tối đa {room.MaxOccupants} người" });
+
+            room.CurrentOccupants = newOccupants;
+
+            // Tự động cập nhật trạng thái dựa trên số người
+            if (newOccupants == 0)
+            {
+                room.Status = "Available"; // Phòng trống
+            }
+            else if (newOccupants >= room.MaxOccupants)
+            {
+                room.Status = "Full"; // Phòng đầy
+            }
+            else
+            {
+                room.Status = "Occupied"; // Đang ở nhưng chưa đầy
+            }
+
+            await _roomRepository.UpdateAsync(room);
+
+            return Ok(new 
+            { 
+                message = "Cập nhật thành công",
+                currentOccupants = room.CurrentOccupants,
+                maxOccupants = room.MaxOccupants,
+                status = room.Status
+            });
+        }
+    }
+
+    public class UpdateOccupancyRequest
+    {
+        public int Increment { get; set; } // +1 để thêm, -1 để bớt
     }
 
     public class CreateRoomDto

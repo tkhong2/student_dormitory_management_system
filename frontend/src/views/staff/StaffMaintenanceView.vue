@@ -1,6 +1,9 @@
 <template>
   <div>
-    <PageHeaderAnt title="Quản lý bảo trì" subtitle="Xử lý yêu cầu bảo trì từ sinh viên">
+    <PageHeaderAnt 
+      :title="isAdmin ? 'Quản lý bảo trì' : 'Công việc của tôi'" 
+      :subtitle="isAdmin ? 'Xử lý yêu cầu bảo trì từ sinh viên' : 'Các yêu cầu bảo trì được phân công cho tôi'"
+    >
       <template #actions>
         <a-space>
           <a-input-search
@@ -15,6 +18,51 @@
         </a-space>
       </template>
     </PageHeaderAnt>
+
+    <!-- Filters -->
+    <a-card size="small" style="margin-bottom: 16px;" :bordered="false">
+      <a-space>
+        <a-select
+          v-model:value="statusFilter"
+          placeholder="Lọc theo trạng thái"
+          style="width: 200px"
+          allow-clear
+          @change="handleSearch"
+        >
+          <a-select-option value="New">Chờ xử lý</a-select-option>
+          <a-select-option value="Assigned">Đã phân công</a-select-option>
+          <a-select-option value="InProgress">Đang xử lý</a-select-option>
+          <a-select-option value="Done">Đã hoàn thành</a-select-option>
+        </a-select>
+
+        <a-select
+          v-model:value="categoryFilter"
+          placeholder="Lọc theo danh mục"
+          style="width: 200px"
+          allow-clear
+          @change="handleSearch"
+        >
+          <a-select-option value="Electric">Điện</a-select-option>
+          <a-select-option value="Plumbing">Nước</a-select-option>
+          <a-select-option value="Furniture">Nội thất</a-select-option>
+          <a-select-option value="Network">Mạng</a-select-option>
+          <a-select-option value="Structure">Kết cấu</a-select-option>
+          <a-select-option value="Other">Khác</a-select-option>
+        </a-select>
+
+        <a-select
+          v-model:value="priorityFilter"
+          placeholder="Lọc theo độ ưu tiên"
+          style="width: 200px"
+          allow-clear
+          @change="handleSearch"
+        >
+          <a-select-option value="Urgent">Khẩn cấp</a-select-option>
+          <a-select-option value="Normal">Bình thường</a-select-option>
+        </a-select>
+      </a-space>
+    </a-card>
+    
 
     <!-- Stats -->
     <a-row :gutter="16" style="margin-bottom: 16px;">
@@ -88,9 +136,13 @@
                   </span>
                 </div>
                 <a-divider style="margin: 8px 0;" />
-                <a-button size="small" type="primary" block @click.stop="openAssignModal(item)">
+                <!-- Chỉ Admin mới thấy nút phân công -->
+                <a-button v-if="isAdmin" size="small" type="primary" block @click.stop="openAssignModal(item)">
                   <UserAddOutlined /> Phân công
                 </a-button>
+                <div v-else style="padding: 8px; text-align: center; font-size: 12px; color: #8c8c8c;">
+                  Chưa được phân công
+                </div>
               </div>
               <a-empty v-if="filteredRequests.pending.length === 0" :image="simpleImage" description="Không có yêu cầu" />
             </div>
@@ -131,9 +183,14 @@
                   <UserOutlined /> {{ item.assignedToName }}
                 </div>
                 <a-divider style="margin: 8px 0;" />
-                <a-button size="small" type="primary" block @click.stop="openResolveModal(item)">
-                  <CheckCircleOutlined /> Hoàn thành
-                </a-button>
+                <a-space direction="vertical" style="width: 100%;" :size="4">
+                  <a-button size="small" type="primary" block @click.stop="startProgress(item)">
+                    <PlayCircleOutlined /> Bắt đầu xử lý
+                  </a-button>
+                  <a-button size="small" type="primary" block @click.stop="openResolveModal(item)">
+                    <CheckCircleOutlined /> Hoàn thành
+                  </a-button>
+                </a-space>
               </div>
               <a-empty v-if="filteredRequests.inProgress.length === 0" :image="simpleImage" description="Không có yêu cầu" />
             </div>
@@ -185,7 +242,7 @@
     <a-modal
       v-model:open="detailModalVisible"
       title="Chi tiết yêu cầu bảo trì"
-      width="700px"
+      width="900px"
       :footer="null"
     >
       <a-descriptions v-if="selectedRequest" bordered :column="2" size="small">
@@ -228,25 +285,82 @@
         <a-descriptions-item v-if="selectedRequest.assignedAt" label="Ngày phân công">
           {{ formatDate(selectedRequest.assignedAt) }}
         </a-descriptions-item>
+        <a-descriptions-item v-if="selectedRequest.startedAt" label="Ngày bắt đầu">
+          {{ formatDate(selectedRequest.startedAt) }}
+        </a-descriptions-item>
         <a-descriptions-item v-if="selectedRequest.resolvedAt" label="Ngày hoàn thành">
           {{ formatDate(selectedRequest.resolvedAt) }}
         </a-descriptions-item>
+        <a-descriptions-item v-if="selectedRequest.estimatedCost" label="Chi phí ước tính">
+          {{ formatCurrency(selectedRequest.estimatedCost) }}
+        </a-descriptions-item>
+        <a-descriptions-item v-if="selectedRequest.actualCost" label="Chi phí thực tế">
+          {{ formatCurrency(selectedRequest.actualCost) }}
+        </a-descriptions-item>
         <a-descriptions-item v-if="selectedRequest.resolutionNote" label="Ghi chú xử lý" :span="2">
           {{ selectedRequest.resolutionNote }}
+        </a-descriptions-item>
+
+        <!-- Before Images -->
+        <a-descriptions-item v-if="selectedRequest.imageUrls && selectedRequest.imageUrls.length > 0" label="Hình ảnh ban đầu" :span="2">
+          <a-space>
+            <a-image
+              v-for="(url, idx) in selectedRequest.imageUrls"
+              :key="idx"
+              :src="url"
+              :width="100"
+              :height="100"
+              style="object-fit: cover; border-radius: 4px;"
+            />
+          </a-space>
+        </a-descriptions-item>
+
+        <!-- After Images -->
+        <a-descriptions-item v-if="selectedRequest.afterImageUrls && selectedRequest.afterImageUrls.length > 0" label="Hình ảnh sau xử lý" :span="2">
+          <a-space>
+            <a-image
+              v-for="(url, idx) in selectedRequest.afterImageUrls"
+              :key="idx"
+              :src="url"
+              :width="100"
+              :height="100"
+              style="object-fit: cover; border-radius: 4px;"
+            />
+          </a-space>
+        </a-descriptions-item>
+
+        <!-- Rating -->
+        <a-descriptions-item v-if="selectedRequest.rating" label="Đánh giá" :span="2">
+          <a-rate :value="selectedRequest.rating" disabled />
+          <div v-if="selectedRequest.feedback" style="margin-top: 8px; color: #8c8c8c;">
+            {{ selectedRequest.feedback }}
+          </div>
         </a-descriptions-item>
       </a-descriptions>
 
       <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
         <a-button @click="detailModalVisible = false">Đóng</a-button>
+        <!-- Chỉ Admin mới có quyền phân công -->
         <a-button
-          v-if="selectedRequest.status === 'New'"
+          v-if="selectedRequest.status === 'New' && isAdmin"
           type="primary"
           @click="openAssignModal(selectedRequest)"
         >
           Phân công
         </a-button>
+        <!-- Staff có thể bắt đầu xử lý -->
         <a-button
-          v-if="selectedRequest.status === 'Assigned' || selectedRequest.status === 'InProgress'"
+          v-if="selectedRequest.status === 'Assigned' && 
+                (isAdmin || selectedRequest.assignedToUserId === currentUser.id)"
+          type="primary"
+          @click="startProgress(selectedRequest); detailModalVisible = false"
+        >
+          Bắt đầu xử lý
+        </a-button>
+        <!-- Staff có thể hoàn thành nếu được phân công -->
+        <a-button
+          v-if="(selectedRequest.status === 'Assigned' || selectedRequest.status === 'InProgress') && 
+                (isAdmin || selectedRequest.assignedToUserId === currentUser.id)"
           type="primary"
           @click="openResolveModal(selectedRequest)"
         >
@@ -300,6 +414,7 @@
       title="Hoàn thành xử lý"
       @ok="handleResolve"
       :confirmLoading="resolving"
+      width="600px"
     >
       <a-form layout="vertical">
         <a-form-item label="Ghi chú xử lý *" required>
@@ -321,6 +436,25 @@
             <template #addonAfter>VNĐ</template>
           </a-input-number>
         </a-form-item>
+
+        <a-form-item label="Hình ảnh sau khi xử lý">
+          <a-upload
+            v-model:file-list="resolveForm.images"
+            list-type="picture-card"
+            :before-upload="beforeUpload"
+            :customRequest="handleUpload"
+            :max-count="5"
+            accept="image/*"
+          >
+            <div v-if="resolveForm.images.length < 5">
+              <PlusOutlined />
+              <div style="margin-top: 8px">Tải ảnh</div>
+            </div>
+          </a-upload>
+          <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+            Tải lên tối đa 5 hình ảnh (JPG, PNG, tối đa 5MB/ảnh)
+          </div>
+        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -332,17 +466,26 @@ import { message } from 'ant-design-vue'
 import { Empty } from 'ant-design-vue'
 import {
   ReloadOutlined, ClockCircleOutlined, ToolOutlined, CheckCircleOutlined,
-  WarningOutlined, CalendarOutlined, HomeOutlined, UserOutlined, UserAddOutlined
+  WarningOutlined, CalendarOutlined, HomeOutlined, UserOutlined, UserAddOutlined,
+  PlusOutlined, PlayCircleOutlined
 } from '@ant-design/icons-vue'
 import PageHeaderAnt from '@/components/common/PageHeaderAnt.vue'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import notificationService from '@/services/notificationService'
 
 const authStore = useAuthStore()
+const currentUser = computed(() => authStore.user || {})
+const isAdmin = computed(() => currentUser.value.role === 'Admin')
+const isStaff = computed(() => currentUser.value.role === 'Staff')
+
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE
 const loading = ref(false)
 const searchText = ref('')
+const statusFilter = ref(undefined)
+const categoryFilter = ref(undefined)
+const priorityFilter = ref(undefined)
 const maintenanceRequests = ref([])
 const staffList = ref([])
 const detailModalVisible = ref(false)
@@ -359,7 +502,8 @@ const assignForm = ref({
 
 const resolveForm = ref({
   resolutionNotes: '',
-  cost: 0
+  cost: 0,
+  images: []
 })
 
 const stats = computed(() => ({
@@ -372,6 +516,11 @@ const stats = computed(() => ({
 const filteredRequests = computed(() => {
   let filtered = maintenanceRequests.value
 
+  // Nếu là Staff, chỉ hiển thị request được phân cho mình
+  if (isStaff.value) {
+    filtered = filtered.filter(r => r.assignedToUserId === currentUser.value.id)
+  }
+
   if (searchText.value) {
     const search = searchText.value.toLowerCase()
     filtered = filtered.filter(r =>
@@ -380,6 +529,21 @@ const filteredRequests = computed(() => {
       r.roomNumber?.toLowerCase().includes(search) ||
       r.requestedByStudentName?.toLowerCase().includes(search)
     )
+  }
+
+  // Filter by status
+  if (statusFilter.value) {
+    filtered = filtered.filter(r => r.status === statusFilter.value)
+  }
+
+  // Filter by category
+  if (categoryFilter.value) {
+    filtered = filtered.filter(r => r.category === categoryFilter.value)
+  }
+
+  // Filter by priority
+  if (priorityFilter.value) {
+    filtered = filtered.filter(r => r.priority === priorityFilter.value)
   }
 
   return {
@@ -473,10 +637,62 @@ const openResolveModal = (request) => {
   selectedRequest.value = request
   resolveForm.value = {
     resolutionNotes: '',
-    cost: 0
+    cost: 0,
+    images: []
   }
   detailModalVisible.value = false
   resolveModalVisible.value = true
+}
+
+const startProgress = async (request) => {
+  try {
+    await axios.post(`http://localhost:5002/api/maintenancerequests/${request.id}/start`, {}, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    message.success('Đã chuyển sang trạng thái "Đang xử lý"')
+    await loadMaintenanceRequests()
+  } catch (error) {
+    console.error('Error starting progress:', error)
+    message.error(error.response?.data?.message || 'Lỗi cập nhật trạng thái')
+  }
+}
+
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    message.error('Chỉ được tải lên file hình ảnh!')
+    return false
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    message.error('Hình ảnh phải nhỏ hơn 5MB!')
+    return false
+  }
+  return false // Prevent auto upload, we'll handle it manually
+}
+
+const handleUpload = async ({ file, onSuccess, onError }) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await axios.post('http://localhost:5003/api/files/upload', formData, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    file.url = response.data.url
+    file.status = 'done'
+    onSuccess(response.data)
+  } catch (error) {
+    console.error('Upload error:', error)
+    onError(error)
+    message.error('Lỗi tải ảnh lên')
+  }
 }
 
 const handleAssign = async () => {
@@ -524,6 +740,22 @@ const handleAssign = async () => {
       }
     })
 
+    // Send notification to assigned staff
+    try {
+      await notificationService.create({
+        userId: staff.id,
+        title: '🔧 Phân công công việc bảo trì',
+        body: `Bạn được phân công xử lý yêu cầu: ${selectedRequest.value.title} tại phòng ${selectedRequest.value.roomNumber}. Hạn hoàn thành: ${formatDate(expectedDate)}`,
+        type: 'System',
+        iconType: 'info',
+        actionUrl: '/staff/maintenance',
+        relatedEntityId: selectedRequest.value.id,
+        relatedEntityType: 'MaintenanceRequest'
+      })
+    } catch (notifError) {
+      console.warn('Failed to send notification:', notifError)
+    }
+
     message.success('Đã phân công xử lý yêu cầu')
     assignModalVisible.value = false
     await loadMaintenanceRequests()
@@ -546,16 +778,37 @@ const handleResolve = async () => {
 
   resolving.value = true
   try {
+    // Collect uploaded image URLs
+    const imageUrls = resolveForm.value.images
+      .filter(img => img.status === 'done' && img.url)
+      .map(img => img.url)
+
     await axios.post(`http://localhost:5002/api/maintenancerequests/${selectedRequest.value.id}/resolve`, {
       resolutionNote: resolveForm.value.resolutionNotes,
       actualCost: resolveForm.value.cost || 0,
-      afterImageUrls: null
+      afterImageUrls: imageUrls.length > 0 ? imageUrls : null
     }, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
       }
     })
+
+    // Send notification to student who requested
+    try {
+      await notificationService.create({
+        userId: selectedRequest.value.requestedByStudentId,
+        title: '✅ Yêu cầu bảo trì đã hoàn thành',
+        body: `Yêu cầu "${selectedRequest.value.title}" tại phòng ${selectedRequest.value.roomNumber} đã được xử lý xong. ${resolveForm.value.resolutionNotes}`,
+        type: 'System',
+        iconType: 'success',
+        actionUrl: '/student/maintenance',
+        relatedEntityId: selectedRequest.value.id,
+        relatedEntityType: 'MaintenanceRequest'
+      })
+    } catch (notifError) {
+      console.warn('Failed to send notification:', notifError)
+    }
 
     message.success('Đã hoàn thành xử lý yêu cầu')
     resolveModalVisible.value = false
@@ -619,6 +872,13 @@ const getStatusText = (status) => {
 
 const formatDate = (date) => {
   return date ? dayjs(date).format('DD/MM/YYYY') : ''
+}
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value || 0)
 }
 
 const getDaysInProgress = (startedAt) => {

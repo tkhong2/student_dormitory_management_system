@@ -10,12 +10,18 @@
           Quản lý phòng, trạng thái và phân bổ sinh viên
         </p>
       </div>
-      <a-button v-if="!isReadOnly" type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
-        + Thêm phòng
-      </a-button>
-      <a-tag v-else color="blue" style="padding: 8px 16px; font-size: 13px;">
-        <EyeOutlined /> Chỉ xem
-      </a-tag>
+      <a-space>
+        <a-button @click="handleExport" :loading="exporting">
+          <template #icon><DownloadOutlined /></template>
+          Xuất Excel
+        </a-button>
+        <a-button v-if="!isReadOnly" type="primary" @click="openCreate" style="background: #ff9800; border-color: #ff9800;">
+          + Thêm phòng
+        </a-button>
+        <a-tag v-else color="blue" style="padding: 8px 16px; font-size: 13px;">
+          <EyeOutlined /> Chỉ xem
+        </a-tag>
+      </a-space>
     </div>
     
     <!-- Filters Card -->
@@ -164,6 +170,15 @@
               {{ b.name }}
             </a-select-option>
           </a-select>
+          <div v-if="remainingRoomSlots" style="margin-top: 8px; font-size: 12px;">
+            <a-tag v-if="remainingRoomSlots.remaining > 0" color="success">
+              Còn có thể thêm {{ remainingRoomSlots.remaining }} phòng 
+              ({{ remainingRoomSlots.current }}/{{ remainingRoomSlots.total }})
+            </a-tag>
+            <a-tag v-else color="error">
+              Tòa nhà đã đủ {{ remainingRoomSlots.total }} phòng
+            </a-tag>
+          </div>
         </a-form-item>
         <a-form-item label="Tầng" required>
           <a-select v-model:value="form.floorId" :disabled="!form.buildingId">
@@ -222,10 +237,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { SearchOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import { roomService } from '@/services/roomService'
 import { buildingService } from '@/services/buildingService'
 import { roomTypeService } from '@/services/roomTypeService'
+import { useExcelExport } from '@/composables/useExcelExport'
+
+const { exporting, exportToExcel } = useExcelExport()
 import { floorService } from '@/services/floorService'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 
@@ -271,6 +289,17 @@ const columns = [
 const filteredRoomTypes = computed(() => {
   if (!form.value.buildingId) return []
   return roomTypes.value.filter(rt => rt.buildingId === form.value.buildingId)
+})
+
+// Tính số phòng còn có thể thêm cho tòa nhà được chọn
+const remainingRoomSlots = computed(() => {
+  if (!form.value.buildingId) return null
+  const building = buildings.value.find(b => b.id === form.value.buildingId)
+  if (!building) return null
+  
+  const currentRoomCount = rooms.value.filter(r => r.buildingId === form.value.buildingId).length
+  const remaining = building.totalRooms - currentRoomCount
+  return { current: currentRoomCount, total: building.totalRooms, remaining }
 })
 
 // Filtered rooms based on search and filters
@@ -378,6 +407,37 @@ function getStatusLabel(s) {
   return map[s] || s
 }
 
+// Export to Excel function
+const handleExport = () => {
+  const columnMapping = {
+    roomNumber: 'Số phòng',
+    buildingName: 'Tòa nhà',
+    floorNumber: 'Tầng',
+    roomTypeName: 'Loại phòng',
+    capacity: 'Sức chứa',
+    currentOccupants: 'Đã ở',
+    availableSlots: 'Còn trống',
+    monthlyRent: 'Giá thuê',
+    status: 'Trạng thái',
+    notes: 'Ghi chú'
+  }
+  
+  const dataToExport = filteredRooms.value.map(room => ({
+    roomNumber: room.roomNumber,
+    buildingName: getBuildingName(room.buildingId),
+    floorNumber: room.floorNumber,
+    roomTypeName: getRoomTypeName(room.roomTypeId),
+    capacity: getRoomCapacity(room),
+    currentOccupants: room.currentOccupants || 0,
+    availableSlots: getRoomCapacity(room) - (room.currentOccupants || 0),
+    monthlyRent: room.monthlyRent,
+    status: getStatusLabel(room.status),
+    notes: room.notes || ''
+  }))
+  
+  exportToExcel(dataToExport, columnMapping, 'Danh_sach_phong', 'Phòng')
+}
+
 function getStatusColor(s) {
   const map = { Available: '#16a34a', Occupied: '#2563eb', Full: '#dc2626', Maintenance: '#d97706', Reserved: '#7c3aed' }
   return map[s] || '#9ca3af'
@@ -435,6 +495,13 @@ async function save() {
     message.warning('Vui lòng điền đầy đủ thông tin')
     return
   }
+  
+  // Kiểm tra số phòng còn có thể thêm (chỉ khi tạo mới, không kiểm tra khi sửa)
+  if (!editTarget.value && remainingRoomSlots.value && remainingRoomSlots.value.remaining <= 0) {
+    message.error(`Không thể thêm phòng. Tòa nhà đã đủ ${remainingRoomSlots.value.total} phòng`)
+    return
+  }
+  
   try {
     const payload = {
       roomNumber: form.value.roomNumber,

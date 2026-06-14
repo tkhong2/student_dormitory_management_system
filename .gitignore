@@ -22,5 +22,18 @@ dist/
 .DS_Store
 Thumbs.db
 
-docker-compose.override.yml
+# Environment & Secrets
 .env
+docker-compose.override.yml
+
+# Uploads (keep structure but not files)
+**/wwwroot/uploads/*
+!**/wwwroot/uploads/.gitignore
+
+# Local dev scripts
+*.bat
+*.ps1
+
+# Test files
+**/test-*.html
+**/cleanup_*.sql

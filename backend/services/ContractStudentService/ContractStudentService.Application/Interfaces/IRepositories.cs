@@ -96,4 +96,28 @@ namespace ContractStudentService.Application.Interfaces
         Task UpdateAsync(ContractTerm term);
         Task DeleteAsync(ContractTerm term);
     }
+
+    public interface ICheckInRepository
+    {
+        Task<CheckIn?> GetByIdAsync(int id);
+        Task<IEnumerable<CheckIn>> GetAllAsync();
+        Task<CheckIn?> GetByContractIdAsync(int contractId);
+        Task<IEnumerable<CheckIn>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<CheckIn>> GetByRoomIdAsync(int roomId);
+        Task AddAsync(CheckIn checkIn);
+        Task UpdateAsync(CheckIn checkIn);
+        Task DeleteAsync(CheckIn checkIn);
+    }
+
+    public interface ICheckOutRepository
+    {
+        Task<CheckOut?> GetByIdAsync(int id);
+        Task<IEnumerable<CheckOut>> GetAllAsync();
+        Task<CheckOut?> GetByContractIdAsync(int contractId);
+        Task<IEnumerable<CheckOut>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<CheckOut>> GetByRoomIdAsync(int roomId);
+        Task AddAsync(CheckOut checkOut);
+        Task UpdateAsync(CheckOut checkOut);
+        Task DeleteAsync(CheckOut checkOut);
+    }
 }

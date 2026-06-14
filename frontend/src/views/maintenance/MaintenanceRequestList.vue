@@ -5,15 +5,26 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-start">
         <div>
           <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
-            Yêu Cầu Sửa Chữa / Bảo Trì
+            {{ isStaff ? 'Công Việc Của Tôi' : 'Quản Lý Bảo Trì' }}
           </h1>
           <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">
-            Tổng số: {{ requests.length }} yêu cầu
+            {{ isStaff ? `Bạn có ${filteredRequests.length} công việc được giao` : `Tổng số: ${requests.length} yêu cầu` }}
           </p>
         </div>
-        <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
-          + Tạo Yêu Cầu
-        </a-button>
+        <a-space>
+          <a-button @click="handleExport" :loading="exporting">
+            <template #icon><DownloadOutlined /></template>
+            Xuất Excel
+          </a-button>
+          <a-button 
+            v-if="isAdmin" 
+            type="primary" 
+            @click="showCreateDialog" 
+            style="background: #ff9800; border-color: #ff9800;"
+          >
+            + Tạo Yêu Cầu
+          </a-button>
+        </a-space>
       </div>
     </div>
 
@@ -70,6 +81,16 @@
           </a-select>
         </a-col>
       </a-row>
+      
+      <!-- Thông báo cho Staff -->
+      <a-alert
+        v-if="isStaff"
+        message="Bạn chỉ xem được các yêu cầu được phân công cho mình"
+        type="info"
+        show-icon
+        closable
+        style="margin-top: 16px"
+      />
     </a-card>
 
     <!-- Table Card -->
@@ -136,15 +157,18 @@
                     <EyeOutlined />
                     <span style="margin-left: 8px">Xem chi tiết</span>
                   </a-menu-item>
-                  <a-menu-item key="assign" v-if="record.status === 'New'">
+                  <!-- Chỉ Admin mới có quyền phân công -->
+                  <a-menu-item key="assign" v-if="record.status === 'New' && isAdmin">
                     <UserAddOutlined />
                     <span style="margin-left: 8px">Phân công</span>
                   </a-menu-item>
-                  <a-menu-item key="start" v-if="record.status === 'Assigned'">
+                  <!-- Nhân viên chỉ thấy nút này nếu được phân công -->
+                  <a-menu-item key="start" v-if="record.status === 'Assigned' && canProcessRequest(record)">
                     <PlayCircleOutlined />
                     <span style="margin-left: 8px">Bắt đầu xử lý</span>
                   </a-menu-item>
-                  <a-menu-item key="resolve" v-if="record.status === 'InProgress'">
+                  <!-- Nhân viên chỉ thấy nút này nếu đang xử lý -->
+                  <a-menu-item key="resolve" v-if="record.status === 'InProgress' && canProcessRequest(record)">
                     <CheckCircleOutlined />
                     <span style="margin-left: 8px">Hoàn thành</span>
                   </a-menu-item>
@@ -152,16 +176,17 @@
                     <StarOutlined />
                     <span style="margin-left: 8px">Đánh giá</span>
                   </a-menu-item>
-                  <a-menu-divider />
-                  <a-menu-item key="edit">
+                  <a-menu-divider v-if="isAdmin" />
+                  <!-- Chỉ Admin mới có quyền sửa/xóa/từ chối -->
+                  <a-menu-item key="edit" v-if="isAdmin">
                     <EditOutlined />
                     <span style="margin-left: 8px">Sửa</span>
                   </a-menu-item>
-                  <a-menu-item key="reject" danger>
+                  <a-menu-item key="reject" danger v-if="isAdmin">
                     <CloseCircleOutlined />
                     <span style="margin-left: 8px">Từ chối</span>
                   </a-menu-item>
-                  <a-menu-item key="delete" danger>
+                  <a-menu-item key="delete" danger v-if="isAdmin">
                     <DeleteOutlined />
                     <span style="margin-left: 8px">Xóa</span>
                   </a-menu-item>
@@ -215,13 +240,46 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="Số Phòng">
-              <a-input v-model:value="editedItem.roomNumber" placeholder="Nhập số phòng" />
+            <a-form-item label="Tòa Nhà" required>
+              <a-select 
+                v-model:value="editedItem.buildingId" 
+                placeholder="Chọn tòa nhà"
+                @change="onBuildingChange"
+                show-search
+                :filter-option="filterOption"
+              >
+                <a-select-option 
+                  v-for="building in buildings" 
+                  :key="building.id" 
+                  :value="building.id"
+                  :label="building.name"
+                >
+                  {{ building.name }}
+                </a-select-option>
+              </a-select>
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="Tòa Nhà">
-              <a-input v-model:value="editedItem.buildingName" placeholder="Nhập tên tòa nhà" />
+            <a-form-item label="Số Phòng" required>
+              <a-select 
+                v-model:value="editedItem.roomId" 
+                placeholder="Chọn phòng"
+                show-search
+                :filter-option="filterOption"
+                :disabled="!editedItem.buildingId"
+              >
+                <a-select-option 
+                  v-for="room in filteredRooms" 
+                  :key="room.id" 
+                  :value="room.id"
+                  :label="room.roomNumber"
+                >
+                  {{ room.roomNumber }}
+                </a-select-option>
+              </a-select>
+              <div v-if="!editedItem.buildingId" style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+                Vui lòng chọn tòa nhà trước
+              </div>
             </a-form-item>
           </a-col>
         </a-row>
@@ -319,11 +377,27 @@ import {
   PlayCircleOutlined,
   CheckCircleOutlined,
   StarOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  DownloadOutlined
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import maintenanceRequestService from '@/services/maintenanceRequestService'
+import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
+import { useExcelExport } from '@/composables/useExcelExport'
+
+const { exporting, exportToExcel } = useExcelExport()
+
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.user || {})
+const isAdmin = computed(() => currentUser.value.role === 'Admin')
+const isStaff = computed(() => currentUser.value.role === 'Staff')
+
+// Filtered rooms based on selected building
+const filteredRooms = computed(() => {
+  if (!editedItem.value.buildingId) return []
+  return rooms.value.filter(r => r.buildingId === editedItem.value.buildingId)
+})
 
 const loading = ref(false)
 const requests = ref([])
@@ -338,9 +412,13 @@ const editedItem = ref({
   description: '',
   category: 'Electric',
   priority: 'Medium',
-  roomNumber: '',
-  buildingName: ''
+  buildingId: undefined,
+  roomId: undefined
 })
+
+// Buildings and Rooms data
+const buildings = ref([])
+const rooms = ref([])
 
 // Assign dialog
 const assignDialog = ref(false)
@@ -435,8 +513,26 @@ const priorityOptions = [
   { label: 'Khẩn cấp', value: 'Urgent' }
 ]
 
+// Kiểm tra nhân viên có quyền xử lý request này không
+const canProcessRequest = (record) => {
+  // Admin xem được tất cả
+  if (isAdmin.value) return true
+  
+  // Staff chỉ xem được request được phân cho mình
+  if (isStaff.value) {
+    return record.assignedToUserId === currentUser.value.id
+  }
+  
+  return false
+}
+
 const filteredRequests = computed(() => {
   let result = requests.value
+
+  // Nếu là Staff, chỉ hiển thị request được phân cho mình
+  if (isStaff.value) {
+    result = result.filter(r => r.assignedToUserId === currentUser.value.id)
+  }
 
   if (statusFilter.value) {
     result = result.filter(r => r.status === statusFilter.value)
@@ -532,6 +628,71 @@ const fetchRequests = async () => {
   }
 }
 
+// Export to Excel function
+const handleExport = () => {
+  const columnMapping = {
+    id: 'Mã yêu cầu',
+    title: 'Tiêu đề',
+    roomNumber: 'Phòng',
+    buildingName: 'Tòa nhà',
+    category: 'Danh mục',
+    priority: 'Độ ưu tiên',
+    status: 'Trạng thái',
+    requestedByStudentName: 'Người yêu cầu',
+    assignedToName: 'Người phụ trách',
+    createdAt: 'Ngày tạo',
+    completedAt: 'Ngày hoàn thành'
+  }
+  
+  const dataToExport = filteredRequests.value.map(req => ({
+    id: req.id,
+    title: req.title,
+    roomNumber: req.roomNumber,
+    buildingName: req.buildingName,
+    category: getCategoryText(req.category),
+    priority: getPriorityText(req.priority),
+    status: getStatusText(req.status),
+    requestedByStudentName: req.requestedByStudentName,
+    assignedToName: req.assignedToName || 'Chưa phân công',
+    createdAt: req.createdAt,
+    completedAt: req.completedAt || ''
+  }))
+  
+  exportToExcel(dataToExport, columnMapping, 'Danh_sach_yeu_cau_bao_tri', 'Yêu cầu bảo trì')
+}
+
+const loadBuildings = async () => {
+  try {
+    const response = await axios.get('http://localhost:5003/api/buildings', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Cache-Control': 'no-cache'
+      }
+    })
+    buildings.value = response.data
+    console.log('Loaded buildings:', buildings.value.length)
+  } catch (error) {
+    console.error('Error loading buildings:', error)
+    message.error('Lỗi tải danh sách tòa nhà')
+  }
+}
+
+const loadRooms = async () => {
+  try {
+    const response = await axios.get('http://localhost:5003/api/rooms', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Cache-Control': 'no-cache'
+      }
+    })
+    rooms.value = response.data
+    console.log('Loaded rooms:', rooms.value.length)
+  } catch (error) {
+    console.error('Error loading rooms:', error)
+    message.error('Lỗi tải danh sách phòng')
+  }
+}
+
 const loadStaffList = async () => {
   try {
     const response = await axios.get('http://localhost:5002/api/users', {
@@ -578,6 +739,16 @@ const handleTableChange = (pag) => {
   pagination.pageSize = pag.pageSize
 }
 
+const onBuildingChange = () => {
+  // Reset room selection when building changes
+  editedItem.value.roomId = undefined
+}
+
+const filterOption = (input, option) => {
+  const label = option.label || ''
+  return label.toLowerCase().includes(input.toLowerCase())
+}
+
 const handleMenuClick = ({ key }, record) => {
   selectedRequest.value = record
   switch (key) {
@@ -609,14 +780,20 @@ const handleMenuClick = ({ key }, record) => {
 }
 
 const showCreateDialog = () => {
+  // Chỉ Admin mới được tạo yêu cầu mới
+  if (!isAdmin.value) {
+    message.warning('Bạn không có quyền tạo yêu cầu mới')
+    return
+  }
+  
   editedIndex.value = -1
   editedItem.value = {
     title: '',
     description: '',
     category: 'Electric',
     priority: 'Medium',
-    roomNumber: '',
-    buildingName: ''
+    buildingId: undefined,
+    roomId: undefined
   }
   dialog.value = true
 }
@@ -627,16 +804,46 @@ const closeDialog = () => {
 
 const saveRequest = async () => {
   try {
+    // Validate required fields
+    if (!editedItem.value.title || !editedItem.value.description) {
+      message.warning('Vui lòng nhập đầy đủ tiêu đề và mô tả')
+      return
+    }
+    
+    if (!editedItem.value.buildingId || !editedItem.value.roomId) {
+      message.warning('Vui lòng chọn tòa nhà và phòng')
+      return
+    }
+    
+    // Find building and room to get their names (snapshot)
+    const building = buildings.value.find(b => b.id === editedItem.value.buildingId)
+    const room = rooms.value.find(r => r.id === editedItem.value.roomId)
+    
+    if (!building || !room) {
+      message.error('Không tìm thấy tòa nhà hoặc phòng đã chọn')
+      return
+    }
+    
+    // Create payload with snapshot data
+    const payload = {
+      ...editedItem.value,
+      buildingName: building.name,      // API returns 'name' not 'buildingName'
+      roomNumber: room.roomNumber
+    }
+    
+    console.log('Saving maintenance request with payload:', payload)
+    
     if (editedIndex.value === -1) {
-      await maintenanceRequestService.create(editedItem.value)
+      await maintenanceRequestService.create(payload)
       message.success('Tạo yêu cầu thành công')
     } else {
-      await maintenanceRequestService.update(editedItem.value.id, editedItem.value)
+      await maintenanceRequestService.update(editedItem.value.id, payload)
       message.success('Cập nhật thành công')
     }
     await fetchRequests()
     closeDialog()
   } catch (error) {
+    console.error('Error saving request:', error)
     message.error(error.message || 'Lỗi lưu dữ liệu')
   }
 }
@@ -784,7 +991,12 @@ const confirmRate = async () => {
 
 const editRequest = (record) => {
   editedIndex.value = requests.value.indexOf(record)
-  editedItem.value = { ...record }
+  editedItem.value = { 
+    ...record,
+    // Keep the IDs if they exist, otherwise leave undefined
+    buildingId: record.buildingId || undefined,
+    roomId: record.roomId || undefined
+  }
   dialog.value = true
 }
 
@@ -830,7 +1042,9 @@ const deleteRequest = (record) => {
 
 onMounted(() => {
   fetchRequests()
-  loadStaffList()  // Load staff list on mount
+  loadStaffList()
+  loadBuildings()
+  loadRooms()
 })
 </script>
 

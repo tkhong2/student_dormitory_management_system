@@ -1,43 +1,151 @@
 <template>
   <div>
     <PageHeaderAnt title="Ghi nhận thanh toán" subtitle="Thu tiền và xác nhận thanh toán từ sinh viên">
-      <template #actions>
-        <a-button type="primary" @click="showQuickPaymentModal">
-          <template #icon><DollarOutlined /></template>
-          Thu tiền nhanh
+      <template #extra>
+        <a-button @click="handleExport" :loading="exporting" style="margin-right: 16px;">
+          <template #icon><DownloadOutlined /></template>
+          Xuất Excel
         </a-button>
+        <a-statistic 
+          title="Tổng sinh viên có nợ" 
+          :value="studentsWithDebt.length" 
+          suffix="SV"
+          style="margin-right: 24px;"
+        />
+        <a-statistic 
+          title="Tổng công nợ" 
+          :value="totalSystemDebt" 
+          :precision="0"
+          suffix="VNĐ"
+          :valueStyle="{ color: '#ff4d4f' }"
+        />
       </template>
     </PageHeaderAnt>
 
-    <!-- Search Student -->
+    <!-- Search & Filters -->
     <a-card :bordered="false" style="margin-bottom: 16px;">
-      <a-row :gutter="16">
+      <a-row :gutter="16" align="middle">
         <a-col :xs="24" :md="12">
           <a-input-search
             v-model:value="searchQuery"
             size="large"
             placeholder="Tìm sinh viên: Mã SV, Tên, Số phòng, SĐT..."
-            @search="searchStudent"
-            :loading="searching"
+            allow-clear
           >
-            <template #enterButton>
-              <a-button type="primary">
-                <SearchOutlined /> Tìm kiếm
-              </a-button>
-            </template>
+            <template #prefix><SearchOutlined /></template>
           </a-input-search>
+        </a-col>
+        <a-col :xs="24" :md="6">
+          <a-select
+            v-model:value="filterStatus"
+            size="large"
+            style="width: 100%"
+            placeholder="Lọc theo trạng thái"
+          >
+            <a-select-option value="all">Tất cả</a-select-option>
+            <a-select-option value="overdue">Quá hạn</a-select-option>
+            <a-select-option value="duesoon">Sắp đến hạn</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :md="6">
+          <a-select
+            v-model:value="sortBy"
+            size="large"
+            style="width: 100%"
+            placeholder="Sắp xếp"
+          >
+            <a-select-option value="debt_desc">Nợ nhiều → ít</a-select-option>
+            <a-select-option value="debt_asc">Nợ ít → nhiều</a-select-option>
+            <a-select-option value="name_asc">Tên A → Z</a-select-option>
+            <a-select-option value="room_asc">Phòng A → Z</a-select-option>
+          </a-select>
         </a-col>
       </a-row>
     </a-card>
 
-    <!-- Student Info & Invoices -->
-    <a-row v-if="selectedStudent" :gutter="[16, 16]">
-      <!-- Student Card -->
-      <a-col :xs="24" :md="8">
-        <a-card title="Thông tin sinh viên" :bordered="false">
-          <a-descriptions :column="1" size="small">
-            <a-descriptions-item label="Họ tên">
-              <strong>{{ selectedStudent.fullName }}</strong>
+    <!-- Students with Debt List -->
+    <a-card :bordered="false" title="Danh sách sinh viên có nợ">
+      <a-table
+        :columns="studentColumns"
+        :data-source="filteredStudents"
+        :loading="loadingStudents"
+        :pagination="pagination"
+        :row-key="record => record.id"
+        size="middle"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'student'">
+            <div>
+              <div><strong>{{ record.fullName }}</strong></div>
+              <div style="font-size: 12px; color: #8c8c8c;">{{ record.studentCode }}</div>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'room'">
+            <a-tag v-if="record.roomNumber" color="blue">{{ record.roomNumber }}</a-tag>
+            <span v-else style="color: #bfbfbf;">Chưa có</span>
+          </template>
+
+          <template v-else-if="column.key === 'contact'">
+            <div style="font-size: 12px;">
+              <div>📱 {{ record.phone }}</div>
+              <div style="color: #8c8c8c;">✉️ {{ record.email }}</div>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'debt'">
+            <div>
+              <div style="font-size: 16px; font-weight: 700; color: #ff4d4f;">
+                {{ formatCurrency(record.totalDebt) }} VNĐ
+              </div>
+              <div style="font-size: 11px; color: #8c8c8c;">
+                {{ record.unpaidCount }} hóa đơn
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="column.key === 'status'">
+            <a-tag v-if="record.hasOverdue" color="red">
+              <WarningOutlined /> Quá hạn
+            </a-tag>
+            <a-tag v-else-if="record.hasDueSoon" color="orange">
+              Sắp hạn
+            </a-tag>
+            <a-tag v-else color="default">
+              Bình thường
+            </a-tag>
+          </template>
+
+          <template v-else-if="column.key === 'actions'">
+            <a-space>
+              <a-button 
+                size="small" 
+                type="link"
+                @click="viewStudentDetail(record)"
+              >
+                <template #icon><EyeOutlined /></template>
+                Xem chi tiết
+              </a-button>
+            </a-space>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
+
+
+    <!-- Student Detail Drawer -->
+    <a-drawer
+      v-model:open="detailDrawerVisible"
+      title="Chi tiết thanh toán"
+      width="800"
+      placement="right"
+    >
+      <div v-if="selectedStudent">
+        <!-- Student Info Card -->
+        <a-card size="small" style="margin-bottom: 16px;">
+          <a-descriptions :column="2" size="small" bordered>
+            <a-descriptions-item label="Họ tên" :span="2">
+              <strong style="font-size: 16px;">{{ selectedStudent.fullName }}</strong>
             </a-descriptions-item>
             <a-descriptions-item label="Mã SV">
               {{ selectedStudent.studentCode }}
@@ -53,90 +161,92 @@
             </a-descriptions-item>
           </a-descriptions>
           
-          <a-divider />
+          <a-divider style="margin: 12px 0;" />
           
-          <a-statistic
-            title="Tổng nợ"
-            :value="totalDebt"
-            :precision="0"
-            suffix="VNĐ"
-            :valueStyle="{ color: totalDebt > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 700 }"
-          />
+          <a-row :gutter="16">
+            <a-col :span="12">
+              <a-statistic
+                title="Tổng nợ"
+                :value="totalDebt"
+                :precision="0"
+                suffix="VNĐ"
+                :valueStyle="{ color: '#ff4d4f', fontWeight: 700 }"
+              />
+            </a-col>
+            <a-col :span="12">
+              <a-statistic
+                title="Số hóa đơn chưa trả"
+                :value="unpaidInvoices.length"
+                suffix="HĐ"
+                :valueStyle="{ color: '#1890ff', fontWeight: 700 }"
+              />
+            </a-col>
+          </a-row>
         </a-card>
-      </a-col>
 
-      <!-- Unpaid Invoices -->
-      <a-col :xs="24" :md="16">
-        <a-card title="Hóa đơn chưa thanh toán" :bordered="false">
-          <a-table
-            :columns="invoiceColumns"
+        <!-- Invoices List -->
+        <a-card size="small" title="Hóa đơn chưa thanh toán">
+          <a-list
             :data-source="unpaidInvoices"
             :loading="loadingInvoices"
-            :pagination="false"
-            :row-key="record => record.id"
-            size="small"
           >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'invoiceCode'">
-                <strong>{{ record.invoiceCode }}</strong>
-              </template>
-
-              <template v-else-if="column.key === 'type'">
-                <a-tag :color="getInvoiceTypeColor(record.type)">
-                  {{ getInvoiceTypeText(record.type) }}
-                </a-tag>
-              </template>
-
-              <template v-else-if="column.key === 'amount'">
-                <div>
-                  <div>Tổng: <strong>{{ formatCurrency(record.totalAmount) }}</strong></div>
-                  <div style="font-size: 11px; color: #52c41a;">Đã trả: {{ formatCurrency(record.paidAmount) }}</div>
-                  <div style="font-size: 11px; color: #ff4d4f;">Còn: {{ formatCurrency(record.debtAmount) }}</div>
-                </div>
-              </template>
-
-              <template v-else-if="column.key === 'status'">
-                <a-tag :color="getStatusColor(record.status)">
-                  {{ getStatusText(record.status) }}
-                </a-tag>
-              </template>
-
-              <template v-else-if="column.key === 'dueDate'">
-                <div :style="{ color: isOverdue(record.dueDate) ? '#ff4d4f' : undefined }">
-                  {{ formatDate(record.dueDate) }}
-                  <div v-if="isOverdue(record.dueDate)" style="font-size: 11px;">
-                    <WarningOutlined /> Quá hạn
-                  </div>
-                </div>
-              </template>
-
-              <template v-else-if="column.key === 'actions'">
-                <a-button 
-                  size="small" 
-                  type="primary"
-                  :disabled="record.debtAmount <= 0"
-                  @click="openPaymentModal(record)"
-                >
-                  <template #icon><DollarOutlined /></template>
-                  Thu tiền
-                </a-button>
-              </template>
+            <template #renderItem="{ item }">
+              <a-list-item>
+                <template #actions>
+                  <a-button 
+                    type="primary"
+                    size="small"
+                    :disabled="item.debtAmount <= 0"
+                    @click="openPaymentModal(item)"
+                  >
+                    <template #icon><DollarOutlined /></template>
+                    Thu tiền
+                  </a-button>
+                </template>
+                
+                <a-list-item-meta>
+                  <template #title>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <strong>{{ item.invoiceCode }}</strong>
+                      <a-tag :color="getInvoiceTypeColor(item.type)">
+                        {{ getInvoiceTypeText(item.type) }}
+                      </a-tag>
+                      <a-tag :color="getStatusColor(item.status)">
+                        {{ getStatusText(item.status) }}
+                      </a-tag>
+                      <a-tag v-if="isOverdue(item.dueDate)" color="red">
+                        <WarningOutlined /> Quá hạn
+                      </a-tag>
+                    </div>
+                  </template>
+                  <template #description>
+                    <a-row :gutter="16" style="margin-top: 8px;">
+                      <a-col :span="8">
+                        <div style="font-size: 12px; color: #8c8c8c;">Tổng tiền</div>
+                        <div style="font-weight: 600;">{{ formatCurrency(item.totalAmount) }} VNĐ</div>
+                      </a-col>
+                      <a-col :span="8">
+                        <div style="font-size: 12px; color: #8c8c8c;">Đã trả</div>
+                        <div style="color: #52c41a; font-weight: 600;">{{ formatCurrency(item.paidAmount) }} VNĐ</div>
+                      </a-col>
+                      <a-col :span="8">
+                        <div style="font-size: 12px; color: #8c8c8c;">Còn lại</div>
+                        <div style="color: #ff4d4f; font-weight: 600;">{{ formatCurrency(item.debtAmount) }} VNĐ</div>
+                      </a-col>
+                    </a-row>
+                    <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+                      Hạn thanh toán: {{ formatDate(item.dueDate) }}
+                    </div>
+                  </template>
+                </a-list-item-meta>
+              </a-list-item>
             </template>
-          </a-table>
-
+          </a-list>
+          
           <a-empty v-if="!loadingInvoices && unpaidInvoices.length === 0" description="Không có hóa đơn chưa thanh toán" />
         </a-card>
-      </a-col>
-    </a-row>
-
-    <!-- Empty State -->
-    <a-card v-else :bordered="false">
-      <a-empty description="Tìm kiếm sinh viên để xem hóa đơn và thu tiền">
-        <template #image>
-          <SearchOutlined style="font-size: 64px; color: #d9d9d9;" />
-        </template>
-      </a-empty>
-    </a-card>
+      </div>
+    </a-drawer>
 
     <!-- Payment Modal -->
     <a-modal
@@ -277,10 +387,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import {
-  DollarOutlined, SearchOutlined, WarningOutlined, PrinterOutlined
+  DollarOutlined, SearchOutlined, WarningOutlined, PrinterOutlined, EyeOutlined, DownloadOutlined
 } from '@ant-design/icons-vue'
 import PageHeaderAnt from '@/components/common/PageHeaderAnt.vue'
 import { studentService } from '@/services/studentService'
@@ -288,14 +398,22 @@ import { invoiceService } from '@/services/invoiceService'
 import { paymentService } from '@/services/paymentService'
 import { useAuthStore } from '@/stores/auth'
 import dayjs from 'dayjs'
+import { useExcelExport } from '@/composables/useExcelExport'
+
+const { exporting, exportToExcel } = useExcelExport()
 
 const authStore = useAuthStore()
-const searching = ref(false)
+const loadingStudents = ref(false)
 const loadingInvoices = ref(false)
 const processing = ref(false)
 const searchQuery = ref('')
+const filterStatus = ref('all')
+const sortBy = ref('debt_desc')
+const allStudents = ref([])
+const studentsWithDebt = ref([])
 const selectedStudent = ref(null)
 const unpaidInvoices = ref([])
+const detailDrawerVisible = ref(false)
 const paymentModalVisible = ref(false)
 const receiptModalVisible = ref(false)
 const selectedInvoice = ref(null)
@@ -309,51 +427,157 @@ const paymentForm = ref({
   note: ''
 })
 
-const invoiceColumns = [
-  { title: 'Mã HĐ', key: 'invoiceCode', width: 120 },
-  { title: 'Loại', key: 'type', width: 120 },
-  { title: 'Số tiền', key: 'amount', width: 180 },
-  { title: 'Hạn', key: 'dueDate', width: 120 },
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  showSizeChanger: true,
+  showTotal: (total) => `Tổng ${total} sinh viên`
+})
+
+const studentColumns = [
+  { title: 'Sinh viên', key: 'student', width: 200 },
+  { title: 'Phòng', key: 'room', width: 100 },
+  { title: 'Liên hệ', key: 'contact', width: 200 },
+  { title: 'Công nợ', key: 'debt', width: 150 },
   { title: 'Trạng thái', key: 'status', width: 120 },
-  { title: 'Thao tác', key: 'actions', width: 120 }
+  { title: 'Thao tác', key: 'actions', width: 120, fixed: 'right' }
 ]
+
+const totalSystemDebt = computed(() => {
+  return studentsWithDebt.value.reduce((sum, s) => sum + s.totalDebt, 0)
+})
 
 const totalDebt = computed(() => {
   return unpaidInvoices.value.reduce((sum, inv) => sum + inv.debtAmount, 0)
 })
 
-const searchStudent = async () => {
-  if (!searchQuery.value.trim()) {
-    message.warning('Vui lòng nhập thông tin tìm kiếm')
-    return
-  }
-
-  searching.value = true
-  try {
-    // Search students - giả sử có API search
-    const students = await studentService.getAll()
+const filteredStudents = computed(() => {
+  let result = [...studentsWithDebt.value]
+  
+  // Search filter
+  if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
-    const found = students.find(s =>
+    result = result.filter(s =>
       s.studentCode?.toLowerCase().includes(query) ||
       s.fullName?.toLowerCase().includes(query) ||
-      s.phone?.includes(query)
+      s.phone?.includes(query) ||
+      s.roomNumber?.toLowerCase().includes(query)
     )
+  }
+  
+  // Status filter
+  if (filterStatus.value === 'overdue') {
+    result = result.filter(s => s.hasOverdue)
+  } else if (filterStatus.value === 'duesoon') {
+    result = result.filter(s => s.hasDueSoon && !s.hasOverdue)
+  }
+  
+  // Sort
+  if (sortBy.value === 'debt_desc') {
+    result.sort((a, b) => b.totalDebt - a.totalDebt)
+  } else if (sortBy.value === 'debt_asc') {
+    result.sort((a, b) => a.totalDebt - b.totalDebt)
+  } else if (sortBy.value === 'name_asc') {
+    result.sort((a, b) => a.fullName.localeCompare(b.fullName))
+  } else if (sortBy.value === 'room_asc') {
+    result.sort((a, b) => (a.roomNumber || '').localeCompare(b.roomNumber || ''))
+  }
+  
+  return result
+})
 
-    if (!found) {
-      message.warning('Không tìm thấy sinh viên')
-      selectedStudent.value = null
-      unpaidInvoices.value = []
-      return
+onMounted(async () => {
+  await loadStudentsWithDebt()
+})
+
+const loadStudentsWithDebt = async () => {
+  loadingStudents.value = true
+  try {
+    // Load all students
+    allStudents.value = await studentService.getAll()
+    
+    // Load all invoices
+    const allInvoices = await invoiceService.getAll()
+    
+    // Group invoices by student and calculate debt
+    const studentDebtMap = new Map()
+    
+    for (const invoice of allInvoices) {
+      if (invoice.status !== 'Paid' && invoice.debtAmount > 0) {
+        if (!studentDebtMap.has(invoice.studentId)) {
+          studentDebtMap.set(invoice.studentId, {
+            totalDebt: 0,
+            unpaidCount: 0,
+            invoices: [],
+            hasOverdue: false,
+            hasDueSoon: false
+          })
+        }
+        
+        const studentDebt = studentDebtMap.get(invoice.studentId)
+        studentDebt.totalDebt += invoice.debtAmount
+        studentDebt.unpaidCount += 1
+        studentDebt.invoices.push(invoice)
+        
+        // Check overdue
+        if (isOverdue(invoice.dueDate)) {
+          studentDebt.hasOverdue = true
+        }
+        
+        // Check due soon (within 7 days)
+        if (isDueSoon(invoice.dueDate)) {
+          studentDebt.hasDueSoon = true
+        }
+      }
     }
-
-    selectedStudent.value = found
-    await loadUnpaidInvoices(found.id)
+    
+    // Merge student info with debt info
+    studentsWithDebt.value = allStudents.value
+      .filter(s => studentDebtMap.has(s.id))
+      .map(s => ({
+        ...s,
+        ...studentDebtMap.get(s.id)
+      }))
+    
   } catch (error) {
-    message.error('Lỗi tìm kiếm sinh viên')
+    message.error('Lỗi tải danh sách sinh viên')
     console.error(error)
   } finally {
-    searching.value = false
+    loadingStudents.value = false
   }
+}
+
+// Export to Excel function
+const handleExport = () => {
+  const columnMapping = {
+    studentCode: 'Mã SV',
+    fullName: 'Sinh viên',
+    roomNumber: 'Phòng',
+    phone: 'Số điện thoại',
+    email: 'Email',
+    totalDebt: 'Tổng nợ',
+    unpaidCount: 'Số hóa đơn chưa thanh toán',
+    status: 'Trạng thái'
+  }
+  
+  const dataToExport = filteredStudents.value.map(student => ({
+    studentCode: student.studentCode,
+    fullName: student.fullName,
+    roomNumber: student.roomNumber || 'Chưa có',
+    phone: student.phone,
+    email: student.email,
+    totalDebt: student.totalDebt,
+    unpaidCount: student.unpaidCount,
+    status: student.hasOverdue ? 'Quá hạn' : (student.hasDueSoon ? 'Sắp đến hạn' : 'Bình thường')
+  }))
+  
+  exportToExcel(dataToExport, columnMapping, 'Danh_sach_cong_no', 'Công nợ')
+}
+
+const viewStudentDetail = async (student) => {
+  selectedStudent.value = student
+  detailDrawerVisible.value = true
+  await loadUnpaidInvoices(student.id)
 }
 
 const loadUnpaidInvoices = async (studentId) => {
@@ -407,8 +631,9 @@ const handlePayment = async () => {
     paymentModalVisible.value = false
     receiptModalVisible.value = true
     
-    // Reload invoices
+    // Reload data
     await loadUnpaidInvoices(selectedStudent.value.id)
+    await loadStudentsWithDebt()
   } catch (error) {
     message.error(error.message || 'Lỗi ghi nhận thanh toán')
   } finally {
@@ -418,10 +643,6 @@ const handlePayment = async () => {
 
 const printReceipt = () => {
   window.print()
-}
-
-const showQuickPaymentModal = () => {
-  message.info('Vui lòng tìm sinh viên trước')
 }
 
 const getInvoiceTypeColor = (type) => {
@@ -486,6 +707,11 @@ const formatCurrency = (value) => {
 
 const isOverdue = (dueDate) => {
   return dayjs(dueDate).isBefore(dayjs(), 'day')
+}
+
+const isDueSoon = (dueDate) => {
+  const daysUntilDue = dayjs(dueDate).diff(dayjs(), 'day')
+  return daysUntilDue >= 0 && daysUntilDue <= 7
 }
 </script>
 

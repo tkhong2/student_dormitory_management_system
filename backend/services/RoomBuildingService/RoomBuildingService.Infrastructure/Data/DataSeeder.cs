@@ -16,9 +16,9 @@ public static class DataSeeder
 
         var buildingsToAdd = new[]
         {
-            new { Name = "Tòa A", Gender = "Male", TotalFloors = 8, TotalRooms = 96, Manager = "Nguyễn Văn A", Phone = "0901234567", Year = "2018" },
-            new { Name = "Tòa B", Gender = "Female", TotalFloors = 8, TotalRooms = 96, Manager = "Trần Thị B", Phone = "0902345678", Year = "2019" },
-            new { Name = "Tòa C", Gender = "Mixed", TotalFloors = 10, TotalRooms = 120, Manager = "Lê Văn C", Phone = "0903456789", Year = "2022" }
+            new { Name = "Tòa A", Gender = "Male", TotalFloors = 8, TotalRooms = 96, Manager = "Nguyễn Văn An", Phone = "0901234567", Year = "2018" },
+            new { Name = "Tòa B", Gender = "Female", TotalFloors = 8, TotalRooms = 96, Manager = "Trần Thị Bình", Phone = "0902345678", Year = "2019" },
+            new { Name = "Tòa C", Gender = "Mixed", TotalFloors = 10, TotalRooms = 120, Manager = "Lê Văn Cường", Phone = "0903456789", Year = "2022" }
         };
 
         foreach (var b in buildingsToAdd)
@@ -60,42 +60,50 @@ public static class DataSeeder
         }
 
         // 2. Seed RoomTypes (only add if not exists)
-        var existingRoomTypeCodes = context.RoomTypes.Select(rt => rt.Code).ToList();
+        // Tạo các loại phòng chung cho TẤT CẢ các tòa nhà
+        var existingRoomTypeCombos = context.RoomTypes
+            .Select(rt => new { rt.Code, rt.BuildingId })
+            .ToList();
         var roomTypes = new List<RoomType>();
 
-        var roomTypesToAdd = new[]
+        var roomTypeTemplates = new[]
         {
-            new { Code = "2P", Name = "Phòng 2 người", BuildingIndex = 0, Capacity = 2, Price = 800000, Deposit = 800000, Area = 15.0m, BedType = "Single", AC = true, Water = true, Bath = false, Window = true, Desc = "Phòng 2 người, có điều hòa, view đẹp" },
-            new { Code = "4P", Name = "Phòng 4 người", BuildingIndex = 0, Capacity = 4, Price = 500000, Deposit = 500000, Area = 20.0m, BedType = "Bunk", AC = true, Water = false, Bath = false, Window = true, Desc = "Phòng 4 người, tiết kiệm" },
-            new { Code = "6P", Name = "Phòng 6 người", BuildingIndex = 1, Capacity = 6, Price = 350000, Deposit = 350000, Area = 25.0m, BedType = "Bunk", AC = false, Water = false, Bath = false, Window = true, Desc = "Phòng 6 người, giá rẻ" },
-            new { Code = "4P-VIP", Name = "Phòng 4 người VIP", BuildingIndex = 2, Capacity = 4, Price = 750000, Deposit = 750000, Area = 30.0m, BedType = "Single", AC = true, Water = true, Bath = true, Window = true, Desc = "Phòng VIP, đầy đủ tiện nghi" }
+            new { Code = "2P", Name = "Phòng 2 người", Capacity = 2, Price = 800000, Deposit = 800000, Area = 15.0m, BedType = "Single", AC = true, Water = true, Bath = false, Window = true, Desc = "Phòng 2 người, có điều hòa, view đẹp" },
+            new { Code = "4P", Name = "Phòng 4 người", Capacity = 4, Price = 500000, Deposit = 500000, Area = 20.0m, BedType = "Bunk", AC = true, Water = false, Bath = false, Window = true, Desc = "Phòng 4 người, tiết kiệm" },
+            new { Code = "6P", Name = "Phòng 6 người", Capacity = 6, Price = 350000, Deposit = 350000, Area = 25.0m, BedType = "Bunk", AC = false, Water = false, Bath = false, Window = true, Desc = "Phòng 6 người, giá rẻ" },
+            new { Code = "4P-VIP", Name = "Phòng 4 người VIP", Capacity = 4, Price = 750000, Deposit = 750000, Area = 30.0m, BedType = "Single", AC = true, Water = true, Bath = true, Window = true, Desc = "Phòng VIP, đầy đủ tiện nghi" }
         };
 
-        foreach (var rt in roomTypesToAdd)
+        // Tạo loại phòng cho MỖI tòa nhà
+        foreach (var building in buildings)
         {
-            if (!existingRoomTypeCodes.Contains(rt.Code) && buildings.Count > rt.BuildingIndex)
+            foreach (var template in roomTypeTemplates)
             {
-                var roomType = new RoomType
+                var combo = new { Code = template.Code, BuildingId = building.Id };
+                if (!existingRoomTypeCombos.Any(x => x.Code == combo.Code && x.BuildingId == combo.BuildingId))
                 {
-                    BuildingId = buildings[rt.BuildingIndex].Id,
-                    Code = rt.Code,
-                    Name = rt.Name,
-                    Capacity = rt.Capacity,
-                    PricePerMonth = rt.Price,
-                    DepositAmount = rt.Deposit,
-                    ElectricityRate = 3500,
-                    WaterRate = rt.Capacity <= 4 ? 20000 : 15000,
-                    Area = rt.Area,
-                    BedType = rt.BedType,
-                    HasAirConditioner = rt.AC,
-                    HasWaterHeater = rt.Water,
-                    HasPrivateBathroom = rt.Bath,
-                    HasWindowView = rt.Window,
-                    Description = rt.Desc,
-                    IsActive = true
-                };
-                roomTypes.Add(roomType);
-                await context.RoomTypes.AddAsync(roomType);
+                    var roomType = new RoomType
+                    {
+                        BuildingId = building.Id,
+                        Code = template.Code,
+                        Name = template.Name,
+                        Capacity = template.Capacity,
+                        PricePerMonth = template.Price,
+                        DepositAmount = template.Deposit,
+                        ElectricityRate = 3500,
+                        WaterRate = template.Capacity <= 4 ? 20000 : 15000,
+                        Area = template.Area,
+                        BedType = template.BedType,
+                        HasAirConditioner = template.AC,
+                        HasWaterHeater = template.Water,
+                        HasPrivateBathroom = template.Bath,
+                        HasWindowView = template.Window,
+                        Description = template.Desc,
+                        IsActive = true
+                    };
+                    roomTypes.Add(roomType);
+                    await context.RoomTypes.AddAsync(roomType);
+                }
             }
         }
 
@@ -166,82 +174,48 @@ public static class DataSeeder
 
         var roomTypeAmenities = new List<RoomTypeAmenity>();
 
-        // Phòng 2 người: Điều hòa, Nóng lạnh, Tủ quần áo, Bàn học, Kệ sách, Cửa sổ lớn
-        var roomType2P = roomTypes.FirstOrDefault(rt => rt.Code == "2P");
-        if (roomType2P != null)
+        // Định nghĩa amenities cho từng loại phòng (theo Code)
+        var amenityMappings = new Dictionary<string, (string[] Names, Dictionary<string, int> Quantities)>
         {
-            var amenitiesFor2P = new[] { "Điều hòa", "Nóng lạnh", "Tủ quần áo", "Bàn học", "Kệ sách", "Cửa sổ lớn" };
-            foreach (var amenityName in amenitiesFor2P)
-            {
-                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
-                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType2P.Id && rta.AmenityId == amenity.Id))
-                {
-                    roomTypeAmenities.Add(new RoomTypeAmenity
-                    {
-                        RoomTypeId = roomType2P.Id,
-                        AmenityId = amenity.Id,
-                        Quantity = amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 2 : 1
-                    });
-                }
-            }
-        }
+            ["2P"] = (
+                new[] { "Điều hòa", "Nóng lạnh", "Tủ quần áo", "Bàn học", "Kệ sách", "Cửa sổ lớn" },
+                new Dictionary<string, int> { ["Bàn học"] = 2, ["Tủ quần áo"] = 2 }
+            ),
+            ["4P"] = (
+                new[] { "Điều hòa", "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" },
+                new Dictionary<string, int> { ["Giường tầng"] = 2, ["Bàn học"] = 4, ["Tủ quần áo"] = 4 }
+            ),
+            ["6P"] = (
+                new[] { "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" },
+                new Dictionary<string, int> { ["Giường tầng"] = 3, ["Bàn học"] = 6, ["Tủ quần áo"] = 6 }
+            ),
+            ["4P-VIP"] = (
+                new[] { "Điều hòa", "Nóng lạnh", "WC riêng", "Tủ lạnh", "Tủ quần áo", "Bàn học", "TV", "Ban công" },
+                new Dictionary<string, int> { ["Bàn học"] = 4, ["Tủ quần áo"] = 4 }
+            )
+        };
 
-        // Phòng 4 người: Điều hòa, Giường tầng, Tủ quần áo, Bàn học, Quạt trần
-        var roomType4P = roomTypes.FirstOrDefault(rt => rt.Code == "4P");
-        if (roomType4P != null)
+        // Áp dụng amenities cho TẤT CẢ room types (mỗi tòa đều có đầy đủ loại phòng)
+        foreach (var roomTypeCode in amenityMappings.Keys)
         {
-            var amenitiesFor4P = new[] { "Điều hòa", "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" };
-            foreach (var amenityName in amenitiesFor4P)
-            {
-                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
-                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType4P.Id && rta.AmenityId == amenity.Id))
-                {
-                    roomTypeAmenities.Add(new RoomTypeAmenity
-                    {
-                        RoomTypeId = roomType4P.Id,
-                        AmenityId = amenity.Id,
-                        Quantity = amenityName == "Giường tầng" ? 2 : amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 4 : 1
-                    });
-                }
-            }
-        }
+            var allRoomTypesWithCode = roomTypes.Where(rt => rt.Code == roomTypeCode).ToList();
+            var (amenityNames, quantities) = amenityMappings[roomTypeCode];
 
-        // Phòng 6 người: Giường tầng, Tủ quần áo, Bàn học, Quạt trần
-        var roomType6P = roomTypes.FirstOrDefault(rt => rt.Code == "6P");
-        if (roomType6P != null)
-        {
-            var amenitiesFor6P = new[] { "Giường tầng", "Tủ quần áo", "Bàn học", "Quạt trần" };
-            foreach (var amenityName in amenitiesFor6P)
+            foreach (var roomType in allRoomTypesWithCode)
             {
-                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
-                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType6P.Id && rta.AmenityId == amenity.Id))
+                foreach (var amenityName in amenityNames)
                 {
-                    roomTypeAmenities.Add(new RoomTypeAmenity
+                    var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
+                    if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType.Id && rta.AmenityId == amenity.Id))
                     {
-                        RoomTypeId = roomType6P.Id,
-                        AmenityId = amenity.Id,
-                        Quantity = amenityName == "Giường tầng" ? 3 : amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 6 : 1
-                    });
-                }
-            }
-        }
-
-        // Phòng 4 người VIP: Điều hòa, Nóng lạnh, WC riêng, Tủ lạnh, Tủ quần áo, Bàn học, TV, Ban công
-        var roomType4PVIP = roomTypes.FirstOrDefault(rt => rt.Code == "4P-VIP");
-        if (roomType4PVIP != null)
-        {
-            var amenitiesFor4PVIP = new[] { "Điều hòa", "Nóng lạnh", "WC riêng", "Tủ lạnh", "Tủ quần áo", "Bàn học", "TV", "Ban công" };
-            foreach (var amenityName in amenitiesFor4PVIP)
-            {
-                var amenity = amenities.FirstOrDefault(a => a.Name == amenityName);
-                if (amenity != null && !existingRoomTypeAmenities.Any(rta => rta.RoomTypeId == roomType4PVIP.Id && rta.AmenityId == amenity.Id))
-                {
-                    roomTypeAmenities.Add(new RoomTypeAmenity
-                    {
-                        RoomTypeId = roomType4PVIP.Id,
-                        AmenityId = amenity.Id,
-                        Quantity = amenityName == "Bàn học" || amenityName == "Tủ quần áo" ? 4 : 1
-                    });
+                        var quantity = quantities.ContainsKey(amenityName) ? quantities[amenityName] : 1;
+                        roomTypeAmenities.Add(new RoomTypeAmenity
+                        {
+                            RoomTypeId = roomType.Id,
+                            AmenityId = amenity.Id,
+                            Quantity = quantity
+                        });
+                    }
                 }
             }
         }

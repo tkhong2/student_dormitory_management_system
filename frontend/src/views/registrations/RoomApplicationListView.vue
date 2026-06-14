@@ -9,6 +9,10 @@
           Tổng số: {{ applications.length }} đơn đăng ký
         </p>
       </div>
+      <a-button @click="handleExport" :loading="exporting">
+        <template #icon><DownloadOutlined /></template>
+        Xuất Excel
+      </a-button>
     </div>
 
     <!-- Filters and Table Card -->
@@ -272,9 +276,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { EyeOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { EyeOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import { roomApplicationService } from '@/services/roomApplicationService'
 import { useRouter } from 'vue-router'
+import { useExcelExport } from '@/composables/useExcelExport'
+
+const { exporting, exportToExcel } = useExcelExport()
 
 const router = useRouter()
 
@@ -434,6 +441,45 @@ function formatDate(value) {
 
 function formatCurrency(value) {
   return value ? value.toLocaleString('vi-VN') + 'đ' : ''
+}
+
+// Export to Excel function
+const handleExport = () => {
+  const columnMapping = {
+    applicationCode: 'Mã đơn',
+    studentName: 'Sinh viên',
+    studentCode: 'Mã SV',
+    assignedRoomNumber: 'Phòng được phân',
+    assignedBuildingName: 'Tòa nhà',
+    preferredRoomTypeName: 'Loại phòng mong muốn',
+    preferredRoomPrice: 'Giá thuê',
+    semester: 'Kỳ đăng ký',
+    submittedDate: 'Ngày nộp',
+    requestedStartDate: 'Ngày bắt đầu',
+    requestedEndDate: 'Ngày kết thúc',
+    status: 'Trạng thái',
+    reviewedBy: 'Người duyệt',
+    reviewedDate: 'Ngày duyệt'
+  }
+  
+  const dataToExport = filteredApplications.value.map(app => ({
+    applicationCode: app.applicationCode || `APP-${app.id}`,
+    studentName: app.studentName,
+    studentCode: app.studentCode,
+    assignedRoomNumber: app.assignedRoomNumber || 'Chưa chọn',
+    assignedBuildingName: app.assignedBuildingName || app.preferredBuildingName,
+    preferredRoomTypeName: app.preferredRoomTypeName,
+    preferredRoomPrice: app.preferredRoomPrice,
+    semester: app.semester,
+    submittedDate: formatDate(app.submittedDate),
+    requestedStartDate: formatDate(app.requestedStartDate),
+    requestedEndDate: formatDate(app.requestedEndDate),
+    status: statusLabel(app.status),
+    reviewedBy: app.reviewedBy || '',
+    reviewedDate: formatDate(app.reviewedDate)
+  }))
+  
+  exportToExcel(dataToExport, columnMapping, 'Danh_sach_don_dang_ky', 'Đơn đăng ký')
 }
 
 onMounted(loadApplications)

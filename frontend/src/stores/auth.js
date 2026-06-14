@@ -26,6 +26,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       const { token: newToken, refreshToken: newRefreshToken, user: userData } = response.data
 
+      // Process avatarUrl - ensure it has the full URL
+      if (userData.avatarUrl && !userData.avatarUrl.startsWith('http')) {
+        userData.avatarUrl = `http://localhost:5003${userData.avatarUrl}`
+      }
+
       // Save to state
       token.value = newToken
       refreshToken.value = newRefreshToken
@@ -122,8 +127,15 @@ export const useAuthStore = defineStore('auth', () => {
         }
       })
       
-      user.value = response.data
-      localStorage.setItem('user', JSON.stringify(response.data))
+      const userData = response.data
+      
+      // Process avatarUrl - ensure it has the full URL
+      if (userData.avatarUrl && !userData.avatarUrl.startsWith('http')) {
+        userData.avatarUrl = `http://localhost:5003${userData.avatarUrl}`
+      }
+      
+      user.value = userData
+      localStorage.setItem('user', JSON.stringify(userData))
     } catch (error) {
       console.error('Error refreshing user data:', error)
     }

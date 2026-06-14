@@ -29,6 +29,13 @@ builder.Services.AddSwaggerGen();
 // Add HttpClient for inter-service communication
 builder.Services.AddHttpClient();
 
+// Register RoomServiceClient
+var roomServiceUrl = builder.Configuration["Services:RoomBuildingService"] ?? "http://localhost:5003";
+builder.Services.AddHttpClient<ContractStudentService.Application.Services.IRoomServiceClient, ContractStudentService.Application.Services.RoomServiceClient>((sp, client) =>
+{
+    client.BaseAddress = new Uri(roomServiceUrl);
+});
+
 // Register repositories
 builder.Services.AddScoped<IStudentRepository, ContractStudentService.Infrastructure.Repositories.StudentRepository>();
 builder.Services.AddScoped<IStudentDocumentRepository, ContractStudentService.Infrastructure.Repositories.StudentDocumentRepository>();
@@ -38,6 +45,8 @@ builder.Services.AddScoped<IContractExtensionRepository, ContractStudentService.
 builder.Services.AddScoped<IRoomTransferRepository, ContractStudentService.Infrastructure.Repositories.RoomTransferRepository>();
 builder.Services.AddScoped<IContractTemplateRepository, ContractStudentService.Infrastructure.Repositories.ContractTemplateRepository>();
 builder.Services.AddScoped<IContractTermRepository, ContractStudentService.Infrastructure.Repositories.ContractTermRepository>();
+builder.Services.AddScoped<ICheckInRepository, ContractStudentService.Infrastructure.Repositories.CheckInRepository>();
+builder.Services.AddScoped<ICheckOutRepository, ContractStudentService.Infrastructure.Repositories.CheckOutRepository>();
 
 builder.Services.AddCors(options =>
 {

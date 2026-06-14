@@ -179,7 +179,7 @@ namespace ContractStudentService.Application.DTOs
         public int StudentId { get; set; }
         public string? StudentName { get; set; }
         public string? StudentCode { get; set; }
-        public int ApplicationId { get; set; }
+        public int? ApplicationId { get; set; }  // Nullable
         public int? ContractTemplateId { get; set; }
         public int RoomId { get; set; }
         public string RoomNumber { get; set; } = string.Empty;
@@ -217,7 +217,7 @@ namespace ContractStudentService.Application.DTOs
     public class CreateContractDto
     {
         public int StudentId { get; set; }
-        public int ApplicationId { get; set; }
+        public int? ApplicationId { get; set; } // Nullable - cho phép tạo hợp đồng thủ công không cần đơn đăng ký
         public int RoomId { get; set; }
         public string RoomNumber { get; set; } = string.Empty;
         public int BuildingId { get; set; }
@@ -350,5 +350,149 @@ namespace ContractStudentService.Application.DTOs
         public bool IsRequired { get; set; } = true;
         public bool IsHighlighted { get; set; } = false;
         public string? Icon { get; set; }
+    }
+
+
+    // ===== CheckIn/CheckOut DTOs =====
+    public class CheckInDto
+    {
+        public int Id { get; set; }
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public string? StudentName { get; set; }
+        public string? StudentCode { get; set; }
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateTime CheckInDate { get; set; }
+        public int CheckedInByUserId { get; set; }
+        public string CheckedInByName { get; set; } = string.Empty;
+        public string? IdCardImageUrls { get; set; }
+        public bool IsDepositPaid { get; set; }
+        public decimal DepositAmount { get; set; }
+        public DateTime? DepositPaidAt { get; set; }
+        public string? RoomConditionChecklist { get; set; }
+        public string? RoomImageUrls { get; set; }
+        public string RoomCondition { get; set; } = "Good";
+        public string? Notes { get; set; }
+        public decimal? InitialElectricityReading { get; set; }
+        public decimal? InitialWaterReading { get; set; }
+        public string? KeysProvided { get; set; }
+        public int? KeyCount { get; set; }
+        public string Status { get; set; } = "Completed";
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CreateCheckInDto
+    {
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateTime CheckInDate { get; set; }
+        public int CheckedInByUserId { get; set; }
+        public string CheckedInByName { get; set; } = string.Empty;
+        public string? IdCardImageUrls { get; set; }
+        public bool IsDepositPaid { get; set; }
+        public decimal DepositAmount { get; set; }
+        public DateTime? DepositPaidAt { get; set; }
+        public string? RoomConditionChecklist { get; set; }
+        public string? RoomImageUrls { get; set; }
+        public string RoomCondition { get; set; } = "Good";
+        public string? Notes { get; set; }
+        public decimal? InitialElectricityReading { get; set; }
+        public decimal? InitialWaterReading { get; set; }
+        public string? KeysProvided { get; set; }
+        public int? KeyCount { get; set; }
+    }
+
+    public class CheckOutDto
+    {
+        public int Id { get; set; }
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public string? StudentName { get; set; }
+        public string? StudentCode { get; set; }
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateTime CheckOutDate { get; set; }
+        public int CheckedOutByUserId { get; set; }
+        public string CheckedOutByName { get; set; } = string.Empty;
+        public string? CurrentRoomImageUrls { get; set; }
+        public string RoomCondition { get; set; } = "Good";
+        public string? DamageDescription { get; set; }
+        public decimal DepositAmount { get; set; }
+        public decimal CompensationCost { get; set; }
+        public decimal RefundAmount { get; set; }
+        public string? CompensationDetails { get; set; }
+        public decimal? FinalElectricityReading { get; set; }
+        public decimal? FinalWaterReading { get; set; }
+        public bool IsKeyReturned { get; set; }
+        public bool IsDepositRefunded { get; set; }
+        public DateTime? DepositRefundedAt { get; set; }
+        public string? RefundMethod { get; set; }
+        public string? RefundReference { get; set; }
+        public string? Notes { get; set; }
+        public string Status { get; set; } = "Completed";
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CreateCheckOutDto
+    {
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateTime CheckOutDate { get; set; }
+        public int CheckedOutByUserId { get; set; }
+        public string CheckedOutByName { get; set; } = string.Empty;
+        public string? CurrentRoomImageUrls { get; set; }
+        public string RoomCondition { get; set; } = "Good";
+        public string? DamageDescription { get; set; }
+        public decimal DepositAmount { get; set; }
+        public decimal CompensationCost { get; set; }
+        public decimal RefundAmount { get; set; }
+        public string? CompensationDetails { get; set; }
+        public decimal? FinalElectricityReading { get; set; }
+        public decimal? FinalWaterReading { get; set; }
+        public bool IsKeyReturned { get; set; }
+        public bool IsDepositRefunded { get; set; }
+        public DateTime? DepositRefundedAt { get; set; }
+        public string? RefundMethod { get; set; }
+        public string? RefundReference { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class PendingCheckInDto
+    {
+        public int Id { get; set; }
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string StudentCode { get; set; } = string.Empty;
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateOnly StartDate { get; set; }
+        public decimal DepositAmount { get; set; }
+        public bool CheckedIn { get; set; }
+    }
+
+    public class PendingCheckOutDto
+    {
+        public int Id { get; set; }
+        public int ContractId { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string StudentCode { get; set; } = string.Empty;
+        public int RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public DateOnly EndDate { get; set; }
+        public decimal DepositAmount { get; set; }
+        public bool CheckedOut { get; set; }
     }
 }

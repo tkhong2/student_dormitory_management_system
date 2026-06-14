@@ -11,9 +11,15 @@
             Tổng số: {{ invoices.length }} phiếu thu
           </p>
         </div>
-        <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
-          + Tạo Phiếu Thu
-        </a-button>
+        <a-space>
+          <a-button @click="exportToExcelHandler" :loading="exporting">
+            <template #icon><DownloadOutlined /></template>
+            Xuất Excel
+          </a-button>
+          <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+            + Tạo Phiếu Thu
+          </a-button>
+        </a-space>
       </div>
     </div>
 
@@ -153,6 +159,11 @@
 
           <template v-else-if="column.key === 'actions'">
             <a-space>
+              <a-tooltip title="In phiếu thu">
+                <a-button type="text" size="small" @click="printInvoiceHandler(record)" :loading="printing">
+                  <template #icon><PrinterOutlined /></template>
+                </a-button>
+              </a-tooltip>
               <a-tooltip title="Xem chi tiết">
                 <a-button type="text" size="small" @click="viewInvoice(record)">
                   <template #icon><EyeOutlined /></template>
@@ -313,7 +324,9 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
-  BellOutlined
+  BellOutlined,
+  DownloadOutlined,
+  PrinterOutlined
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import billService from '@/services/billService'
@@ -321,9 +334,14 @@ import { contractService } from '@/services/contractService'
 import notificationService from '@/services/notificationService'
 import dayjs from 'dayjs'
 import CreateInvoiceModal from './CreateInvoiceModal.vue'
+import { exportToExcel } from '@/utils/excelExport'
+import { usePrintPDF } from '@/composables/usePrintPDF'
+
+const { printing, printInvoice } = usePrintPDF()
 
 const loading = ref(false)
 const saving = ref(false)
+const exporting = ref(false)
 const invoices = ref([])
 const contracts = ref([])
 const search = ref('')
@@ -843,6 +861,48 @@ const deleteInvoice = (record) => {
       }
     }
   })
+}
+
+// Export to Excel
+const exportToExcelHandler = async () => {
+  if (invoices.value.length === 0) {
+    message.warning('Không có dữ liệu để xuất')
+    return
+  }
+
+  exporting.value = true
+  try {
+    const columnMapping = {
+      invoiceCode: 'Mã phiếu thu',
+      studentName: 'Sinh viên',
+      studentCode: 'Mã SV',
+      roomNumber: 'Phòng',
+      buildingName: 'Tòa nhà',
+      billingMonth: 'Tháng',
+      billingYear: 'Năm',
+      totalAmount: 'Tổng tiền',
+      paidAmount: 'Đã trả',
+      debtAmount: 'Còn nợ',
+      dueDate: 'Hạn thanh toán',
+      status: 'Trạng thái',
+      createdAt: 'Ngày tạo'
+    }
+
+    const now = new Date()
+    const dateStr = `${now.getDate()}_${now.getMonth() + 1}_${now.getFullYear()}`
+    
+    await exportToExcel(invoices.value, columnMapping, `Danh_sach_phieu_thu_${dateStr}`, 'Phiếu thu')
+    message.success('Xuất Excel thành công')
+  } catch (error) {
+    message.error('Lỗi xuất Excel')
+  } finally {
+    exporting.value = false
+  }
+}
+
+// Print invoice PDF
+const printInvoiceHandler = async (record) => {
+  await printInvoice(record)
 }
 
 onMounted(() => {
