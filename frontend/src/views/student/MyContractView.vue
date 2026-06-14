@@ -643,6 +643,12 @@ async function submitTransfer() {
   transferErrors.value = errors
   if (Object.keys(errors).length > 0) return
 
+  // Check selected contract
+  if (!selectedContract.value || !selectedContract.value.id) {
+    message.error('Không tìm thấy thông tin hợp đồng')
+    return
+  }
+
   submitting.value = true
   try {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -653,21 +659,29 @@ async function submitTransfer() {
       return
     }
 
-    await roomTransferService.create({
-      contractId: selectedContract.value.contractId,
+    const payload = {
+      contractId: selectedContract.value.id, // ✅ Fixed: was .contractId
       studentId: selectedContract.value.studentId,
       currentRoomId: selectedContract.value.roomId,
       currentRoomNumber: selectedContract.value.roomNumber,
-      requestedBuildingName: transferForm.value.requestedBuildingName.trim() || null,
-      requestedRoomTypeName: transferForm.value.requestedRoomTypeName.trim() || null,
+      requestedBuildingName: transferForm.value.requestedBuildingName?.trim() || null,
+      requestedRoomTypeName: transferForm.value.requestedRoomTypeName?.trim() || null,
       reason: transferForm.value.reason.trim()
-    })
+    }
+
+    console.log('Submitting room transfer request:', payload)
+    
+    await roomTransferService.create(payload)
 
     message.success('Yêu cầu chuyển phòng đã được gửi thành công!')
     transferDialog.value = false
+    
+    // Reload history to show new transfer
+    await loadHistory()
   } catch (err) {
     console.error('Error submitting transfer:', err)
-    message.error(err.response?.data?.message || err.message || 'Không thể gửi yêu cầu chuyển phòng')
+    const errorMessage = err.response?.data?.message || err.message || 'Không thể gửi yêu cầu chuyển phòng'
+    message.error(errorMessage)
   } finally {
     submitting.value = false
   }

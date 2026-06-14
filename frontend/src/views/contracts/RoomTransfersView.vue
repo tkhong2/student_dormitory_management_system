@@ -260,27 +260,49 @@
       </div>
       <a-form layout="vertical">
         <a-form-item
-          label="Phòng mới"
-          :validate-status="approveErrors.newRoomNumber ? 'error' : ''"
-          :help="approveErrors.newRoomNumber"
+          label="Tòa nhà mới"
+          :validate-status="approveErrors.buildingId ? 'error' : ''"
+          :help="approveErrors.buildingId"
         >
-          <a-input
-            v-model:value="approveForm.newRoomNumber"
-            placeholder="Nhập số phòng mới"
-          />
+          <a-select
+            v-model:value="approveForm.buildingId"
+            placeholder="Chọn tòa nhà"
+            @change="onBuildingChange"
+            :loading="loadingBuildings"
+          >
+            <a-select-option
+              v-for="building in buildings"
+              :key="building.id"
+              :value="building.id"
+            >
+              {{ building.name }}
+            </a-select-option>
+          </a-select>
         </a-form-item>
+
         <a-form-item
-          label="ID Phòng mới"
+          label="Phòng mới"
           :validate-status="approveErrors.newRoomId ? 'error' : ''"
           :help="approveErrors.newRoomId"
         >
-          <a-input-number
+          <a-select
             v-model:value="approveForm.newRoomId"
-            :min="1"
-            style="width: 100%"
-            placeholder="Nhập ID phòng mới"
-          />
+            placeholder="Chọn phòng"
+            :disabled="!approveForm.buildingId || loadingRooms"
+            :loading="loadingRooms"
+            show-search
+            :filter-option="filterRoomOption"
+          >
+            <a-select-option
+              v-for="room in availableRooms"
+              :key="room.id"
+              :value="room.id"
+            >
+              {{ room.roomNumber }} - {{ room.roomTypeName }} ({{ room.currentOccupants }}/{{ room.maxOccupants }})
+            </a-select-option>
+          </a-select>
         </a-form-item>
+
         <a-form-item
           label="Ngày chuyển"
           :validate-status="approveErrors.transferDate ? 'error' : ''"
@@ -396,6 +418,9 @@ import {
 } from '@ant-design/icons-vue'
 import { roomTransferService } from '@/services/roomTransferService'
 import { contractService } from '@/services/contractService'
+import axios from 'axios'
+
+const API_BASE = 'http://localhost:5000' // API Gateway
 
 const columns = [
   { title: 'Sinh viên', key: 'student', width: 220 },
@@ -417,10 +442,14 @@ const filterStatusOptions = [{ label: 'Tất cả', value: 'all' }, ...statusOpt
 
 const transfers = ref([])
 const activeContracts = ref([])
+const buildings = ref([])
+const availableRooms = ref([])
 const search = ref('')
 const statusFilter = ref('all')
 const loading = ref(false)
 const saving = ref(false)
+const loadingBuildings = ref(false)
+const loadingRooms = ref(false)
 const createDialog = ref(false)
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
@@ -436,8 +465,8 @@ const createForm = ref({
   reason: '',
 })
 const approveForm = ref({ 
+  buildingId: null,
   newRoomId: null, 
-  newRoomNumber: '', 
   transferDate: null 
 })
 const rejectForm = ref({ rejectReason: '' })
@@ -542,28 +571,68 @@ async function handleCreate() {
 function openApprove(item) {
   approveTarget.value = item
   approveForm.value = {
+    buildingId: null,
     newRoomId: null,
-    newRoomNumber: '',
     transferDate: dayjs(),
   }
   approveErrors.value = {}
   approveDialog.value = true
+  loadBuildings()
+}
+
+async function loadBuildings() {
+  loadingBuildings.value = true
+  try {
+    const response = await axios.get(`${API_BASE}/api/buildings`)
+    buildings.value = response.data
+  } catch (err) {
+    console.error('Error loading buildings:', err)
+    message.error('Không thể tải danh sách tòa nhà')
+  } finally {
+    loadingBuildings.value = false
+  }
+}
+
+async function onBuildingChange(buildingId) {
+  approveForm.value.newRoomId = null
+  availableRooms.value = []
+  
+  if (!buildingId) return
+  
+  loadingRooms.value = true
+  try {
+    const response = await axios.get(`${API_BASE}/api/rooms/building/${buildingId}`)
+    // Filter available rooms only
+    availableRooms.value = response.data.filter(room => 
+      room.status === 'Available' && room.currentOccupants < room.maxOccupants
+    )
+  } catch (err) {
+    console.error('Error loading rooms:', err)
+    message.error('Không thể tải danh sách phòng')
+  } finally {
+    loadingRooms.value = false
+  }
+}
+
+function filterRoomOption(input, option) {
+  return option.children[0].children.toLowerCase().includes(input.toLowerCase())
 }
 
 async function handleApprove() {
   const errors = {}
-  if (!approveForm.value.newRoomId) errors.newRoomId = 'Vui lòng nhập ID phòng mới'
-  if (!approveForm.value.newRoomNumber.trim())
-    errors.newRoomNumber = 'Vui lòng nhập số phòng mới'
+  if (!approveForm.value.buildingId) errors.buildingId = 'Vui lòng chọn tòa nhà'
+  if (!approveForm.value.newRoomId) errors.newRoomId = 'Vui lòng chọn phòng mới'
   if (!approveForm.value.transferDate) errors.transferDate = 'Vui lòng chọn ngày chuyển'
   approveErrors.value = errors
   if (Object.keys(errors).length > 0) return
 
   saving.value = true
   try {
+    const selectedRoom = availableRooms.value.find(r => r.id === approveForm.value.newRoomId)
+    
     await roomTransferService.approve(approveTarget.value.id, {
-      newRoomId: parseInt(approveForm.value.newRoomId),
-      newRoomNumber: approveForm.value.newRoomNumber.trim(),
+      newRoomId: approveForm.value.newRoomId,
+      newRoomNumber: selectedRoom.roomNumber,
       transferDate: approveForm.value.transferDate.format('YYYY-MM-DD'),
       reviewedByUserId: 1, // TODO: Get from auth
       reviewedByName: 'Admin', // TODO: Get from auth

@@ -269,7 +269,11 @@ namespace ContractStudentService.Infrastructure.Repositories
             await _context.ContractExtensions.FindAsync(id);
 
         public async Task<IEnumerable<ContractExtension>> GetAllAsync() => 
-            await _context.ContractExtensions.ToListAsync();
+            await _context.ContractExtensions
+                .Include(e => e.Contract)
+                    .ThenInclude(c => c.Student)
+                .OrderByDescending(e => e.ApprovedAt)
+                .ToListAsync();
 
         public async Task<IEnumerable<ContractExtension>> GetByContractIdAsync(int contractId) => 
             await _context.ContractExtensions
