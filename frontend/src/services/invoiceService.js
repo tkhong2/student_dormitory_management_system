@@ -56,4 +56,11 @@ export const invoiceService = {
   delete(id) {
     return api.delete(`/invoices/${id}`);
   },
+
+  /**
+   * Get next invoice code
+   */
+  getNextInvoiceCode(invoiceType, month, year) {
+    return api.get(`/invoices/next-code?invoiceType=${invoiceType}&month=${month}&year=${year}`);
+  },
 };

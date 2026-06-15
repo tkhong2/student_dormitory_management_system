@@ -293,8 +293,8 @@ namespace BillingMaintenanceService.API.Controllers
             if (string.IsNullOrWhiteSpace(content))
                 return "";
 
-            // Look for pattern PTT followed by numbers (e.g., PTT202606001)
-            var match = System.Text.RegularExpressions.Regex.Match(content, @"PTT\d+");
+            // Look for pattern PT[DTRO] followed by numbers (e.g., PTT202606001, PTD202606002, PTR202606003, PTO202606004)
+            var match = System.Text.RegularExpressions.Regex.Match(content, @"PT[DTRO]\d+");
             return match.Success ? match.Value : "";
         }
     }

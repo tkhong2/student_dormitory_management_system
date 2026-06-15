@@ -400,6 +400,61 @@ namespace BillingMaintenanceService.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy mã phiếu thu tiếp theo cho một loại và tháng/năm cụ thể
+        /// GET: api/invoices/next-code?invoiceType=Monthly&month=6&year=2026
+        /// </summary>
+        [HttpGet("next-code")]
+        public async Task<ActionResult<string>> GetNextInvoiceCode(
+            [FromQuery] string invoiceType = "Monthly",
+            [FromQuery] int? month = null,
+            [FromQuery] int? year = null)
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var billingMonth = month ?? now.Month;
+                var billingYear = year ?? now.Year;
+
+                // Determine prefix based on invoice type
+                string prefix = invoiceType switch
+                {
+                    "Deposit" => "PTD",
+                    "Monthly" => "PTT",
+                    "DepositRefund" => "PTR",
+                    "Other" => "PTO",
+                    _ => "PTT"
+                };
+
+                // Get all invoices
+                var allInvoices = await _invoiceRepository.GetAllAsync();
+                
+                // Find max sequence for this month (across all types to avoid collision)
+                int maxSequence = 0;
+                var pattern = $@"PT[DTRO]{billingYear:0000}{billingMonth:00}(\d{{3}})";
+                var regex = new System.Text.RegularExpressions.Regex(pattern);
+
+                foreach (var inv in allInvoices)
+                {
+                    var match = regex.Match(inv.InvoiceCode ?? "");
+                    if (match.Success)
+                    {
+                        var seq = int.Parse(match.Groups[1].Value);
+                        if (seq > maxSequence) maxSequence = seq;
+                    }
+                }
+
+                var nextSequence = (maxSequence + 1).ToString("D3");
+                var nextCode = $"{prefix}{billingYear:0000}{billingMonth:00}{nextSequence}";
+
+                return Ok(new { invoiceCode = nextCode });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error generating next invoice code: {ex.Message}");
+            }
+        }
+
         private static InvoiceDto MapToDto(Invoice invoice)
         {
             return new InvoiceDto

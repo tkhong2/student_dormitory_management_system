@@ -17,7 +17,7 @@
         </a-col>
         <a-col :span="8">
           <a-form-item label="Loại Phiếu Thu" required>
-            <a-select v-model:value="form.invoiceType">
+            <a-select v-model:value="form.invoiceType" @change="$emit('invoiceTypeChange', form.invoiceType)">
               <a-select-option value="Monthly">Tiền phòng tháng</a-select-option>
               <a-select-option value="Deposit">Tiền cọc</a-select-option>
               <a-select-option value="DepositRefund">Hoàn cọc</a-select-option>

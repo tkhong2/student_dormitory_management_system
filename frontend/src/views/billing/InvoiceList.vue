@@ -193,6 +193,7 @@
       :saving="saving"
       @save="saveInvoice"
       @contract-change="onContractChange"
+      @invoice-type-change="onInvoiceTypeChange"
     />
 
     <!-- Detail Modal -->
@@ -573,33 +574,20 @@ const showCreateDialog = async () => {
       return
     }
 
-    // Generate invoice code automatically based on existing invoices for current month
+    // Get next invoice code from backend
     const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const billingMonth = now.getMonth() + 1
+    const billingYear = now.getFullYear()
     
-    // Filter invoices for current month/year to get correct sequence number
-    const currentMonthInvoices = invoices.value.filter(inv => {
-      const invYear = inv.billingYear || new Date(inv.createdAt).getFullYear()
-      const invMonth = inv.billingMonth || new Date(inv.createdAt).getMonth() + 1
-      return invYear === year && invMonth === (now.getMonth() + 1)
-    })
+    let autoInvoiceCode = `PTT${billingYear}${String(billingMonth).padStart(2, '0')}001` // Default fallback
     
-    // Find max sequence number for current month
-    let maxSequence = 0
-    const pattern = new RegExp(`PTT${year}${month}(\\d{3})`)
-    currentMonthInvoices.forEach(inv => {
-      const match = inv.invoiceCode.match(pattern)
-      if (match) {
-        const seq = parseInt(match[1])
-        if (seq > maxSequence) maxSequence = seq
-      }
-    })
-    
-    const nextSequence = String(maxSequence + 1).padStart(3, '0')
-    const autoInvoiceCode = `PTT${year}${month}${nextSequence}`
-    
-    console.log('Generated invoice code:', autoInvoiceCode, 'from', currentMonthInvoices.length, 'invoices this month')
+    try {
+      const nextCodeResponse = await billService.getNextInvoiceCode('Monthly', billingMonth, billingYear)
+      autoInvoiceCode = nextCodeResponse.invoiceCode
+      console.log('Generated invoice code from backend:', autoInvoiceCode)
+    } catch (error) {
+      console.error('Failed to get next invoice code from backend, using fallback:', error)
+    }
 
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     editedItem.value = {
@@ -612,8 +600,8 @@ const showCreateDialog = async () => {
       roomId: null,
       roomNumber: '',
       buildingName: '',
-      billingMonth: now.getMonth() + 1,
-      billingYear: year,
+      billingMonth: billingMonth,
+      billingYear: billingYear,
       rentAmount: 0,
       // Electricity
       electricityStartIndex: 0,
@@ -671,7 +659,20 @@ const onContractChange = async (contractId) => {
     const dayOfMonth = contractStart.date() // Lấy ngày trong tháng
     editedItem.value.dueDate = dayjs().month(editedItem.value.billingMonth - 1).date(dayOfMonth)
 
-    message.success('Đã tự động điền thông tin từ hợp đồng')
+    // Kiểm tra xem phiếu thu cho hợp đồng này ở tháng này đã tồn tại chưa
+    const existingInvoice = invoices.value.find(inv => 
+      inv.contractId === contractId && 
+      inv.billingMonth === editedItem.value.billingMonth &&
+      inv.billingYear === editedItem.value.billingYear &&
+      inv.invoiceType === editedItem.value.invoiceType &&
+      inv.status !== 'Cancelled'
+    )
+    
+    if (existingInvoice) {
+      message.warning(`Phiếu thu ${existingInvoice.invoiceCode} đã tồn tại cho hợp đồng này ở kỳ ${editedItem.value.billingMonth}/${editedItem.value.billingYear}`)
+    } else {
+      message.success('Đã tự động điền thông tin từ hợp đồng')
+    }
   } catch (error) {
     message.error('Lỗi khi load thông tin hợp đồng')
   }
@@ -689,6 +690,37 @@ const calculateWaterAmount = () => {
   const { waterStartIndex, waterEndIndex, waterUnitPrice } = editedItem.value
   const usage = (waterEndIndex || 0) - (waterStartIndex || 0)
   editedItem.value.waterAmount = usage > 0 ? usage * waterUnitPrice : 0
+}
+
+// Handle invoice type change - regenerate invoice code
+const onInvoiceTypeChange = async (invoiceType) => {
+  try {
+    const billingMonth = editedItem.value.billingMonth
+    const billingYear = editedItem.value.billingYear
+    
+    const nextCodeResponse = await billService.getNextInvoiceCode(invoiceType, billingMonth, billingYear)
+    editedItem.value.invoiceCode = nextCodeResponse.invoiceCode
+    
+    console.log('Updated invoice code after type change:', editedItem.value.invoiceCode, 'for type:', invoiceType)
+    
+    // Auto-adjust rent amount based on invoice type
+    if (invoiceType === 'Monthly' && editedItem.value.contractId) {
+      const selectedContract = contracts.value.find(c => c.id === editedItem.value.contractId)
+      if (selectedContract) {
+        editedItem.value.rentAmount = selectedContract.monthlyRent || selectedContract.rentAmount || 0
+      }
+    } else if (invoiceType === 'Deposit' && editedItem.value.contractId) {
+      const selectedContract = contracts.value.find(c => c.id === editedItem.value.contractId)
+      if (selectedContract) {
+        editedItem.value.rentAmount = selectedContract.depositAmount || selectedContract.monthlyRent || 0
+      }
+    } else {
+      editedItem.value.rentAmount = 0
+    }
+  } catch (error) {
+    console.error('Failed to get next invoice code:', error)
+    message.error('Không thể tạo mã phiếu thu mới')
+  }
 }
 
 const closeCreateDialog = () => {

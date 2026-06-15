@@ -37,5 +37,9 @@ export default {
   // Update overdue status
   updateOverdueStatus() {
     return billingMaintenanceApi.post('/invoices/update-overdue-status');
+  },
+  // Get next invoice code
+  getNextInvoiceCode(invoiceType, month, year) {
+    return billingMaintenanceApi.get(`/invoices/next-code?invoiceType=${invoiceType}&month=${month}&year=${year}`);
   }
 };

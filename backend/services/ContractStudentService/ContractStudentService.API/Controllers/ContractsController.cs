@@ -304,13 +304,38 @@ namespace ContractStudentService.API.Controllers
                 var billingServiceUrl = _configuration["Services:BillingService"] ?? "http://localhost:5002";
                 var httpClient = _httpClientFactory.CreateClient();
 
+                // Query admin user to get createdByUserId
+                int adminUserId = 1; // Default fallback
+                try
+                {
+                    var usersResponse = await httpClient.GetAsync($"{billingServiceUrl}/api/users");
+                    if (usersResponse.IsSuccessStatusCode)
+                    {
+                        var usersJson = await usersResponse.Content.ReadAsStringAsync();
+                        using var doc = System.Text.Json.JsonDocument.Parse(usersJson);
+                        var adminUser = doc.RootElement.EnumerateArray()
+                            .FirstOrDefault(u => u.GetProperty("role").GetString() == "Admin");
+                        
+                        if (adminUser.ValueKind != System.Text.Json.JsonValueKind.Undefined)
+                        {
+                            adminUserId = adminUser.GetProperty("id").GetInt32();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[WARNING] Cannot query admin user: {ex.Message}. Using default ID 1");
+                }
+
                 // Tính toán kỳ thanh toán (tháng hiện tại)
                 var now = DateTime.Now;
                 var billingMonth = now.Month;
                 var billingYear = now.Year;
 
-                // Tạo mã phiếu thu: PTT<YYYYMM><ContractId>
-                var invoiceCode = $"PTT{billingYear:0000}{billingMonth:00}{contract.Id:000}";
+                // Query existing invoices to avoid duplicate code
+                // For simplicity, use timestamp-based suffix to ensure uniqueness
+                var timestamp = DateTime.Now.ToString("HHmmss");
+                var invoiceCode = $"PTT{billingYear:0000}{billingMonth:00}{timestamp.Substring(0, 3)}";
 
                 // Tính hạn thanh toán (ngày PaymentDueDay của tháng hiện tại)
                 var dueDate = new DateOnly(billingYear, billingMonth, contract.PaymentDueDay);
@@ -336,7 +361,7 @@ namespace ContractStudentService.API.Controllers
                     previousDebt = 0m,      // Nợ kỳ trước
                     discount = 0m,
                     dueDate = dueDate,
-                    createdByUserId = 1,    // System auto-generate
+                    createdByUserId = adminUserId,    // Auto-generate by first Admin user
                     notes = "Công nợ tháng được sinh tự động từ hợp đồng",
                     items = new[]
                     {

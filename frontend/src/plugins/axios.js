@@ -23,6 +23,12 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      // Log để debug
+      console.error('🔴 401 Unauthorized Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        message: error.response?.data?.message
+      })
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem('token')
       window.location.href = '/login'

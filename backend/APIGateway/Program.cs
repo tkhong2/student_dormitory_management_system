@@ -8,8 +8,9 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Add Ocelot configuration
+// Add Ocelot configuration - always use ocelot.json
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+Console.WriteLine($"🔧 Loading Ocelot config: ocelot.json");
 
 // Add CORS
 builder.Services.AddCors(options =>
