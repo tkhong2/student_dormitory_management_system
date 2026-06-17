@@ -23,6 +23,25 @@ namespace RoomBuildingService.API.Controllers
             _amenityRepository = amenityRepository;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<RoomTypeAmenityDto>>> GetAll()
+        {
+            var roomTypeAmenities = await _roomTypeAmenityRepository.GetAllAsync();
+            var roomTypeAmenityDtos = roomTypeAmenities.Select(rta => new RoomTypeAmenityDto
+            {
+                Id = rta.Id,
+                RoomTypeId = rta.RoomTypeId,
+                AmenityId = rta.AmenityId,
+                AmenityName = rta.Amenity?.Name ?? "",
+                AmenityCategory = rta.Amenity?.Category ?? "",
+                AmenityIconUrl = rta.Amenity?.IconUrl,
+                Quantity = rta.Quantity,
+                Note = rta.Note
+            });
+
+            return Ok(roomTypeAmenityDtos);
+        }
+
         [HttpGet("roomtype/{roomTypeId}")]
         public async Task<ActionResult<IEnumerable<RoomTypeAmenityDto>>> GetByRoomTypeId(int roomTypeId)
         {

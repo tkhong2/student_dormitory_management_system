@@ -10,10 +10,14 @@ namespace RoomBuildingService.API.Controllers
     public class AmenitiesController : ControllerBase
     {
         private readonly IAmenityRepository _amenityRepository;
+        private readonly IRoomTypeAmenityRepository _roomTypeAmenityRepository;
 
-        public AmenitiesController(IAmenityRepository amenityRepository)
+        public AmenitiesController(
+            IAmenityRepository amenityRepository,
+            IRoomTypeAmenityRepository roomTypeAmenityRepository)
         {
             _amenityRepository = amenityRepository;
+            _roomTypeAmenityRepository = roomTypeAmenityRepository;
         }
 
         [HttpGet]
@@ -115,6 +119,15 @@ namespace RoomBuildingService.API.Controllers
             var amenity = await _amenityRepository.GetByIdAsync(id);
             if (amenity == null)
                 return NotFound(new { message = "Không tìm thấy tiện nghi" });
+
+            // Kiểm tra tiện nghi có đang được sử dụng ở loại phòng nào không
+            var usages = await _roomTypeAmenityRepository.GetByAmenityIdAsync(id);
+            if (usages.Any())
+            {
+                return BadRequest(new { 
+                    message = "Không thể xóa tiện nghi đã có loại phòng sử dụng" 
+                });
+            }
 
             await _amenityRepository.DeleteAsync(amenity);
 

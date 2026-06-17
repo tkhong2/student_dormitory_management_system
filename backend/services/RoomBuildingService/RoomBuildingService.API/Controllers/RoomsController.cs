@@ -288,6 +288,12 @@ namespace RoomBuildingService.API.Controllers
             if (room == null)
                 return NotFound(new { message = "Không tìm thấy phòng" });
 
+            // Kiểm tra phòng có người ở không
+            if (room.CurrentOccupants > 0)
+            {
+                return BadRequest(new { message = "Không thể xóa phòng đang có người ở" });
+            }
+
             await _roomRepository.DeleteAsync(room);
 
             return NoContent();
@@ -318,6 +324,7 @@ namespace RoomBuildingService.API.Controllers
             if (newOccupants == 0)
             {
                 room.Status = "Available"; // Phòng trống
+                room.AllowedGender = null; // Reset gender khi phòng trống
             }
             else if (newOccupants >= room.MaxOccupants)
             {
@@ -338,11 +345,99 @@ namespace RoomBuildingService.API.Controllers
                 status = room.Status
             });
         }
+
+        /// <summary>
+        /// Cập nhật giới tính được phép ở trong phòng
+        /// </summary>
+        [HttpPut("{id}/gender")]
+        public async Task<ActionResult> UpdateGender(int id, [FromBody] UpdateGenderRequest request)
+        {
+            var room = await _roomRepository.GetByIdAsync(id);
+            if (room == null)
+                return NotFound(new { message = "Không tìm thấy phòng" });
+
+            // Validate gender value
+            if (!string.IsNullOrEmpty(request.AllowedGender) && 
+                request.AllowedGender != "Male" && 
+                request.AllowedGender != "Female" && 
+                request.AllowedGender != "Mixed")
+            {
+                return BadRequest(new { message = "Giới tính phải là Male, Female hoặc Mixed" });
+            }
+
+            room.AllowedGender = request.AllowedGender;
+            await _roomRepository.UpdateAsync(room);
+
+            return Ok(new 
+            { 
+                message = "Cập nhật giới tính phòng thành công",
+                allowedGender = room.AllowedGender
+            });
+        }
+
+        /// <summary>
+        /// Lấy danh sách phòng còn chỗ trống (có thể lọc theo giới tính)
+        /// </summary>
+        [HttpGet("available")]
+        public async Task<ActionResult<IEnumerable<RoomDto>>> GetAvailableRooms([FromQuery] string? gender = null)
+        {
+            var rooms = await _roomRepository.GetAllAsync();
+            
+            // Lọc phòng còn chỗ trống
+            var availableRooms = rooms.Where(r => 
+                r.CurrentOccupants < r.MaxOccupants && 
+                !r.IsLocked &&
+                r.Status != "Maintenance" &&
+                r.Status != "Closed"
+            );
+
+            // Lọc theo giới tính nếu có
+            if (!string.IsNullOrEmpty(gender))
+            {
+                availableRooms = availableRooms.Where(r => 
+                    string.IsNullOrEmpty(r.AllowedGender) || // Phòng chưa có ai
+                    r.AllowedGender == "Mixed" || // Phòng mixed
+                    r.AllowedGender == gender // Phòng cùng giới tính
+                );
+            }
+
+            var roomDtos = availableRooms.Select(r => new RoomDto
+            {
+                Id = r.Id,
+                RoomNumber = r.RoomNumber,
+                FloorId = r.FloorId,
+                RoomTypeId = r.RoomTypeId,
+                BuildingId = r.Floor?.BuildingId ?? 0,
+                FloorNumber = r.Floor?.FloorNumber ?? 0,
+                BuildingName = r.Floor?.Building?.Name ?? "",
+                RoomTypeName = r.RoomType?.Name ?? "",
+                Status = r.Status,
+                CurrentOccupants = r.CurrentOccupants,
+                MaxOccupants = r.MaxOccupants,
+                AllowedGender = r.AllowedGender,
+                Orientation = r.Orientation,
+                Notes = r.Notes,
+                IsLocked = r.IsLocked,
+                LockReason = r.LockReason,
+                QRCode = r.QRCode,
+                ImageUrl = GetCoverImageUrl(r),
+                LastInspectedAt = r.LastInspectedAt,
+                AvailableFrom = r.AvailableFrom,
+                AvailableSlots = r.MaxOccupants - r.CurrentOccupants
+            }).ToList();
+
+            return Ok(roomDtos);
+        }
     }
 
     public class UpdateOccupancyRequest
     {
         public int Increment { get; set; } // +1 để thêm, -1 để bớt
+    }
+
+    public class UpdateGenderRequest
+    {
+        public string? AllowedGender { get; set; } // Male / Female / Mixed / null
     }
 
     public class CreateRoomDto

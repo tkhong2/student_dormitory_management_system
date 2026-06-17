@@ -223,6 +223,14 @@ namespace ContractStudentService.Infrastructure.Repositories
                 .Where(c => c.Student.UserId == userId && c.Status == "Active")
                 .ToListAsync();
 
+        public async Task<IEnumerable<Contract>> GetActiveContractsByRoomAsync(int roomId) =>
+            await _context.Contracts
+                .Include(c => c.Student)
+                .Include(c => c.ContractTemplate)
+                    .ThenInclude(t => t.Terms)
+                .Where(c => c.RoomId == roomId && c.Status == "Active")
+                .ToListAsync();
+
         public async Task<int> GetNextSequenceForYearAsync(int year)
         {
             var lastContract = await _context.Contracts

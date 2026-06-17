@@ -161,6 +161,7 @@ namespace RoomBuildingService.Infrastructure.Repositories
         private readonly AppDbContext _context;
         public RoomTypeAmenityRepository(AppDbContext context) => _context = context;
 
+        public async Task<IEnumerable<RoomTypeAmenity>> GetAllAsync() => await _context.RoomTypeAmenities.Include(rta => rta.Amenity).Include(rta => rta.RoomType).ToListAsync();
         public async Task<RoomTypeAmenity?> GetByIdAsync(int id) => await _context.RoomTypeAmenities.Include(rta => rta.Amenity).Include(rta => rta.RoomType).FirstOrDefaultAsync(rta => rta.Id == id);
         public async Task<IEnumerable<RoomTypeAmenity>> GetByRoomTypeIdAsync(int roomTypeId) => await _context.RoomTypeAmenities.Include(rta => rta.Amenity).Where(rta => rta.RoomTypeId == roomTypeId).ToListAsync();
         public async Task<IEnumerable<RoomTypeAmenity>> GetByAmenityIdAsync(int amenityId) => await _context.RoomTypeAmenities.Include(rta => rta.RoomType).Where(rta => rta.AmenityId == amenityId).ToListAsync();

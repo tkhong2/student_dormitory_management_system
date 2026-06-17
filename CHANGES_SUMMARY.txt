@@ -1,0 +1,97 @@
+TỔNG KẾT CÁC THAY ĐỔI ĐÃ THỰC HIỆN
+
+=== ĐÃ HOÀN THÀNH ===
+
+1. ✅ IMPORT/EXPORT EXCEL TÀI KHOẢN SINH VIÊN
+   - Thêm EPPlus 7.0.0 vào BillingMaintenanceService
+   - Backend: 3 endpoints mới trong UsersController:
+     * GET /api/users/export-template - Tải mẫu Excel
+     * POST /api/users/import-excel - Import từ Excel
+     * GET /api/users/export-excel - Xuất danh sách
+   - Frontend: 3 nút mới trong UserListView.vue
+   - Test: Vào /admin/users để sử dụng
+
+2. ✅ PHÂN PHÒNG THEO GIỚI TÍNH
+   - Thêm field AllowedGender vào Room entity
+   - Migration: AddAllowedGenderToRoom
+   - Logic trong RoomApplicationsController.Approve():
+     * Kiểm tra capacity trước khi gán phòng
+     * Kiểm tra giới tính với người đã ở
+     * Tự động set gender cho phòng lần đầu
+     * Không cho nam/nữ ở chung (trừ Mixed)
+   - Endpoint mới: PUT /api/rooms/{id}/gender
+
+3. ✅ KIỂM TRA CAPACITY PHÒNG
+   - Logic đã thêm vào Approve() method
+   - Kiểm tra CurrentOccupants < MaxOccupants
+   - Từ chối nếu phòng đã đầy
+   - Tự động reset AllowedGender khi phòng trống
+
+4. ✅ API LỌC PHÒNG CÒN SLOT
+   - Endpoint mới: GET /api/rooms/available?gender=Male
+   - Trả về phòng còn chỗ + có thể lọc theo giới tính
+   - Response includes AvailableSlots field
+
+5. ✅ CẬP NHẬT ROOM SERVICE CLIENT
+   - Thêm GetRoomByIdAsync()
+   - Thêm UpdateRoomGenderAsync()
+   - Cập nhật RoomInfoDto thêm AllowedGender
+
+6. ✅ CẬP NHẬT CONTRACT REPOSITORY
+   - Thêm GetActiveContractsByRoomAsync()
+   - Dùng để kiểm tra giới tính sinh viên hiện tại
+
+=== CẦN TRIỂN KHAI TIẾP ===
+
+7. ⏳ THÊM NGƯỜI LIÊN HỆ VÀO FORM ĐĂNG KÝ
+   - Backend đã có sẵn fields trong RoomApplication:
+     * EmergencyContactName
+     * EmergencyContactPhone
+     * EmergencyContactRelationship
+   - Cần: Thêm input fields vào frontend form
+
+8. ⏳ TỰ ĐỘNG TẠO PHIẾU THU THEO PHÒNG
+   - Cần: Endpoint POST /api/invoices/generate-by-room/{roomId}
+   - Logic: Lấy tất cả contracts Active trong phòng
+   - Tạo invoice cho từng sinh viên
+
+9. ⏳ CHẠY MIGRATION
+   cd backend/services/RoomBuildingService/RoomBuildingService.Infrastructure
+   dotnet ef database update
+
+=== FILES ĐÃ THAY ĐỔI ===
+
+Backend:
+- BillingMaintenanceService.API/Controllers/UsersController.cs (Import/Export)
+- RoomBuildingService.Domain/Entities/Room.cs (+AllowedGender)
+- RoomBuildingService.API/Controllers/RoomsController.cs (+gender endpoints)
+- RoomBuildingService.Application/DTOs/DTOs.cs (+AllowedGender, AvailableSlots)
+- ContractStudentService.API/Controllers/RoomApplicationsController.cs (gender validation)
+- ContractStudentService.Application/Services/RoomServiceClient.cs (+gender methods)
+- ContractStudentService.Application/Interfaces/IRepositories.cs (+GetActiveContractsByRoomAsync)
+- ContractStudentService.Infrastructure/Repositories/Repositories.cs (implementation)
+- RoomBuildingService.Infrastructure/Migrations/20260615000001_AddAllowedGenderToRoom.cs
+
+Frontend:
+- views/users/UserListView.vue (Import/Export buttons)
+- nginx.conf (domain ktxdnu.duckdns.org)
+
+=== HƯỚNG DẪN TRIỂN KHAI ===
+
+1. Stop các service đang chạy
+2. Chạy migration cho RoomBuildingService
+3. Rebuild BillingMaintenanceService (vì có thêm EPPlus)
+4. Restart tất cả services
+5. Test import/export tại /admin/users
+6. Test duyệt đơn xem có kiểm tra giới tính không
+
+=== TEST CHECKLIST ===
+
+□ Import Excel tài khoản sinh viên
+□ Export danh sách người dùng
+□ Duyệt đơn: Phòng đầy → Từ chối
+□ Duyệt đơn: Nam vào phòng nữ → Từ chối
+□ Duyệt đơn: Nữ vào phòng nữ → Chấp nhận
+□ API /api/rooms/available?gender=Male
+□ Khi phòng trống: AllowedGender = null
+□ Khi CurrentOccupants = 0: Reset gender

@@ -11,10 +11,14 @@ namespace BillingMaintenanceService.API.Controllers
     public class InvoicesController : ControllerBase
     {
         private readonly IInvoiceRepository _invoiceRepository;
+        private readonly IUserRepository _userRepository;
 
-        public InvoicesController(IInvoiceRepository invoiceRepository)
+        public InvoicesController(
+            IInvoiceRepository invoiceRepository,
+            IUserRepository userRepository)
         {
             _invoiceRepository = invoiceRepository;
+            _userRepository = userRepository;
         }
 
         [HttpGet]
@@ -62,6 +66,36 @@ namespace BillingMaintenanceService.API.Controllers
         {
             try
             {
+                // Check if CreatedByUser exists, if not use Admin (ID = 1) or create user
+                var createdByUser = await _userRepository.GetByIdAsync(dto.CreatedByUserId);
+                int createdByUserId = dto.CreatedByUserId;
+                
+                if (createdByUser == null)
+                {
+                    // Try to use Admin user (ID = 1)
+                    var adminUser = await _userRepository.GetByIdAsync(1);
+                    if (adminUser != null)
+                    {
+                        createdByUserId = 1;
+                    }
+                    else
+                    {
+                        // Create a default system user
+                        var systemUser = new User
+                        {
+                            Username = "system",
+                            Email = "system@ktx.dnu.edu.vn",
+                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("System@123"),
+                            FullName = "Hệ thống",
+                            Phone = "",
+                            Role = "Admin",
+                            IsActive = true
+                        };
+                        await _userRepository.AddAsync(systemUser);
+                        createdByUserId = systemUser.Id;
+                    }
+                }
+                
                 // Check for duplicate invoice code
                 var existingByCode = await _invoiceRepository.GetByInvoiceCodeAsync(dto.InvoiceCode);
                 if (existingByCode != null)
@@ -110,7 +144,7 @@ namespace BillingMaintenanceService.API.Controllers
                     PreviousDebt = dto.PreviousDebt,
                     Discount = dto.Discount,
                     DueDate = dto.DueDate,
-                    CreatedByUserId = dto.CreatedByUserId,
+                    CreatedByUserId = createdByUserId, // Use validated user ID
                     Notes = dto.Notes,
                     Status = "Unpaid"
                 };

@@ -266,7 +266,7 @@ public static class DataSeeder
         // 6. Seed Rooms (only add if not exists)
         var existingRoomNumbers = context.Rooms.Select(r => r.RoomNumber).ToList();
         var rooms = new List<Room>();
-        var roomStatuses = new[] { "Available", "Available", "Available", "Full", "Maintenance" };
+        var roomStatuses = new[] { "Available", "Available", "Available", "Available", "Maintenance" };
         int roomIndex = 0;
         int newRoomsCount = 0;
 
@@ -294,7 +294,7 @@ public static class DataSeeder
                                 FloorId = floor.Id,
                                 RoomTypeId = roomType.Id,
                                 Status = roomStatuses[roomIndex % roomStatuses.Length],
-                                CurrentOccupants = roomStatuses[roomIndex % roomStatuses.Length] == "Full" ? roomType.Capacity : 0,
+                                CurrentOccupants = 0, // Chỉ hiển thị sinh viên đăng ký thật
                                 MaxOccupants = roomType.Capacity,
                                 Orientation = i % 4 == 0 ? "Đông" : i % 4 == 1 ? "Tây" : i % 4 == 2 ? "Nam" : "Bắc",
                                 IsLocked = false
@@ -324,7 +324,7 @@ public static class DataSeeder
                                 FloorId = floor.Id,
                                 RoomTypeId = roomType.Id,
                                 Status = roomStatuses[roomIndex % roomStatuses.Length],
-                                CurrentOccupants = roomStatuses[roomIndex % roomStatuses.Length] == "Full" ? roomType.Capacity : roomIndex % 3,
+                                CurrentOccupants = 0, // Chỉ hiển thị sinh viên đăng ký thật
                                 MaxOccupants = roomType.Capacity,
                                 Orientation = i % 4 == 0 ? "Đông" : i % 4 == 1 ? "Tây" : i % 4 == 2 ? "Nam" : "Bắc",
                                 IsLocked = false
@@ -354,7 +354,7 @@ public static class DataSeeder
                                 FloorId = floor.Id,
                                 RoomTypeId = roomType.Id,
                                 Status = roomStatuses[roomIndex % roomStatuses.Length],
-                                CurrentOccupants = roomStatuses[roomIndex % roomStatuses.Length] == "Full" ? roomType.Capacity : roomIndex % 2,
+                                CurrentOccupants = 0, // Chỉ hiển thị sinh viên đăng ký thật
                                 MaxOccupants = roomType.Capacity,
                                 Orientation = i % 4 == 0 ? "Đông" : i % 4 == 1 ? "Tây" : i % 4 == 2 ? "Nam" : "Bắc",
                                 IsLocked = false

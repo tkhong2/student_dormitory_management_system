@@ -102,6 +102,7 @@ namespace RoomBuildingService.Application.Interfaces
 
     public interface IRoomTypeAmenityRepository
     {
+        Task<IEnumerable<RoomTypeAmenity>> GetAllAsync();
         Task<RoomTypeAmenity?> GetByIdAsync(int id);
         Task<IEnumerable<RoomTypeAmenity>> GetByRoomTypeIdAsync(int roomTypeId);
         Task<IEnumerable<RoomTypeAmenity>> GetByAmenityIdAsync(int amenityId);

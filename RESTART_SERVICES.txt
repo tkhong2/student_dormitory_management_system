@@ -1,0 +1,63 @@
+================================
+CẦN RESTART TẤT CẢ BACKEND SERVICES
+================================
+
+Migration đã chạy xong, nhưng backend services đang chạy code cũ.
+
+CẦN LÀM:
+========
+
+1. DỪNG tất cả backend services đang chạy:
+   - RoomBuildingService (port 5003)
+   - ContractStudentService (port 5001)
+   - BillingMaintenanceService (port 5002)
+   - API Gateway (port 5000)
+
+   Cách dừng: Nhấn Ctrl+C trong mỗi terminal đang chạy service
+
+2. KHỞI ĐỘNG LẠI từng service:
+
+   Terminal 1 - RoomBuildingService:
+   ```
+   cd backend\services\RoomBuildingService\RoomBuildingService.API
+   dotnet run
+   ```
+
+   Terminal 2 - ContractStudentService:
+   ```
+   cd backend\services\ContractStudentService\ContractStudentService.API
+   dotnet run
+   ```
+
+   Terminal 3 - BillingMaintenanceService:
+   ```
+   cd backend\services\BillingMaintenanceService\BillingMaintenanceService.API
+   dotnet run
+   ```
+
+   Terminal 4 - API Gateway:
+   ```
+   cd backend\APIGateway
+   dotnet run
+   ```
+
+3. HOẶC dùng script PowerShell:
+   ```
+   cd backend
+   .\run.ps1
+   ```
+
+SAU KHI RESTART:
+================
+- Tất cả lỗi AllowedGender sẽ biến mất
+- Trang web sẽ hoạt động bình thường
+- Refresh lại browser
+
+KIỂM TRA:
+=========
+Sau khi services chạy lại, test bằng cách:
+1. Vào trang quản lý phòng
+2. Vào trang kiểm tra phòng (RoomInspection)
+3. Không còn lỗi 500 "Invalid column name 'AllowedGender'"
+
+================================

@@ -56,6 +56,8 @@ namespace RoomBuildingService.Application.DTOs
         public string Status { get; set; } = string.Empty;
         public int CurrentOccupants { get; set; }
         public int MaxOccupants { get; set; }
+        public string? AllowedGender { get; set; } // Male / Female / Mixed
+        public int AvailableSlots { get; set; } // MaxOccupants - CurrentOccupants
         public string? Orientation { get; set; }
         public string? Notes { get; set; }
         public string? ImageUrl { get; set; }

@@ -81,6 +81,18 @@
             </a-tag>
           </template>
           
+          <template v-else-if="column.key === 'roomTypeCount'">
+            <span style="font-weight: 600; color: #1890ff;">
+              {{ record.roomTypeCount || 0 }} loại phòng
+            </span>
+          </template>
+          
+          <template v-else-if="column.key === 'totalQuantity'">
+            <a-tag color="green" style="font-size: 14px; padding: 4px 12px;">
+              {{ record.totalQuantity || 0 }} cái
+            </a-tag>
+          </template>
+          
           <template v-else-if="column.key === 'isActive'">
             <a-tag :color="record.isActive ? 'green' : 'default'">
               {{ record.isActive ? 'Đang dùng' : 'Ngừng dùng' }}
@@ -195,8 +207,10 @@ const form = ref({
 })
 
 const columns = [
-  { title: 'Tên tiện nghi', dataIndex: 'name', key: 'name', width: 250 },
-  { title: 'Danh mục', dataIndex: 'category', key: 'category', width: 150 },
+  { title: 'Tên tiện nghi', dataIndex: 'name', key: 'name', width: 200 },
+  { title: 'Danh mục', dataIndex: 'category', key: 'category', width: 120 },
+  { title: 'Số loại phòng sử dụng', key: 'roomTypeCount', width: 180 },
+  { title: 'Tổng số lượng', key: 'totalQuantity', width: 130 },
   { title: 'Trạng thái', key: 'isActive', width: 120 },
   { title: 'Thao tác', key: 'actions', width: 150, fixed: 'right' }
 ]
@@ -204,7 +218,20 @@ const columns = [
 async function loadAmenities() {
   loading.value = true
   try {
-    amenities.value = await amenityService.getAll()
+    const [amenitiesData, roomTypeAmenitiesData] = await Promise.all([
+      amenityService.getAll(),
+      fetch('http://localhost:5003/api/roomtypeamenities').then(r => r.json()).catch(() => [])
+    ])
+    
+    // Tính toán số loại phòng và tổng số lượng cho mỗi amenity
+    amenities.value = amenitiesData.map(amenity => {
+      const usages = roomTypeAmenitiesData.filter(rta => rta.amenityId === amenity.id)
+      return {
+        ...amenity,
+        roomTypeCount: usages.length, // Số loại phòng sử dụng
+        totalQuantity: usages.reduce((sum, rta) => sum + (rta.quantity || 1), 0) // Tổng số lượng
+      }
+    })
   } catch (err) {
     message.error(err.message || 'Không thể tải danh sách tiện nghi')
   } finally {

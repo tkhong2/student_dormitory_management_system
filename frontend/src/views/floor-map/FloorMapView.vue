@@ -194,10 +194,10 @@ const detailDlg = ref(false)
 const selectedRoom = ref(null)
 
 const legend = [
-  { label: 'Trống', color: '#16a34a' },
+  { label: 'Đầy', color: '#52c41a' },
+  { label: 'Trống', color: '#ff4d4f' },
   { label: 'Đang ở', color: '#0ea5e9' },
-  { label: 'Đã đầy', color: '#dc2626' },
-  { label: 'Bảo trì', color: '#ea580c' },
+  { label: 'Bảo trì', color: '#fa8c16' },
 ]
 
 onMounted(async () => {
@@ -272,9 +272,9 @@ const floorStats = computed(() => {
 })
 
 function getRoomColor(room) {
-  if (room.status === 'Maintenance') return '#ea580c'
-  if (room.currentOccupants === 0) return '#16a34a'
-  if (room.currentOccupants >= room.maxOccupants) return '#dc2626'
+  if (room.status === 'Maintenance') return '#fa8c16'
+  if (room.currentOccupants === 0) return '#ff4d4f'
+  if (room.currentOccupants >= room.maxOccupants) return '#52c41a'
   return '#0ea5e9'
 }
 

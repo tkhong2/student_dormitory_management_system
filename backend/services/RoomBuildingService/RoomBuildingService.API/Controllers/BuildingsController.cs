@@ -220,7 +220,14 @@ namespace RoomBuildingService.API.Controllers
 
             var rooms = await _roomRepository.GetByBuildingIdAsync(id);
             if (rooms.Any())
+            {
+                // Check if any rooms have occupants
+                var totalOccupants = rooms.Sum(r => r.CurrentOccupants);
+                if (totalOccupants > 0)
+                    return Conflict(new { message = $"Không thể xóa tòa nhà vì có {totalOccupants} người đang ở trong các phòng" });
+
                 return Conflict(new { message = "Không thể xóa tòa nhà vì vẫn còn phòng thuộc tòa nhà này" });
+            }
 
             await _buildingRepository.DeleteAsync(building);
 

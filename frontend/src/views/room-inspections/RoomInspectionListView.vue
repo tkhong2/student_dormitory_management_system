@@ -109,6 +109,89 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- Modal View Detail -->
+    <a-modal
+      v-model:open="detailDialog"
+      title="Chi tiết biên bản kiểm tra"
+      width="800px"
+      :footer="null"
+    >
+      <a-descriptions v-if="selectedInspection" :column="2" bordered size="small">
+        <a-descriptions-item label="Phòng" :span="1">
+          <a-tag color="blue">{{ selectedInspection.roomNumber }}</a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Ngày kiểm tra" :span="1">
+          {{ formatDate(selectedInspection.inspectionDate) }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Loại kiểm tra" :span="1">
+          <a-tag :color="getTypeColor(selectedInspection.inspectionType)">
+            {{ getTypeLabel(selectedInspection.inspectionType) }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Tình trạng chung" :span="1">
+          <a-tag :color="getConditionColor(selectedInspection.overallCondition)">
+            {{ getConditionLabel(selectedInspection.overallCondition) }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Điện" :span="1">
+          <a-tag :color="selectedInspection.electricalStatus === 'OK' ? 'green' : 'orange'">
+            {{ selectedInspection.electricalStatus || 'OK' }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Nước" :span="1">
+          <a-tag :color="selectedInspection.plumbingStatus === 'OK' ? 'green' : 'orange'">
+            {{ selectedInspection.plumbingStatus || 'OK' }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Nội thất" :span="1">
+          <a-tag :color="selectedInspection.furnitureStatus === 'OK' ? 'green' : 'orange'">
+            {{ selectedInspection.furnitureStatus || 'OK' }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Tường" :span="1">
+          <a-tag :color="selectedInspection.wallStatus === 'OK' ? 'green' : 'orange'">
+            {{ selectedInspection.wallStatus || 'OK' }}
+          </a-tag>
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Sàn nhà" :span="1">
+          <a-tag :color="selectedInspection.floorStatus === 'OK' ? 'green' : 'orange'">
+            {{ selectedInspection.floorStatus || 'OK' }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="Người kiểm tra" :span="1">
+          {{ selectedInspection.inspectorName }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="selectedInspection.electricityReading" label="Chỉ số điện" :span="1">
+          {{ selectedInspection.electricityReading }} kWh
+        </a-descriptions-item>
+        <a-descriptions-item v-if="selectedInspection.waterReading" label="Chỉ số nước" :span="1">
+          {{ selectedInspection.waterReading }} m³
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="selectedInspection.notes" label="Ghi chú" :span="2">
+          {{ selectedInspection.notes }}
+        </a-descriptions-item>
+        
+        <a-descriptions-item label="Trạng thái duyệt" :span="2">
+          <a-tag :color="selectedInspection.isApproved ? 'green' : 'orange'">
+            {{ selectedInspection.isApproved ? 'Đã duyệt' : 'Chờ duyệt' }}
+          </a-tag>
+          <span v-if="selectedInspection.isApproved && selectedInspection.approvedByName" style="margin-left: 8px;">
+            bởi {{ selectedInspection.approvedByName }} - {{ formatDate(selectedInspection.approvedAt) }}
+          </span>
+        </a-descriptions-item>
+        
+        <a-descriptions-item v-if="selectedInspection.nextInspectionDate" label="Lần kiểm tra tiếp theo" :span="2">
+          {{ formatDate(selectedInspection.nextInspectionDate) }}
+        </a-descriptions-item>
+      </a-descriptions>
+    </a-modal>
     
     <!-- Modal Delete -->
     <a-modal 
@@ -135,8 +218,10 @@ const inspections = ref([])
 const rooms = ref([])
 const loading = ref(false)
 const dialog = ref(false)
+const detailDialog = ref(false)
 const deleteDialog = ref(false)
 const deleteTarget = ref(null)
+const selectedInspection = ref(null)
 
 const form = ref({
   roomId: null,
@@ -241,7 +326,8 @@ async function save() {
 }
 
 function viewDetail(record) {
-  message.info('Chức năng xem chi tiết đang được phát triển')
+  selectedInspection.value = record
+  detailDialog.value = true
 }
 
 async function approve(record) {

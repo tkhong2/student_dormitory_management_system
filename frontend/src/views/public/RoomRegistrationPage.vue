@@ -429,8 +429,9 @@ async function loadData() {
     
     rooms.value = roomsData
       .filter(room => {
+        // CHỈ HIỂN THỊ PHÒNG CÒN CHỖ TRỐNG (không vượt quá capacity)
         const available = room.maxOccupants - room.currentOccupants
-        return (available > 0 && room.status === 'Available') || room.status === 'Maintenance'
+        return available > 0 && room.status === 'Available'
       })
       .map(room => {
         const roomType = roomTypesData.find(rt => rt.id === room.roomTypeId)
@@ -448,6 +449,7 @@ async function loadData() {
           name: room.roomNumber,
           building: building?.name || 'N/A',
           buildingId: room.buildingId,
+          buildingGender: building?.gender || 'Mixed', // Thêm giới tính tòa nhà
           capacity: room.maxOccupants,
           area: roomType?.area || 25,
           price: roomType?.pricePerMonth || 0,

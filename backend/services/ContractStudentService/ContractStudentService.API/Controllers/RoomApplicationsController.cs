@@ -200,6 +200,88 @@ namespace ContractStudentService.API.Controllers
             if (!application.AssignedRoomId.HasValue || string.IsNullOrEmpty(application.AssignedRoomNumber))
                 return BadRequest(new { message = "Đơn chưa có thông tin phòng được chọn" });
 
+            // Lấy thông tin sinh viên để kiểm tra giới tính
+            var student = await _studentRepository.GetByIdAsync(application.StudentId);
+            if (student == null)
+                return NotFound(new { message = "Không tìm thấy thông tin sinh viên" });
+
+            // Lấy thông tin phòng từ RoomService
+            var room = await _roomServiceClient.GetRoomByIdAsync(application.AssignedRoomId.Value);
+            if (room == null)
+                return NotFound(new { message = $"Không tìm thấy thông tin phòng {application.AssignedRoomNumber}" });
+
+            // KIỂM TRA CAPACITY - Phòng đã đầy chưa?
+            if (room.CurrentOccupants >= room.MaxOccupants)
+            {
+                return BadRequest(new { 
+                    message = $"Phòng {room.RoomNumber} đã đầy ({room.CurrentOccupants}/{room.MaxOccupants} người). Vui lòng chọn phòng khác." 
+                });
+            }
+
+            // Lấy thông tin tòa nhà để kiểm tra giới tính tòa nhà
+            var building = await _roomServiceClient.GetBuildingByIdAsync(room.BuildingId);
+            if (building == null)
+            {
+                return NotFound(new { message = $"Không tìm thấy thông tin tòa nhà" });
+            }
+
+            // KIỂM TRA GIỚI TÍNH TÒA NHÀ
+            if (!string.IsNullOrEmpty(building.Gender) && building.Gender != "Mixed")
+            {
+                if (student.Gender != building.Gender && student.Gender != "Unknown")
+                {
+                    var buildingGenderText = building.Gender == "Male" ? "Nam" : "Nữ";
+                    var studentGenderText = student.Gender == "Male" ? "Nam" : "Nữ";
+                    return BadRequest(new { 
+                        message = $"Tòa {building.Name} chỉ dành cho sinh viên {buildingGenderText}. Sinh viên này là {studentGenderText}." 
+                    });
+                }
+            }
+
+            // KIỂM TRA GIỚI TÍNH PHÒNG (nếu phòng đã có người)
+            if (!string.IsNullOrEmpty(room.AllowedGender))
+            {
+                // Phòng đã có giới tính xác định
+                if (room.AllowedGender != "Mixed" && student.Gender != room.AllowedGender)
+                {
+                    var genderText = room.AllowedGender == "Male" ? "Nam" : "Nữ";
+                    return BadRequest(new { 
+                        message = $"Phòng {room.RoomNumber} chỉ dành cho sinh viên {genderText}. Sinh viên này không phù hợp." 
+                    });
+                }
+            }
+            else if (room.CurrentOccupants > 0)
+            {
+                // Phòng chưa set gender nhưng đã có người - cần check người hiện tại
+                var existingContracts = await _contractRepository.GetActiveContractsByRoomAsync(application.AssignedRoomId.Value);
+                if (existingContracts.Any())
+                {
+                    // Lấy giới tính của người đầu tiên trong phòng
+                    var firstStudent = await _studentRepository.GetByIdAsync(existingContracts.First().StudentId);
+                    if (firstStudent != null && firstStudent.Gender != student.Gender && student.Gender != "Unknown" && firstStudent.Gender != "Unknown")
+                    {
+                        var genderText = firstStudent.Gender == "Male" ? "Nam" : "Nữ";
+                        return BadRequest(new { 
+                            message = $"Phòng {room.RoomNumber} hiện có sinh viên {genderText}. Không thể xếp sinh viên khác giới." 
+                        });
+                    }
+
+                    // Nếu pass validation, set AllowedGender cho phòng (lần đầu)
+                    if (student.Gender != "Unknown")
+                    {
+                        await _roomServiceClient.UpdateRoomGenderAsync(application.AssignedRoomId.Value, student.Gender);
+                    }
+                }
+            }
+            else
+            {
+                // Phòng trống hoàn toàn - set gender lần đầu
+                if (student.Gender != "Unknown")
+                {
+                    await _roomServiceClient.UpdateRoomGenderAsync(application.AssignedRoomId.Value, student.Gender);
+                }
+            }
+
             // Cập nhật trạng thái đơn sang Approved
             application.Status = "Approved";
             application.ReviewedByUserId = request.ReviewedByUserId;

@@ -6,9 +6,31 @@
         <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">Quản lý Người dùng</h1>
         <p style="font-size: 13px; color: #8c8c8c; margin: 4px 0 0 0;">Tổng số: {{ users.length }} người dùng</p>
       </div>
-      <a-button type="primary" @click="openCreateDialog" style="background: #ff9800; border-color: #ff9800;">
-        + Thêm người dùng
-      </a-button>
+        <a-space>
+          <a-button @click="exportTemplate">
+            <template #icon><DownloadOutlined /></template>
+            Tải mẫu Excel
+          </a-button>
+          <a-upload
+            name="file"
+            :show-upload-list="false"
+            :before-upload="beforeUpload"
+            :custom-request="handleImportExcel"
+            accept=".xlsx,.xls"
+          >
+            <a-button :loading="importing">
+              <template #icon><UploadOutlined /></template>
+              Import Excel
+            </a-button>
+          </a-upload>
+          <a-button @click="exportUsers" :loading="exporting">
+            <template #icon><DownloadOutlined /></template>
+            Xuất Excel
+          </a-button>
+          <a-button type="primary" @click="openCreateDialog" style="background: #ff9800; border-color: #ff9800;">
+            + Thêm người dùng
+          </a-button>
+        </a-space>
     </div>
      <!-- Role stats -->
     <a-row :gutter="[16, 16]" style="margin-bottom: 16px;">
@@ -360,17 +382,19 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { 
-  PlusOutlined, 
-  SearchOutlined, 
-  EditOutlined, 
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
   DeleteOutlined,
   KeyOutlined,
   CrownOutlined,
   SafetyOutlined,
   UserOutlined,
   LoadingOutlined,
-  CameraOutlined
+  CameraOutlined,
+  DownloadOutlined,
+  UploadOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import axios from 'axios'
@@ -408,6 +432,8 @@ const form = ref({
 })
 
 const uploadingAvatar = ref(false)
+const importing = ref(false)
+const exporting = ref(false)
 
 const uploadHeaders = computed(() => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -805,6 +831,129 @@ async function doResetPassword() {
     message.error(error.response?.data?.message || 'Không thể reset mật khẩu')
   } finally {
     saving.value = false
+  }
+}
+
+// Excel Import/Export functions
+async function exportTemplate() {
+  try {
+    const response = await axios.get('http://localhost:5002/api/users/export-template', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      responseType: 'blob'
+    })
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `MauTaiKhoanSinhVien_${Date.now()}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    message.success('Đã tải mẫu Excel thành công')
+  } catch (error) {
+    console.error('Error downloading template:', error)
+    message.error('Không thể tải mẫu Excel')
+  }
+}
+
+function beforeUpload(file) {
+  const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                  file.type === 'application/vnd.ms-excel'
+  if (!isExcel) {
+    message.error('Chỉ được upload file Excel (.xlsx, .xls)!')
+    return false
+  }
+  
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    message.error('Kích thước file phải nhỏ hơn 10MB!')
+    return false
+  }
+  
+  return true
+}
+
+async function handleImportExcel({ file }) {
+  importing.value = true
+  
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await axios.post('http://localhost:5002/api/users/import-excel', formData, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    const result = response.data
+    
+    if (result.errorCount > 0) {
+      // Tạo message string
+      let errorMessage = `Tổng số dòng: ${result.totalRows}\n`
+      errorMessage += `Thành công: ${result.successCount}\n`
+      errorMessage += `Lỗi: ${result.errorCount}\n\n`
+      
+      if (result.errors && result.errors.length > 0) {
+        errorMessage += 'Chi tiết lỗi:\n'
+        result.errors.forEach((error, index) => {
+          errorMessage += `${index + 1}. ${error}\n`
+        })
+      }
+      
+      Modal.warning({
+        title: 'Kết quả Import',
+        content: errorMessage,
+        width: 600,
+        okText: 'Đóng'
+      })
+    } else {
+      message.success(`Import thành công ${result.successCount} tài khoản`)
+    }
+    
+    await loadUsers()
+  } catch (error) {
+    console.error('Error importing Excel:', error)
+    message.error(error.response?.data || error.message || 'Lỗi khi import Excel')
+  } finally {
+    importing.value = false
+  }
+}
+
+async function exportUsers() {
+  exporting.value = true
+  
+  try {
+    const role = filterRole.value !== 'all' ? filterRole.value : undefined
+    const params = role ? `?role=${role}` : ''
+    
+    const response = await axios.get(`http://localhost:5002/api/users/export-excel${params}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      responseType: 'blob'
+    })
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `DanhSachTaiKhoan_${Date.now()}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    message.success('Xuất Excel thành công')
+  } catch (error) {
+    console.error('Error exporting users:', error)
+    message.error('Không thể xuất Excel')
+  } finally {
+    exporting.value = false
   }
 }
 

@@ -8,6 +8,7 @@ public class Room : BaseEntity
     public string Status { get; set; } = "Available";      // Available / Full / Maintenance / Reserved / Closed
     public int CurrentOccupants { get; set; } = 0;         // Số SV đang ở thực tế
     public int MaxOccupants { get; set; }                  // Copy từ RoomType.Capacity khi tạo phòng
+    public string? AllowedGender { get; set; }             // Male / Female / Mixed - Giới tính được phép ở
     public string? Orientation { get; set; }               // Đông / Tây / Nam / Bắc
     public string? Notes { get; set; }
 

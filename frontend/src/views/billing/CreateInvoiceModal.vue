@@ -156,13 +156,16 @@
               <a-input-number
                 v-model:value="form.electricityUnitPrice"
                 :min="0"
+                disabled
                 style="width: 100%"
-                @change="calcElec"
                 :formatter="fmt"
                 :parser="parse"
               >
                 <template #addonAfter>đ/kWh</template>
               </a-input-number>
+              <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+                <i class="fas fa-lock" style="margin-right: 4px"></i>Theo hợp đồng
+              </div>
             </a-form-item>
           </a-col>
           <a-col :span="6">
@@ -193,13 +196,16 @@
               <a-input-number
                 v-model:value="form.waterUnitPrice"
                 :min="0"
+                disabled
                 style="width: 100%"
-                @change="calcWater"
                 :formatter="fmt"
                 :parser="parse"
               >
                 <template #addonAfter>đ/m³</template>
               </a-input-number>
+              <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+                <i class="fas fa-lock" style="margin-right: 4px"></i>Theo hợp đồng
+              </div>
             </a-form-item>
           </a-col>
           <a-col :span="6">

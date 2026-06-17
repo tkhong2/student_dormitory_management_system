@@ -104,7 +104,7 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'roomNumber'">
-            <a-tag color="blue">{{ record.roomNumber }}</a-tag>
+            <a-tag color="blue">{{ getRoomNumberWithType(record) }}</a-tag>
           </template>
           
           <template v-else-if="column.key === 'building'">
@@ -113,10 +113,6 @@
           
           <template v-else-if="column.key === 'floor'">
             Tầng {{ record.floorNumber }}
-          </template>
-          
-          <template v-else-if="column.key === 'roomType'">
-            {{ getRoomTypeName(record.roomTypeId) }}
           </template>
           
           <template v-else-if="column.key === 'status'">
@@ -277,10 +273,9 @@ const form = ref({
 })
 
 const columns = [
-  { title: 'Số phòng', key: 'roomNumber', width: 120, fixed: 'left' },
+  { title: 'Số phòng', key: 'roomNumber', width: 150, fixed: 'left' },
   { title: 'Tòa nhà', key: 'building', width: 150 },
   { title: 'Tầng', key: 'floor', width: 100 },
-  { title: 'Loại phòng', key: 'roomType', width: 150 },
   { title: 'Trạng thái', key: 'status', width: 120 },
   { title: 'Lấp đầy', key: 'occupancy', width: 120 },
   { title: 'Thao tác', key: 'actions', width: 150, fixed: 'right' }
@@ -389,6 +384,28 @@ function getBuildingName(id) {
 function getRoomTypeName(id) {
   const rt = roomTypes.value.find(rt => rt.id === id)
   return rt ? rt.name : '-'
+}
+
+// Get room type code: extract capacity from name
+function getRoomTypeCode(id) {
+  const rt = roomTypes.value.find(rt => rt.id === id)
+  if (!rt) return ''
+  
+  // Extract capacity (first number in the name)
+  const capacityMatch = rt.name.match(/\d+/)
+  const capacity = capacityMatch ? capacityMatch[0] : ''
+  
+  // Check if VIP room
+  const nameLower = rt.name.toLowerCase()
+  const isVip = nameLower.includes('vip')
+  
+  return capacity ? `${capacity} người${isVip ? ' VIP' : ''}` : ''
+}
+
+// Get combined room number with type code (e.g., "101 - 4 người VIP" or "101 - 4 người")
+function getRoomNumberWithType(room) {
+  const typeCode = getRoomTypeCode(room.roomTypeId)
+  return typeCode ? `${room.roomNumber} - ${typeCode}` : room.roomNumber
 }
 
 function getRoomCapacity(room) {

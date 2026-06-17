@@ -88,7 +88,7 @@
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Họ và tên">
-                  <a-input v-model:value="editForm.fullName" />
+                  <a-input v-model:value="editForm.fullName" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
@@ -103,12 +103,12 @@
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Ngày sinh">
-                  <a-input v-model:value="editForm.dateOfBirth" type="date" />
+                  <a-input v-model:value="editForm.dateOfBirth" type="date" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Giới tính">
-                  <a-select v-model:value="editForm.gender" :options="[{label: 'Nam', value: 'Nam'}, {label: 'Nữ', value: 'Nữ'}, {label: 'Khác', value: 'Khác'}]" />
+                  <a-select v-model:value="editForm.gender" :options="[{label: 'Nam', value: 'Nam'}, {label: 'Nữ', value: 'Nữ'}, {label: 'Khác', value: 'Khác'}]" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
@@ -123,7 +123,7 @@
               </a-col>
               <a-col :span="24">
                 <a-form-item label="Địa chỉ thường trú">
-                  <a-textarea v-model:value="editForm.address" :rows="2" />
+                  <a-textarea v-model:value="editForm.address" :rows="2" disabled />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -255,18 +255,21 @@ const loadProfile = async () => {
   try {
     const user = authStore.user
     if (!user?.id) {
-      message.error('Không tìm thấy thông tin người dùng!')
+      message.error('Không tìm thấy thông tin người dùng! Vui lòng đăng nhập lại.')
       return
     }
 
-    // Get student info from ContractStudentService
-    const response = await axios.get(`http://localhost:5001/api/students/by-user/${user.id}`, {
+    console.log('Loading profile for user:', user.id)
+
+    // Get student info from ContractStudentService via API Gateway
+    const response = await axios.get(`http://localhost:5000/api/students/by-user/${user.id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
 
     const student = response.data
+    console.log('Student data loaded:', student)
     
     // Format dates
     let formattedDateOfBirth = ''
@@ -329,7 +332,18 @@ const loadProfile = async () => {
 
   } catch (error) {
     console.error('Error loading profile:', error)
-    message.error('Lỗi tải thông tin hồ sơ!')
+    
+    if (error.response?.status === 404) {
+      message.error({
+        content: 'Không tìm thấy hồ sơ sinh viên! Vui lòng liên hệ quản trị viên để tạo hồ sơ.',
+        duration: 5
+      })
+    } else if (error.response?.status === 401) {
+      message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      authStore.logout()
+    } else {
+      message.error(`Lỗi tải thông tin hồ sơ: ${error.message}`)
+    }
   } finally {
     loading.value = false
   }
@@ -377,7 +391,7 @@ const saveProfile = async () => {
       userId: profileData.value.userId
     }
 
-    await axios.put(`http://localhost:5001/api/students/${profileData.value.id}`, updateData, {
+    await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -534,7 +548,7 @@ const handleAvatarChange = async (event) => {
         userId: profileData.value.userId
       }
       
-      await axios.put(`http://localhost:5001/api/students/${profileData.value.id}`, updateData, {
+      await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -597,7 +611,7 @@ const removeAvatar = async () => {
       userId: profileData.value.userId
     }
     
-    await axios.put(`http://localhost:5001/api/students/${profileData.value.id}`, updateData, {
+    await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }

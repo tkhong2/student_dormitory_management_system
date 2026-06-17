@@ -47,6 +47,7 @@ namespace ContractStudentService.Application.Interfaces
         Task<IEnumerable<Contract>> GetByStatusAsync(string status);
         Task<IEnumerable<Contract>> GetActiveContractsByStudentAsync(int studentId);
         Task<IEnumerable<Contract>> GetActiveContractsByUserIdAsync(int userId);
+        Task<IEnumerable<Contract>> GetActiveContractsByRoomAsync(int roomId);
         Task<int> GetNextSequenceForYearAsync(int year);
         Task AddAsync(Contract contract);
         Task UpdateAsync(Contract contract);
