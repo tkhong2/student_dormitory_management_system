@@ -113,11 +113,9 @@
             size="middle"
           />
 
-          <a-badge :count="5" :offset="[-6, 4]" style="margin-right: 16px">
-            <a-button type="text" shape="circle">
-              <template #icon><BellOutlined /></template>
-            </a-button>
-          </a-badge>
+          <div style="margin-right: 16px; display: flex; align-items: center;">
+            <NotificationDropdown />
+          </div>
 
           <a-dropdown placement="bottomRight">
             <a-avatar
@@ -247,6 +245,7 @@ import {
   AppstoreOutlined,
 } from "@ant-design/icons-vue";
 import AppLogo from "@/components/common/AppLogo.vue";
+import NotificationDropdown from "@/components/common/NotificationDropdown.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();

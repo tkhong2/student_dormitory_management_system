@@ -252,6 +252,46 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "Lỗi đổi mật khẩu", error = ex.Message });
         }
     }
+
+    [HttpPost("verify-token")]
+    public IActionResult VerifyToken()
+    {
+        try
+        {
+            // Get token from Authorization header
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized(new { message = "Token không hợp lệ" });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+            
+            // Validate token
+            var principal = _jwtService.ValidateToken(token);
+            if (principal == null)
+            {
+                return Unauthorized(new { message = "Token không hợp lệ hoặc đã hết hạn" });
+            }
+
+            // Extract user info from token
+            var userId = principal.FindFirst("userId")?.Value;
+            var username = principal.FindFirst("username")?.Value;
+            var role = principal.FindFirst("role")?.Value;
+
+            return Ok(new 
+            { 
+                valid = true, 
+                userId = userId,
+                username = username,
+                role = role 
+            });
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(new { message = "Token không hợp lệ", error = ex.Message });
+        }
+    }
 }
 
 // DTOs

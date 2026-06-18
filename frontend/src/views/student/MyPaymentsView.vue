@@ -152,85 +152,141 @@
       </a-table>
     </a-card>
 
-    <!-- Invoice Detail Modal -->
     <a-modal
       v-model:open="detailDialog"
       title="Chi tiết Phiếu Thu"
-      width="800px"
+      width="900px"
       :footer="null"
     >
-      <a-descriptions v-if="detailTarget" bordered :column="2" size="small">
+      <a-descriptions v-if="detailTarget" bordered :column="2" size="default">
         <a-descriptions-item label="Mã Phiếu Thu" :span="2">
-          <a-typography-text strong copyable>{{ detailTarget.invoiceCode }}</a-typography-text>
+          <a-typography-text strong copyable style="font-size: 16px;">{{ detailTarget.invoiceCode }}</a-typography-text>
         </a-descriptions-item>
         
-        <a-descriptions-item label="Kỳ thanh toán">
-          Tháng {{ detailTarget.billingMonth }}/{{ detailTarget.billingYear }}
+        <a-descriptions-item label="Loại phiếu thu">
+          <a-tag :color="getInvoiceTypeColor(detailTarget.invoiceType)">
+            {{ getInvoiceTypeText(detailTarget.invoiceType) }}
+          </a-tag>
         </a-descriptions-item>
+        <a-descriptions-item label="Kỳ thanh toán">
+          <strong>Tháng {{ detailTarget.billingMonth }}/{{ detailTarget.billingYear }}</strong>
+        </a-descriptions-item>
+        
         <a-descriptions-item label="Phòng">
           <a-tag color="blue">{{ detailTarget.roomNumber }}</a-tag> {{ detailTarget.buildingName }}
         </a-descriptions-item>
+        <a-descriptions-item label="Hạn thanh toán">
+          <strong>{{ formatDate(detailTarget.dueDate) }}</strong>
+        </a-descriptions-item>
         
         <a-descriptions-item label="Trạng thái" :span="2">
-          <a-tag :color="getStatusColor(detailTarget.status)">
+          <a-tag :color="getStatusColor(detailTarget.status)" style="font-size: 14px; padding: 4px 12px;">
             {{ getStatusText(detailTarget.status) }}
           </a-tag>
-          <span v-if="detailTarget.overdueDays > 0" style="margin-left: 8px; color: #ff4d4f;">
+          <span v-if="detailTarget.overdueDays > 0" style="margin-left: 8px; color: #ff4d4f; font-weight: 500;">
             (Quá hạn {{ detailTarget.overdueDays }} ngày)
           </span>
         </a-descriptions-item>
         
+        <!-- Chi tiết các khoản phí -->
         <a-descriptions-item label="Chi tiết các khoản" :span="2">
-          <a-list size="small" :data-source="detailTarget.items || getDefaultItems(detailTarget)" bordered>
-            <template #renderItem="{ item }">
-              <a-list-item>
-                <a-list-item-meta>
-                  <template #title>{{ item.itemName }}</template>
-                  <template #description>{{ item.itemDescription }}</template>
-                </a-list-item-meta>
-                <div style="font-weight: 500">{{ formatCurrency(item.amount) }}</div>
-              </a-list-item>
+          <a-table 
+            :columns="itemColumns" 
+            :data-source="detailTarget.items && detailTarget.items.length > 0 ? detailTarget.items : getDefaultItems(detailTarget)" 
+            :pagination="false"
+            size="middle"
+            bordered
+            style="margin-top: 8px;"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'itemName'">
+                <strong>{{ record.itemName }}</strong>
+                <div v-if="record.itemDescription" style="font-size: 12px; color: #8c8c8c;">
+                  {{ record.itemDescription }}
+                </div>
+              </template>
+              <template v-else-if="column.key === 'quantity'">
+                <span v-if="record.quantity">{{ record.quantity }}</span>
+                <span v-else style="color: #d9d9d9;">-</span>
+              </template>
+              <template v-else-if="column.key === 'unit'">
+                <span v-if="record.unit">{{ record.unit }}</span>
+                <span v-else style="color: #d9d9d9;">-</span>
+              </template>
+              <template v-else-if="column.key === 'unitPrice'">
+                <span v-if="record.unitPrice" style="font-weight: 500;">{{ formatCurrency(record.unitPrice) }}</span>
+                <span v-else style="color: #d9d9d9;">-</span>
+              </template>
+              <template v-else-if="column.key === 'amount'">
+                <strong :style="{ color: record.amount < 0 ? '#52c41a' : '#1890ff', fontSize: '15px' }">
+                  {{ formatCurrency(record.amount) }}
+                </strong>
+              </template>
             </template>
-          </a-list>
+            <template #summary>
+              <a-table-summary fixed>
+                <a-table-summary-row style="background: #fafafa;">
+                  <a-table-summary-cell :col-span="4" align="right">
+                    <strong style="font-size: 16px;">TỔNG CỘNG:</strong>
+                  </a-table-summary-cell>
+                  <a-table-summary-cell align="right">
+                    <strong style="color: #1890ff; font-size: 18px;">
+                      {{ formatCurrency(detailTarget.totalAmount) }}
+                    </strong>
+                  </a-table-summary-cell>
+                </a-table-summary-row>
+              </a-table-summary>
+            </template>
+          </a-table>
         </a-descriptions-item>
         
-        <a-descriptions-item label="Hạn thanh toán">
-          {{ formatDate(detailTarget.dueDate) }}
-        </a-descriptions-item>
-        <a-descriptions-item label="Tổng tiền">
-          <strong style="color: #1890ff; font-size: 16px;">{{ formatCurrency(detailTarget.totalAmount) }}</strong>
+        <!-- Thông tin thanh toán -->
+        <a-descriptions-item label="Tổng tiền" :span="2">
+          <strong style="color: #1890ff; font-size: 18px;">{{ formatCurrency(detailTarget.totalAmount) }}</strong>
         </a-descriptions-item>
         
         <a-descriptions-item label="Đã thanh toán">
           <strong style="color: #52c41a; font-size: 16px;">{{ formatCurrency(detailTarget.paidAmount) }}</strong>
         </a-descriptions-item>
         <a-descriptions-item label="Còn nợ">
-          <strong style="color: #ff4d4f; font-size: 16px;">{{ formatCurrency(detailTarget.debtAmount) }}</strong>
+          <strong :style="{ color: detailTarget.debtAmount > 0 ? '#ff4d4f' : '#52c41a', fontSize: '16px' }">
+            {{ formatCurrency(detailTarget.debtAmount) }}
+          </strong>
         </a-descriptions-item>
         
         <a-descriptions-item v-if="detailTarget.notes" label="Ghi chú" :span="2">
-          {{ detailTarget.notes }}
+          <a-alert type="info" :message="detailTarget.notes" show-icon />
         </a-descriptions-item>
       </a-descriptions>
 
       <a-alert
         v-if="detailTarget?.status !== 'Paid'"
         message="Hướng dẫn thanh toán"
-        type="info"
+        type="warning"
         show-icon
         style="margin-top: 16px"
       >
         <template #description>
-          <p>Vui lòng chuyển khoản đến:</p>
-          <p><strong>Ngân hàng:</strong> Vietcombank - Chi nhánh Đà Nẵng</p>
-          <p><strong>Số tài khoản:</strong> 0123456789</p>
-          <p><strong>Chủ tài khoản:</strong> KTX Đại học DNU</p>
-          <p><strong>Nội dung:</strong> {{ detailTarget.invoiceCode }} {{ detailTarget.studentCode }}</p>
+          <p style="margin-bottom: 8px;"><strong>Vui lòng chuyển khoản đến:</strong></p>
+          <p style="margin: 4px 0;"><strong>🏦 Ngân hàng:</strong> BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</p>
+          <p style="margin: 4px 0;"><strong>👤 Chủ tài khoản:</strong> TRAN KHAC HONG</p>
+          <p style="margin: 4px 0;"><strong>💳 Số tài khoản:</strong> <a-typography-text copyable strong>8871422018</a-typography-text></p>
+          <p style="margin: 4px 0;"><strong>💰 Số tiền:</strong> <span style="color: #ff9800; font-weight: bold;">{{ formatCurrency(detailTarget.debtAmount) }}</span></p>
+          <p style="margin: 4px 0;"><strong>✍️ Nội dung:</strong> <a-typography-text copyable strong type="danger">{{ detailTarget.invoiceCode }} {{ detailTarget.studentCode }}</a-typography-text></p>
         </template>
       </a-alert>
 
-      <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
-        <a-button @click="detailDialog = false">Đóng</a-button>
+      <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+        <a-button type="default" @click="detailDialog = false">Đóng</a-button>
+        <a-button 
+          v-if="detailTarget?.status !== 'Paid'" 
+          type="primary" 
+          style="background: #ff9800; border-color: #ff9800;"
+          @click="detailDialog = false; openQRPayment(detailTarget)"
+        >
+          <template #icon><QrcodeOutlined /></template>
+          Thanh toán ngay
+        </a-button>
       </div>
     </a-modal>
 
@@ -366,6 +422,14 @@ const columns = [
   { title: 'Thao tác', key: 'actions', align: 'center', width: 150 }
 ]
 
+const itemColumns = [
+  { title: 'Khoản thu', key: 'itemName', dataIndex: 'itemName', width: '30%' },
+  { title: 'Số lượng', key: 'quantity', dataIndex: 'quantity', align: 'center', width: '12%' },
+  { title: 'Đơn vị', key: 'unit', dataIndex: 'unit', align: 'center', width: '12%' },
+  { title: 'Đơn giá', key: 'unitPrice', dataIndex: 'unitPrice', align: 'right', width: '23%' },
+  { title: 'Thành tiền', key: 'amount', dataIndex: 'amount', align: 'right', width: '23%' }
+]
+
 const totalPaid = computed(() => {
   return invoices.value
     .filter(inv => inv.status === 'Paid')
@@ -428,6 +492,26 @@ const getStatusText = (status) => {
     'Cancelled': 'Đã hủy'
   }
   return texts[status] || status
+}
+
+const getInvoiceTypeColor = (type) => {
+  const colors = {
+    'Monthly': 'blue',
+    'Deposit': 'green',
+    'DepositRefund': 'purple',
+    'Other': 'default'
+  }
+  return colors[type] || 'default'
+}
+
+const getInvoiceTypeText = (type) => {
+  const texts = {
+    'Monthly': '💰 Tiền phòng tháng',
+    'Deposit': '🏦 Tiền cọc',
+    'DepositRefund': '💸 Hoàn cọc',
+    'Other': '📝 Khác'
+  }
+  return texts[type] || type
 }
 
 const getDefaultItems = (invoice) => {

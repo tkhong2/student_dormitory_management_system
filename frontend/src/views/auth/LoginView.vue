@@ -110,6 +110,7 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
+    console.log('Attempting login with username:', form.username)
     await authStore.login(form.username, form.password)
     
     // Success - redirect based on role
@@ -124,6 +125,9 @@ const handleLogin = async () => {
   } catch (error) {
     // Show error notification
     console.error('Login failed:', error)
+    console.error('Error response:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+    
     notification.error({
       message: 'Đăng nhập thất bại',
       description: error.message || 'Vui lòng kiểm tra lại thông tin đăng nhập của bạn.',

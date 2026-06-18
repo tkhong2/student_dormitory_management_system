@@ -16,6 +16,10 @@
             <template #icon><DownloadOutlined /></template>
             Xuất Excel
           </a-button>
+          <a-button @click="autoGenerateMonthly" :loading="autoGenerating" type="dashed" style="border-color: #52c41a; color: #52c41a;">
+            <template #icon><ThunderboltOutlined /></template>
+            Tự động tạo hóa đơn tháng
+          </a-button>
           <a-button type="primary" @click="showCreateDialog" style="background: #ff9800; border-color: #ff9800;">
             + Tạo Phiếu Thu
           </a-button>
@@ -327,7 +331,8 @@ import {
   DeleteOutlined,
   BellOutlined,
   DownloadOutlined,
-  PrinterOutlined
+  PrinterOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import billService from '@/services/billService'
@@ -343,6 +348,7 @@ const { printing, printInvoice } = usePrintPDF()
 const loading = ref(false)
 const saving = ref(false)
 const exporting = ref(false)
+const autoGenerating = ref(false)
 const invoices = ref([])
 const contracts = ref([])
 const search = ref('')
@@ -576,8 +582,10 @@ const showCreateDialog = async () => {
 
     // Get next invoice code from backend
     const now = new Date()
-    const billingMonth = now.getMonth() + 1
-    const billingYear = now.getFullYear()
+    // Calculate next month for billing (invoices are for the upcoming month)
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const billingMonth = nextMonth.getMonth() + 1
+    const billingYear = nextMonth.getFullYear()
     
     let autoInvoiceCode = `PTT${billingYear}${String(billingMonth).padStart(2, '0')}001` // Default fallback
     
@@ -659,17 +667,35 @@ const onContractChange = async (contractId) => {
     const dayOfMonth = contractStart.date() // Lấy ngày trong tháng
     editedItem.value.dueDate = dayjs().month(editedItem.value.billingMonth - 1).date(dayOfMonth)
 
-    // Kiểm tra xem phiếu thu cho hợp đồng này ở tháng này đã tồn tại chưa
-    const existingInvoice = invoices.value.find(inv => 
-      inv.contractId === contractId && 
-      inv.billingMonth === editedItem.value.billingMonth &&
-      inv.billingYear === editedItem.value.billingYear &&
-      inv.invoiceType === editedItem.value.invoiceType &&
-      inv.status !== 'Cancelled'
-    )
+    // Kiểm tra xem phiếu thu cho hợp đồng này đã tồn tại chưa
+    let existingInvoice = null
+    
+    // Với phiếu tiền cọc (Deposit) hoặc hoàn cọc (DepositRefund): chỉ kiểm tra theo contractId và loại phiếu
+    if (editedItem.value.invoiceType === 'Deposit' || editedItem.value.invoiceType === 'DepositRefund') {
+      existingInvoice = invoices.value.find(inv => 
+        inv.contractId === contractId && 
+        inv.invoiceType === editedItem.value.invoiceType &&
+        inv.status !== 'Cancelled'
+      )
+    } else {
+      // Với phiếu tiền phòng tháng (Monthly) hoặc khác: kiểm tra theo tháng/năm
+      existingInvoice = invoices.value.find(inv => 
+        inv.contractId === contractId && 
+        inv.billingMonth === editedItem.value.billingMonth &&
+        inv.billingYear === editedItem.value.billingYear &&
+        inv.invoiceType === editedItem.value.invoiceType &&
+        inv.status !== 'Cancelled'
+      )
+    }
     
     if (existingInvoice) {
-      message.warning(`Phiếu thu ${existingInvoice.invoiceCode} đã tồn tại cho hợp đồng này ở kỳ ${editedItem.value.billingMonth}/${editedItem.value.billingYear}`)
+      if (editedItem.value.invoiceType === 'Deposit') {
+        message.warning(`Phiếu tiền cọc ${existingInvoice.invoiceCode} đã tồn tại cho hợp đồng này`)
+      } else if (editedItem.value.invoiceType === 'DepositRefund') {
+        message.warning(`Phiếu hoàn cọc ${existingInvoice.invoiceCode} đã tồn tại cho hợp đồng này`)
+      } else {
+        message.warning(`Phiếu thu ${existingInvoice.invoiceCode} đã tồn tại cho hợp đồng này ở kỳ ${editedItem.value.billingMonth}/${editedItem.value.billingYear}`)
+      }
     } else {
       message.success('Đã tự động điền thông tin từ hợp đồng')
     }
@@ -760,10 +786,32 @@ const saveInvoice = async () => {
 
   saving.value = true
   try {
+    // Only send fields that backend DTO expects
     const invoiceData = {
-      ...editedItem.value,
-      dueDate: dayjs(editedItem.value.dueDate).format('YYYY-MM-DD')
+      invoiceCode: editedItem.value.invoiceCode,
+      invoiceType: editedItem.value.invoiceType,
+      contractId: editedItem.value.contractId,
+      studentId: editedItem.value.studentId,
+      studentName: editedItem.value.studentName,
+      studentCode: editedItem.value.studentCode,
+      roomId: editedItem.value.roomId,
+      roomNumber: editedItem.value.roomNumber,
+      buildingName: editedItem.value.buildingName,
+      billingMonth: editedItem.value.billingMonth,
+      billingYear: editedItem.value.billingYear,
+      rentAmount: editedItem.value.rentAmount || 0,
+      electricityAmount: editedItem.value.electricityAmount || 0,
+      waterAmount: editedItem.value.waterAmount || 0,
+      serviceAmount: editedItem.value.serviceAmount || 0,
+      previousDebt: editedItem.value.previousDebt || 0,
+      discount: editedItem.value.discount || 0,
+      dueDate: dayjs(editedItem.value.dueDate).format('YYYY-MM-DD'),
+      createdByUserId: editedItem.value.createdByUserId || 1,
+      notes: editedItem.value.notes || '',
+      items: editedItem.value.items || []
     }
+    
+    console.log('Sending invoice data:', JSON.stringify(invoiceData, null, 2))
     
     await billService.create(invoiceData)
     message.success('Tạo phiếu thu thành công')
@@ -771,6 +819,7 @@ const saveInvoice = async () => {
     await fetchInvoices()
   } catch (error) {
     console.error('Error creating invoice:', error)
+    console.error('Error response:', error.response)
     
     // Handle specific error cases
     if (error.response?.status === 409) {
@@ -781,7 +830,11 @@ const saveInvoice = async () => {
         duration: 5
       })
     } else {
-      message.error(error.response?.data?.message || error.message || 'Lỗi tạo phiếu thu')
+      const errorMsg = error.response?.data?.message || 
+                       error.response?.data?.title ||
+                       error.message || 
+                       'Lỗi tạo phiếu thu'
+      message.error(errorMsg)
     }
   } finally {
     saving.value = false
@@ -935,6 +988,43 @@ const exportToExcelHandler = async () => {
 // Print invoice PDF
 const printInvoiceHandler = async (record) => {
   await printInvoice(record)
+}
+
+// Auto-generate monthly invoices for all active contracts
+const autoGenerateMonthly = () => {
+  Modal.confirm({
+    title: 'Tự động tạo hóa đơn tháng',
+    content: 'Bạn có muốn tự động tạo hóa đơn tiền phòng tháng này cho tất cả hợp đồng đang hoạt động?',
+    okText: 'Tạo',
+    cancelText: 'Hủy',
+    async onOk() {
+      autoGenerating.value = true
+      try {
+        const now = new Date()
+        const month = now.getMonth() + 1
+        const year = now.getFullYear()
+        
+        const response = await billService.autoGenerateMonthly(month, year)
+        
+        message.success({
+          content: `${response.message}. Đã tạo: ${response.created}, Bỏ qua: ${response.skipped}, Lỗi: ${response.errors}`,
+          duration: 5
+        })
+        
+        if (response.errorDetails && response.errorDetails.length > 0) {
+          console.warn('Errors during auto-generation:', response.errorDetails)
+        }
+        
+        // Reload invoices
+        await fetchInvoices()
+      } catch (error) {
+        console.error('Auto-generate error:', error)
+        message.error(error.response?.data?.message || error.message || 'Lỗi tạo hóa đơn tự động')
+      } finally {
+        autoGenerating.value = false
+      }
+    }
+  })
 }
 
 onMounted(() => {

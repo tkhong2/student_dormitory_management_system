@@ -372,6 +372,7 @@ async function handleApprove() {
     })
     message.success('Đã duyệt đơn đăng ký thành công')
     approveDialog.value = false
+    detailDialog.value = false
     await loadApplications()
   } catch (err) {
     message.error(err.message || 'Có lỗi xảy ra')
@@ -397,6 +398,7 @@ async function handleReject() {
     })
     message.success('Đã từ chối đơn đăng ký')
     rejectDialog.value = false
+    detailDialog.value = false
     await loadApplications()
   } catch (err) {
     message.error(err.message || 'Có lỗi xảy ra')

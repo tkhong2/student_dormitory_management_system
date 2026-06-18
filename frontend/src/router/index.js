@@ -9,6 +9,7 @@ const routes = [
       { path: '', name: 'home', meta: { title: 'Trang chủ' }, component: () => import('../views/public/HomePage.vue') },
       { path: 'about', name: 'about', meta: { title: 'Giới thiệu' }, component: () => import('../views/public/AboutPage.vue') },
       { path: 'rooms', name: 'room-registration', meta: { title: 'Đăng ký phòng' }, component: () => import('../views/public/RoomRegistrationPage.vue') },
+      { path: 'rooms/:id', name: 'room-detail', meta: { title: 'Chi tiết phòng' }, component: () => import('../views/public/RoomDetailPage.vue') },
       { path: 'news', name: 'news', meta: { title: 'Tin tức' }, component: () => import('../views/public/NewsPage.vue') },
       { path: 'rules', name: 'rules', meta: { title: 'Nội quy' }, component: () => import('../views/public/RulesPage.vue') },
       { path: 'contact', name: 'contact', meta: { title: 'Liên hệ' }, component: () => import('../views/public/ContactPage.vue') },
@@ -138,7 +139,7 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   const user = JSON.parse(localStorage.getItem('user') || 'null')
 
@@ -150,32 +151,33 @@ router.beforeEach((to, from, next) => {
 
   // Public routes that don't require authentication
   const publicPaths = ['/', '/about', '/rooms', '/news', '/rules', '/contact', '/login']
-  const isPublicRoute = publicPaths.includes(to.path) || to.path.startsWith('/public')
-  
-  // If user is logged in and tries to access public HOME page (not login), redirect to dashboard
-  if (token && user && to.path === '/') {
-    if (user.role === 'Student') {
-      return next('/student')
-    } else if (user.role === 'Staff') {
-      return next('/staff/dashboard')
-    } else if (user.role === 'Admin') {
-      return next('/admin')
-    }
-  }
+  const isPublicRoute = publicPaths.includes(to.path) || 
+                        to.path.startsWith('/public') || 
+                        to.path.startsWith('/rooms/') // Allow room detail pages
   
   // Allow access to login page regardless of authentication status
-  // This allows users to logout and login again
   if (to.path === '/login') {
     return next()
   }
   
-  // Allow access to other public routes
+  // Allow access to other public routes without token validation
   if (isPublicRoute) {
+    // But if user is logged in and tries to access HOME page, redirect to dashboard
+    if (token && user && to.path === '/') {
+      if (user.role === 'Student') {
+        return next('/student')
+      } else if (user.role === 'Staff') {
+        return next('/staff/dashboard')
+      } else if (user.role === 'Admin') {
+        return next('/admin')
+      }
+    }
     return next()
   }
 
-  // Check authentication for protected routes
+  // For protected routes: check if we have token
   if (!token || !user) {
+    // No token or user - redirect to login
     return next('/login')
   }
 

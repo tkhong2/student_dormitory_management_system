@@ -27,15 +27,13 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _context.Users
-            .Where(u => !u.IsDeleted && u.Email == email)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
     {
         return await _context.Users
-            .Where(u => !u.IsDeleted && u.RefreshToken == refreshToken)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
     }
 
     public async Task<IEnumerable<User>> GetAllAsync()

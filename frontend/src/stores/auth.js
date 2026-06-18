@@ -19,6 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Actions
   const login = async (username, password) => {
     try {
+      console.log('Sending login request:', { username, url: `${API_URL}/auth/login` })
       const response = await axios.post(`${API_URL}/auth/login`, {
         username,
         password
@@ -47,6 +48,10 @@ export const useAuthStore = defineStore('auth', () => {
       return userData
     } catch (error) {
       console.error('Login error:', error)
+      console.error('Login error response:', error.response)
+      console.error('Login error response data:', error.response?.data)
+      console.error('Login error response status:', error.response?.status)
+      
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message)
       }
@@ -148,20 +153,38 @@ export const useAuthStore = defineStore('auth', () => {
       async (error) => {
         const originalRequest = error.config
 
-        if (
-          error.response?.status === 401 &&
-          !originalRequest._retry &&
-          originalRequest.url &&
-          !originalRequest.url.includes('/auth/login') &&
-          !originalRequest.url.includes('/auth/refresh-token')
-        ) {
-          originalRequest._retry = true
+        // Only handle 401 errors
+        if (error.response?.status === 401) {
+          // Skip retry for login and refresh-token endpoints
+          if (
+            originalRequest.url &&
+            (originalRequest.url.includes('/auth/login') ||
+             originalRequest.url.includes('/auth/refresh-token'))
+          ) {
+            return Promise.reject(error)
+          }
 
-          try {
-            await refreshAccessToken()
-            return axios(originalRequest)
-          } catch (refreshError) {
-            return Promise.reject(refreshError)
+          // Only retry once
+          if (!originalRequest._retry) {
+            originalRequest._retry = true
+
+            try {
+              console.log('🔄 Token expired, attempting to refresh...')
+              const newToken = await refreshAccessToken()
+              console.log('✅ Token refreshed successfully')
+              
+              // Update the failed request with new token
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+              
+              // Retry the original request
+              return axios(originalRequest)
+            } catch (refreshError) {
+              console.error('❌ Token refresh failed, logging out...')
+              // Only logout if refresh fails
+              logout()
+              window.location.href = '/login'
+              return Promise.reject(refreshError)
+            }
           }
         }
 

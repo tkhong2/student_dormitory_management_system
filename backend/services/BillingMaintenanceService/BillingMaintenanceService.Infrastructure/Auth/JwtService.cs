@@ -53,5 +53,41 @@ namespace BillingMaintenanceService.Infrastructure.Auth
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
         }
+
+        public ClaimsPrincipal? ValidateToken(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Secret"] ?? "YourSuperSecretKeyForJWTValidation_MustBeLongEnough_AtLeast32Characters!");
+                
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = _configuration["JwtSettings:Issuer"] ?? "BillingMaintenanceService",
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["JwtSettings:Audience"] ?? "BillingMaintenanceClient",
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+                
+                // Verify token is a JWT
+                if (validatedToken is not JwtSecurityToken jwtToken || 
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
+
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

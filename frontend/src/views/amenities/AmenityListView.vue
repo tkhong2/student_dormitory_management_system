@@ -101,6 +101,10 @@
           
           <template v-else-if="column.key === 'actions'">
             <a-space>
+              <a-button size="small" type="link" @click="viewDetails(record)">
+                <template #icon><EyeOutlined /></template>
+                Chi tiết
+              </a-button>
               <a-button size="small" @click="openEdit(record)">Sửa</a-button>
               <a-button size="small" danger @click="confirmDelete(record)">Xóa</a-button>
             </a-space>
@@ -108,6 +112,68 @@
         </template>
       </a-table>
     </a-card>
+    
+    <!-- Modal View Details -->
+    <a-modal 
+      v-model:open="detailDialog" 
+      :title="`Chi tiết tiện nghi: ${detailTarget?.name}`"
+      width="700px"
+      @cancel="detailDialog = false"
+      :footer="null"
+    >
+      <a-spin :spinning="detailLoading">
+        <div v-if="roomTypeDetails.length > 0">
+          <p style="margin-bottom: 16px; color: #595959;">
+            Tiện nghi này đang được sử dụng ở <strong>{{ roomTypeDetails.length }}</strong> loại phòng
+          </p>
+          
+          <a-table 
+            :dataSource="roomTypeDetails" 
+            :columns="detailColumns"
+            :pagination="false"
+            size="small"
+            :rowKey="r => r.id"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'roomTypeName'">
+                <strong>{{ record.roomTypeName }}</strong>
+              </template>
+              <template v-else-if="column.key === 'quantity'">
+                <a-tag color="blue">{{ record.quantity }} cái</a-tag>
+              </template>
+              <template v-else-if="column.key === 'roomCount'">
+                <span style="color: #52c41a; font-weight: 600;">{{ record.roomCount }} phòng</span>
+              </template>
+            </template>
+          </a-table>
+          
+          <a-divider />
+          
+          <div style="background: #f0f2f5; padding: 12px; border-radius: 8px;">
+            <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 8px;">Tổng quan</div>
+            <a-row :gutter="16">
+              <a-col :span="12">
+                <a-statistic 
+                  title="Tổng số loại phòng" 
+                  :value="roomTypeDetails.length"
+                  :value-style="{ fontSize: '20px', color: '#1890ff' }"
+                />
+              </a-col>
+              <a-col :span="12">
+                <a-statistic 
+                  title="Tổng số phòng sử dụng" 
+                  :value="totalRoomsUsingAmenity"
+                  :value-style="{ fontSize: '20px', color: '#52c41a' }"
+                />
+              </a-col>
+            </a-row>
+          </div>
+        </div>
+        <div v-else>
+          <a-empty description="Chưa có loại phòng nào sử dụng tiện nghi này" />
+        </div>
+      </a-spin>
+    </a-modal>
     
     <!-- Modal Create/Edit -->
     <a-modal 
@@ -154,13 +220,29 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { SearchOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import { amenityService } from '@/services/amenityService'
+import { roomTypeService } from '@/services/roomTypeService'
+import { roomService } from '@/services/roomService'
 
 const amenities = ref([])
 const loading = ref(false)
 const dialog = ref(false)
 const deleteDialog = ref(false)
+const detailDialog = ref(false)
+const detailLoading = ref(false)
+const detailTarget = ref(null)
+const roomTypeDetails = ref([])
+const totalRoomsUsingAmenity = computed(() => {
+  return roomTypeDetails.value.reduce((sum, rt) => sum + (rt.roomCount || 0), 0)
+})
+
+const detailColumns = [
+  { title: 'Loại phòng', key: 'roomTypeName', dataIndex: 'roomTypeName' },
+  { title: 'Số lượng/phòng', key: 'quantity', dataIndex: 'quantity', width: 130 },
+  { title: 'Số phòng', key: 'roomCount', dataIndex: 'roomCount', width: 100 },
+  { title: 'Ghi chú', dataIndex: 'note', key: 'note' }
+]
 
 // Filter states
 const search = ref('')
@@ -243,6 +325,51 @@ function openCreate() {
   editTarget.value = null
   form.value = { name: '', category: 'Electric', iconUrl: '', isActive: true }
   dialog.value = true
+}
+
+async function viewDetails(amenity) {
+  detailTarget.value = amenity
+  detailDialog.value = true
+  detailLoading.value = true
+  
+  try {
+    // Get all room type amenities for this amenity
+    const roomTypeAmenitiesResponse = await fetch('http://localhost:5003/api/roomtypeamenities')
+    const allRoomTypeAmenities = await roomTypeAmenitiesResponse.json()
+    
+    // Filter for current amenity
+    const amenityUsages = allRoomTypeAmenities.filter(rta => rta.amenityId === amenity.id)
+    
+    if (amenityUsages.length === 0) {
+      roomTypeDetails.value = []
+      return
+    }
+    
+    // Get all room types and rooms
+    const [roomTypes, rooms] = await Promise.all([
+      roomTypeService.getAll(),
+      roomService.getAll()
+    ])
+    
+    // Build details with room counts
+    roomTypeDetails.value = amenityUsages.map(usage => {
+      const roomType = roomTypes.find(rt => rt.id === usage.roomTypeId)
+      const roomCount = rooms.filter(r => r.roomTypeId === usage.roomTypeId).length
+      
+      return {
+        id: usage.id,
+        roomTypeName: roomType ? roomType.name : 'N/A',
+        quantity: usage.quantity || 1,
+        note: usage.note || '-',
+        roomCount
+      }
+    })
+  } catch (err) {
+    console.error('Error loading amenity details:', err)
+    message.error('Không thể tải chi tiết tiện nghi')
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 function openEdit(item) {

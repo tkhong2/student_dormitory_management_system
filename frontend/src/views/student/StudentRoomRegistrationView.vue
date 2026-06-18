@@ -63,12 +63,12 @@
           </a-col>
           <a-col :xs="24" :md="12">
             <a-form-item label="Email">
-              <a-input v-model:value="form.email" disabled />
+              <a-input v-model:value="form.email" type="email" placeholder="Nhập email" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
             <a-form-item label="Số điện thoại">
-              <a-input v-model:value="form.phone" disabled />
+              <a-input v-model:value="form.phone" placeholder="Nhập số điện thoại" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">

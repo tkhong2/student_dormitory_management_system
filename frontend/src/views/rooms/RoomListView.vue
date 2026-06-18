@@ -75,7 +75,7 @@
             @change="handleSearch"
           >
             <a-select-option value="">Tất cả loại</a-select-option>
-            <a-select-option v-for="rt in roomTypes" :key="rt.id" :value="rt.id">
+            <a-select-option v-for="rt in uniqueRoomTypes" :key="rt.name" :value="rt.name">
               {{ rt.name }}
             </a-select-option>
           </a-select>
@@ -286,6 +286,17 @@ const filteredRoomTypes = computed(() => {
   return roomTypes.value.filter(rt => rt.buildingId === form.value.buildingId)
 })
 
+// Lấy danh sách loại phòng unique theo tên (không trùng lặp)
+const uniqueRoomTypes = computed(() => {
+  const uniqueMap = new Map()
+  roomTypes.value.forEach(rt => {
+    if (!uniqueMap.has(rt.name)) {
+      uniqueMap.set(rt.name, rt)
+    }
+  })
+  return Array.from(uniqueMap.values())
+})
+
 // Tính số phòng còn có thể thêm cho tòa nhà được chọn
 const remainingRoomSlots = computed(() => {
   if (!form.value.buildingId) return null
@@ -318,9 +329,12 @@ const filteredRooms = computed(() => {
     result = result.filter(r => r.status === statusFilter.value)
   }
 
-  // Filter by room type
+  // Filter by room type (lọc theo tên loại phòng thay vì ID)
   if (roomTypeFilter.value) {
-    result = result.filter(r => r.roomTypeId === roomTypeFilter.value)
+    const matchingRoomTypeIds = roomTypes.value
+      .filter(rt => rt.name === roomTypeFilter.value)
+      .map(rt => rt.id)
+    result = result.filter(r => matchingRoomTypeIds.includes(r.roomTypeId))
   }
 
   return result

@@ -14,4 +14,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    exclude: ['core-js'],
+  },
+  server: {
+    watch: {
+      usePolling: false,
+      ignored: ['**/node_modules/**', '**/.git/**']
+    },
+    fs: {
+      strict: false
+    }
+  }
 })

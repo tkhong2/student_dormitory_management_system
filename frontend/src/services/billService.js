@@ -41,5 +41,9 @@ export default {
   // Get next invoice code
   getNextInvoiceCode(invoiceType, month, year) {
     return billingMaintenanceApi.get(`/invoices/next-code?invoiceType=${invoiceType}&month=${month}&year=${year}`);
+  },
+  // Auto-generate monthly invoices
+  autoGenerateMonthly(month, year) {
+    return billingMaintenanceApi.post(`/invoices/auto-generate-monthly?month=${month}&year=${year}`);
   }
 };

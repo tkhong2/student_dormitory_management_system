@@ -688,6 +688,20 @@ async function saveUser() {
         await authStore.refreshUserData()
       }
     } else {
+      // Create new user
+      console.log('Creating new user with data:', {
+        username: form.value.username,
+        hasPassword: !!form.value.password,
+        passwordLength: form.value.password?.length,
+        ...userData
+      })
+      
+      if (!form.value.password) {
+        message.error('Vui lòng nhập mật khẩu')
+        saving.value = false
+        return
+      }
+      
       await axios.post('http://localhost:5002/api/users', {
         username: form.value.username,
         password: form.value.password,

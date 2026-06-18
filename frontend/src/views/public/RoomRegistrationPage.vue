@@ -228,7 +228,11 @@
 
                 <div class="room-footer">
                   <div class="room-price">{{ formatPrice(room.price) }}</div>
-                  <button class="details-btn" @click="viewRoomDetails(room)">
+                  <button 
+                    class="details-btn" 
+                    @click.stop="viewRoomDetails(room)"
+                    style="cursor: pointer; pointer-events: auto;"
+                  >
                     Xem chi tiết
                   </button>
                 </div>
@@ -264,71 +268,227 @@
       </v-container>
     </section>
 
-    <!-- Room Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="900">
-      <v-card v-if="selectedRoom" class="details-dialog">
+    <!-- Room Details Dialog - Using Ant Design Modal -->
+    <a-modal 
+      v-model:open="detailsDialog" 
+      :width="1000"
+      :footer="null"
+      :destroy-on-close="true"
+    >
+      <div v-if="selectedRoom" class="details-dialog">
         <div class="dialog-header">
           <div>
-            <h2 class="dialog-title">{{ selectedRoom.name }}</h2>
-            <p class="dialog-subtitle">{{ selectedRoom.building }} · {{ selectedRoom.roomTypeName }}</p>
+            <h2 class="dialog-title">Phòng {{ selectedRoom.name }}</h2>
+            <p class="dialog-subtitle">
+              <i class="fas fa-building mr-1"></i>
+              {{ selectedRoom.building }} · {{ selectedRoom.roomTypeName }}
+            </p>
           </div>
-          <button class="close-btn" @click="detailsDialog = false">
-            <i class="fas fa-times"></i>
-          </button>
         </div>
 
-        <v-card-text class="pa-6">
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-img :src="selectedRoom.image" class="rounded-lg" />
-            </v-col>
-            <v-col cols="12" md="6">
-              <h3 class="mb-4">Thông tin phòng</h3>
-              <div class="info-list">
-                <div class="info-item">
-                  <span>Sức chứa:</span>
-                  <strong>{{ selectedRoom.capacity }} người</strong>
-                </div>
-                <div class="info-item">
-                  <span>Diện tích:</span>
-                  <strong>{{ selectedRoom.area }} m²</strong>
-                </div>
-                <div class="info-item">
-                  <span>Giá thuê:</span>
-                  <strong class="price-highlight">{{ formatPrice(selectedRoom.price) }}</strong>
-                </div>
-                <div class="info-item">
-                  <span>Còn trống:</span>
-                  <span :class="['badge', selectedRoom.available > 0 ? 'success' : 'error']">
-                    {{ selectedRoom.available }} chỗ
-                  </span>
-                </div>
-              </div>
+        <!-- Image Section -->
+        <div class="detail-image-wrapper">
+          <v-img :src="selectedRoom.image" height="300" cover />
+          <div class="detail-overlay">
+            <div class="overlay-badge">
+              <i class="fas fa-door-open mr-2"></i>
+              {{ selectedRoom.available }} chỗ trống
+            </div>
+            <div class="overlay-price">
+              {{ formatPrice(selectedRoom.price) }}<span class="price-unit">/tháng</span>
+            </div>
+          </div>
+        </div>
 
-              <v-divider class="my-5" />
+        <!-- Content Section -->
+        <div class="pa-6">
+          <!-- Quick Info Cards -->
+          <v-row class="mb-5">
+            <v-col cols="6" sm="3">
+              <div class="info-card">
+                  <div class="info-card-icon">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <div class="info-card-value">{{ selectedRoom.capacity }}</div>
+                  <div class="info-card-label">Người/phòng</div>
+                </div>
+              </v-col>
+              <v-col cols="6" sm="3">
+                <div class="info-card">
+                  <div class="info-card-icon orange">
+                    <i class="fas fa-ruler-combined"></i>
+                  </div>
+                  <div class="info-card-value">{{ selectedRoom.area }}</div>
+                  <div class="info-card-label">m² diện tích</div>
+                </div>
+              </v-col>
+              <v-col cols="6" sm="3">
+                <div class="info-card">
+                  <div class="info-card-icon green">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="info-card-value">{{ selectedRoom.amenities.length }}</div>
+                  <div class="info-card-label">Tiện nghi</div>
+                </div>
+              </v-col>
+              <v-col cols="6" sm="3">
+                <div class="info-card">
+                  <div class="info-card-icon purple">
+                    <i class="fas fa-bed"></i>
+                  </div>
+                  <div class="info-card-value">{{ selectedRoom.available }}</div>
+                  <div class="info-card-label">Chỗ trống</div>
+                </div>
+              </v-col>
+            </v-row>
 
-              <h3 class="mb-3">Tiện nghi</h3>
-              <div class="amenities-list">
-                <span v-for="amenity in selectedRoom.amenities" :key="amenity" class="amenity-chip">
-                  {{ amenity }}
-                </span>
-              </div>
+            <v-row>
+              <!-- Left Column -->
+              <v-col cols="12" md="7">
+                <!-- Room Type Info -->
+                <div class="detail-section mb-5">
+                  <h3 class="section-title">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Thông tin loại phòng
+                  </h3>
+                  <div class="info-table">
+                    <div class="info-row">
+                      <span class="info-label">Loại phòng:</span>
+                      <strong>{{ selectedRoom.roomTypeName }}</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Số phòng:</span>
+                      <strong>{{ selectedRoom.name }}</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Tòa nhà:</span>
+                      <strong>{{ selectedRoom.building }}</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Giới tính:</span>
+                      <strong>
+                        <i :class="['fas', selectedRoom.buildingGender === 'Male' ? 'fa-mars' : selectedRoom.buildingGender === 'Female' ? 'fa-venus' : 'fa-venus-mars', 'mr-1']"></i>
+                        {{ selectedRoom.buildingGender === 'Male' ? 'Nam' : selectedRoom.buildingGender === 'Female' ? 'Nữ' : 'Cả hai' }}
+                      </strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Sức chứa:</span>
+                      <strong>{{ selectedRoom.capacity }} người</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Diện tích:</span>
+                      <strong>{{ selectedRoom.area }} m²</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Hiện tại:</span>
+                      <strong>{{ selectedRoom.capacity - selectedRoom.available }}/{{ selectedRoom.capacity }} người</strong>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Trạng thái:</span>
+                      <span :class="['status-badge', selectedRoom.available > 0 ? 'success' : 'full']">
+                        {{ selectedRoom.available > 0 ? 'Còn chỗ' : 'Hết chỗ' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              <v-btn
-                block
-                size="large"
-                class="register-btn mt-6"
-                :disabled="selectedRoom.available === 0"
-                @click="registerRoom"
-              >
-                <i class="fas fa-pen-to-square mr-2"></i>
-                Đăng ký phòng này
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+                <!-- Amenities -->
+                <div class="detail-section">
+                  <h3 class="section-title">
+                    <i class="fas fa-star mr-2"></i>
+                    Tiện nghi phòng
+                  </h3>
+                  <div class="amenities-grid">
+                    <div v-for="amenity in selectedRoom.amenities" :key="amenity" class="amenity-item">
+                      <i class="fas fa-check-circle amenity-icon"></i>
+                      <span>{{ amenity }}</span>
+                    </div>
+                    <div v-if="selectedRoom.amenities.length === 0" class="text-muted">
+                      Tiện nghi cơ bản
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+
+              <!-- Right Column -->
+              <v-col cols="12" md="5">
+                <!-- Price Card -->
+                <div class="price-card mb-5">
+                  <div class="price-card-header">
+                    <i class="fas fa-tag"></i>
+                    Giá thuê
+                  </div>
+                  <div class="price-card-body">
+                    <div class="price-main">{{ formatPrice(selectedRoom.price) }}</div>
+                    <div class="price-period">mỗi tháng</div>
+                    <v-divider class="my-3" />
+                    <div class="price-includes">
+                      <div class="include-item">
+                        <i class="fas fa-check mr-2"></i>
+                        Tiền phòng cố định
+                      </div>
+                      <div class="include-item">
+                        <i class="fas fa-plus mr-2"></i>
+                        Tiền điện (theo số)
+                      </div>
+                      <div class="include-item">
+                        <i class="fas fa-plus mr-2"></i>
+                        Tiền nước (theo số)
+                      </div>
+                      <div class="include-item">
+                        <i class="fas fa-plus mr-2"></i>
+                        Phí dịch vụ
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Highlights -->
+                <div class="highlights-card">
+                  <div class="highlight-item">
+                    <i class="fas fa-shield-alt highlight-icon"></i>
+                    <div>
+                      <div class="highlight-title">An toàn</div>
+                      <div class="highlight-text">Bảo vệ 24/7, camera giám sát</div>
+                    </div>
+                  </div>
+                  <div class="highlight-item">
+                    <i class="fas fa-wifi highlight-icon"></i>
+                    <div>
+                      <div class="highlight-title">Internet</div>
+                      <div class="highlight-text">Wifi tốc độ cao miễn phí</div>
+                    </div>
+                  </div>
+                  <div class="highlight-item">
+                    <i class="fas fa-broom highlight-icon"></i>
+                    <div>
+                      <div class="highlight-title">Vệ sinh</div>
+                      <div class="highlight-text">Dịch vụ dọn dẹp định kỳ</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Register Button -->
+                <v-btn
+                  block
+                  size="x-large"
+                  class="register-btn mt-5"
+                  :disabled="selectedRoom.available === 0"
+                  @click="registerRoom"
+                >
+                  <i class="fas fa-pen-to-square mr-2"></i>
+                  {{ selectedRoom.available > 0 ? 'Đăng ký phòng này' : 'Hết chỗ trống' }}
+                </v-btn>
+
+                <div v-if="selectedRoom.available > 0" class="register-note mt-3">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Còn {{ selectedRoom.available }} chỗ trống
+                </div>
+              </v-col>
+            </v-row>
+          </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -529,8 +689,8 @@ function formatPrice(price) {
 }
 
 function viewRoomDetails(room) {
-  selectedRoom.value = room
-  detailsDialog.value = true
+  console.log('Navigating to room details for:', room)
+  router.push(`/rooms/${room.id}`)
 }
 
 function registerRoom() {
@@ -895,29 +1055,323 @@ function registerRoom() {
 }
 
 .dialog-title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .dialog-subtitle {
   font-size: 14px;
-  opacity: 0.8;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .close-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.detail-image-wrapper {
+  position: relative;
+}
+
+.detail-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.overlay-badge {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.overlay-price {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.price-unit {
+  font-size: 16px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+/* Info Cards */
+.info-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: 2px solid #e9ecef;
+  transition: all 0.2s;
+}
+
+.info-card:hover {
+  border-color: #ff9800;
+  transform: translateY(-2px);
+}
+
+.info-card-icon {
+  width: 48px;
+  height: 48px;
+  background: #2c3e50;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 20px;
+}
+
+.info-card-icon.orange {
+  background: #ff9800;
+}
+
+.info-card-icon.green {
+  background: #4caf50;
+}
+
+.info-card-icon.purple {
+  background: #9c27b0;
+}
+
+.info-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.info-card-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Detail Sections */
+.detail-section {
+  background: white;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.section-title i {
+  color: #ff9800;
+}
+
+.info-table {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-badge.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.full {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Amenities Grid */
+.amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.amenity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #e9ecef;
+}
+
+.amenity-icon {
+  color: #4caf50;
+  font-size: 16px;
+}
+
+/* Price Card */
+.price-card {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.price-card-header {
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-card-body {
+  padding: 24px 20px;
+}
+
+.price-main {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.price-period {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+.price-includes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.include-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+/* Highlights Card */
+.highlights-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.highlight-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.highlight-item:last-child {
+  border-bottom: none;
+}
+
+.highlight-icon {
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff9800;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.highlight-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.highlight-text {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Register Button & Note */
+.register-btn {
+  background: #ff9800 !important;
+  color: white !important;
+  text-transform: none;
+  font-weight: 600;
+  font-size: 16px !important;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3) !important;
+}
+
+.register-btn:disabled {
+  background: #ccc !important;
+  box-shadow: none !important;
+}
+
+.register-note {
+  text-align: center;
+  font-size: 13px;
+  color: #4caf50;
+  font-weight: 500;
 }
 
 .info-list {
@@ -952,10 +1406,9 @@ function registerRoom() {
   border: 1px solid #e0e0e0;
 }
 
-.register-btn {
-  background: #ff9800 !important;
-  color: white !important;
-  text-transform: none;
-  font-weight: 600;
+.text-muted {
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
 }
 </style>

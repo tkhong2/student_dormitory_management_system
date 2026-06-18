@@ -1,7 +1,9 @@
 using BillingMaintenanceService.Application.DTOs;
 using BillingMaintenanceService.Application.Interfaces;
 using BillingMaintenanceService.Domain.Entities;
+using BillingMaintenanceService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 using OfficeOpenXml;
 using System.Text;
@@ -13,10 +15,12 @@ namespace BillingMaintenanceService.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly AppDbContext _context;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserRepository userRepository, AppDbContext context)
         {
             _userRepository = userRepository;
+            _context = context;
             // Set EPPlus license context
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         }
@@ -27,6 +31,34 @@ namespace BillingMaintenanceService.API.Controllers
             var users = await _userRepository.GetAllAsync();
             var dtos = users.Select(MapToDto);
             return Ok(dtos);
+        }
+
+        // DEBUG: Get all users including deleted ones
+        [HttpGet("debug/all-users-including-deleted")]
+        public async Task<ActionResult> GetAllIncludingDeleted()
+        {
+            var allUsers = await _context.Users.IgnoreQueryFilters().ToListAsync();
+            
+            var result = allUsers.Select(u => new
+            {
+                u.Id,
+                u.Username,
+                u.FullName,
+                u.Email,
+                u.Role,
+                u.IsActive,
+                u.IsDeleted,
+                u.CreatedAt,
+                PasswordHashLength = u.PasswordHash != null ? u.PasswordHash.Length : 0
+            }).OrderByDescending(u => u.CreatedAt).ToList();
+            
+            return Ok(new
+            {
+                TotalUsers = allUsers.Count,
+                DeletedUsers = allUsers.Count(u => u.IsDeleted),
+                ActiveUsers = allUsers.Count(u => !u.IsDeleted && u.IsActive),
+                Users = result
+            });
         }
 
         [HttpGet("{id}")]
@@ -56,6 +88,9 @@ namespace BillingMaintenanceService.API.Controllers
         [HttpPost]
         public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserDto dto)
         {
+            // Log incoming data for debugging
+            Console.WriteLine($"Creating user: Username={dto.Username}, HasPassword={!string.IsNullOrEmpty(dto.Password)}, PasswordLength={dto.Password?.Length}");
+            
             // Check if username exists
             var existingUser = await _userRepository.GetByUsernameAsync(dto.Username);
             if (existingUser != null)
@@ -70,10 +105,24 @@ namespace BillingMaintenanceService.API.Controllers
                 return BadRequest("Email already exists");
             }
 
+            // Validate password
+            if (string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest("Password is required");
+            }
+
+            if (dto.Password.Length < 6)
+            {
+                return BadRequest("Password must be at least 6 characters");
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            Console.WriteLine($"Password hashed successfully. Hash length: {passwordHash.Length}");
+
             var user = new User
             {
                 Username = dto.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                PasswordHash = passwordHash,
                 FullName = dto.FullName,
                 Email = dto.Email,
                 Phone = dto.Phone,
@@ -85,10 +134,14 @@ namespace BillingMaintenanceService.API.Controllers
                 Gender = dto.Gender,
                 DateOfBirth = dto.DateOfBirth,
                 Address = dto.Address,
-                IsActive = true
+                IsActive = true,
+                IsDeleted = false,  // IMPORTANT: Set IsDeleted = false explicitly
+                CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(user);
+            Console.WriteLine($"User created successfully. UserId={user.Id}");
+            
             return CreatedAtAction(nameof(GetById), new { id = user.Id }, MapToDto(user));
         }
 
