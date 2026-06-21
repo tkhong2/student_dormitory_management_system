@@ -9,6 +9,7 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Hongtran021005@
       - MSSQL_PID=Express
+      - MSSQL_MEMORY_LIMIT_MB=512
     ports:
       - "1433:1433"
     volumes:
@@ -16,6 +17,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 600m
+    mem_reservation: 400m
 
   # Backend Services
   billing-maintenance-service:
@@ -35,6 +38,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 200m
+    mem_reservation: 150m
 
   contract-student-service:
     build:
@@ -56,6 +61,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 200m
+    mem_reservation: 150m
 
   room-building-service:
     build:
@@ -75,6 +82,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 200m
+    mem_reservation: 150m
 
   api-gateway:
     build:
@@ -93,6 +102,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 100m
+    mem_reservation: 50m
 
   # Frontend
   frontend:
@@ -107,6 +118,8 @@ services:
     networks:
       - ktx-network
     restart: unless-stopped
+    mem_limit: 50m
+    mem_reservation: 30m
 
 networks:
   ktx-network:
