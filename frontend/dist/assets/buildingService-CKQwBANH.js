@@ -1,1 +1,0 @@
-import{a as t}from"./api-DveqSkcF.js";const u={getAll(){return t.get("/buildings")},getById(e){return t.get(`/buildings/${e}`)},create(e){return t.post("/buildings",e)},update(e,i){return t.put(`/buildings/${e}`,i)},delete(e){return t.delete(`/buildings/${e}`)}};export{u as b};

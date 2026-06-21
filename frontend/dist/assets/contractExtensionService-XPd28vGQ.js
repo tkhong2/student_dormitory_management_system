@@ -1,1 +1,0 @@
-import{c as e}from"./api-DveqSkcF.js";const r={getAll(){return e.get("/contractextensions")},getById(t){return e.get(`/contractextensions/${t}`)},getByContractId(t){return e.get(`/contractextensions/contract/${t}`)},create(t){return e.post("/contractextensions",t)},delete(t){return e.delete(`/contractextensions/${t}`)}};export{r as c};
