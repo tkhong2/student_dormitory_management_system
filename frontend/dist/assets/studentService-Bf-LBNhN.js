@@ -1,0 +1,1 @@
+import{a as e}from"./api-DveqSkcF.js";const u={getAll(){return e.get("/students")},getById(t){return e.get(`/students/${t}`)},getByUserId(t){return e.get(`/students/by-user/${t}`)},create(t){return e.post("/students",t)},update(t,s){return e.put(`/students/${t}`,s)},delete(t){return e.delete(`/students/${t}`)}};export{u as s};
