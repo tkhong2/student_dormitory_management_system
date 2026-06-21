@@ -9,6 +9,9 @@ RUN npm install
 
 COPY . .
 
+# Set NODE_OPTIONS to limit memory usage
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 RUN npm run build
 
 # Run bằng nginx
