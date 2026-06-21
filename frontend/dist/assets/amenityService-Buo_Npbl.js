@@ -1,0 +1,1 @@
+import{a as t}from"./api-RY2-2DBj.js";const a={getAll(){return t.get("/amenities")},getActives(){return t.get("/amenities/active")},getById(e){return t.get(`/amenities/${e}`)},create(e){return t.post("/amenities",e)},update(e,i){return t.put(`/amenities/${e}`,i)},delete(e){return t.delete(`/amenities/${e}`)}};export{a};

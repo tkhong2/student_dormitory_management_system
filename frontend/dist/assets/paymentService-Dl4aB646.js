@@ -1,0 +1,1 @@
+import{a as t}from"./api-RY2-2DBj.js";const p={getAll(){return t.get("/payments")},getById(e){return t.get(`/payments/${e}`)},getByInvoiceId(e){return t.get(`/payments/invoice/${e}`)},create(e){return t.post("/payments",e)},update(e,r){return t.put(`/payments/${e}`,r)},delete(e){return t.delete(`/payments/${e}`)}};export{p};

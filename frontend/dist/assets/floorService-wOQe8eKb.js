@@ -1,0 +1,1 @@
+import{a as r}from"./api-RY2-2DBj.js";const l={getAll(){return r.get("/floors")},getByBuildingId(e){return r.get(`/floors/building/${e}`)},create(e){return r.post("/floors",e)},update(e,t){return r.put(`/floors/${e}`,t)},delete(e){return r.delete(`/floors/${e}`)}};export{l as f};
