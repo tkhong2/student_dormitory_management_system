@@ -289,6 +289,102 @@
       "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
     },
     {
+      "DownstreamPathTemplate": "/api/facilityreviews",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/facilityreviews",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/facilityreviews/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/facilityreviews/{everything}",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/sharedutilities",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/sharedutilities",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/sharedutilities/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/sharedutilities/{everything}",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/utilityevents",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/utilityevents",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/utilityevents/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/utilityevents/{everything}",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/utilityusagelogs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/utilityusagelogs",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
+      "DownstreamPathTemplate": "/api/utilityusagelogs/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "room-building-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/utilityusagelogs/{everything}",
+      "UpstreamHttpMethod": ["Get", "Post", "Put", "Delete"]
+    },
+    {
       "DownstreamPathTemplate": "/api/students",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
