@@ -18,7 +18,8 @@ services:
       - ktx-network
     restart: unless-stopped
     mem_limit: 600m
-    mem_reservation: 400m
+    mem_reservation: 450m
+    memswap_limit: 1000m
 
   # Backend Services
   billing-maintenance-service:
