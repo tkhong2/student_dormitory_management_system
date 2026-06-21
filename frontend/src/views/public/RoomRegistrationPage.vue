@@ -539,10 +539,11 @@ onMounted(async () => {
 async function loadData() {
   loading.value = true
   try {
+    const apiUrl = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:5000'
     const [buildingsData, roomTypesData, roomsData] = await Promise.all([
-      axios.get('http://localhost:5003/api/buildings').then(r => r.data),
-      axios.get('http://localhost:5003/api/roomtypes').then(r => r.data),
-      axios.get('http://localhost:5003/api/rooms').then(r => r.data)
+      axios.get(`${apiUrl}/api/buildings`).then(r => r.data),
+      axios.get(`${apiUrl}/api/roomtypes`).then(r => r.data),
+      axios.get(`${apiUrl}/api/rooms`).then(r => r.data)
     ])
 
     console.log('Buildings data:', buildingsData)
@@ -580,7 +581,7 @@ async function loadData() {
     const roomTypeAmenitiesMap = {}
     for (const roomType of roomTypesData) {
       try {
-        const amenitiesResponse = await axios.get(`http://localhost:5003/api/roomtypes/${roomType.id}/amenities`)
+        const amenitiesResponse = await axios.get(`${apiUrl}/api/roomtypes/${roomType.id}/amenities`)
         roomTypeAmenitiesMap[roomType.id] = amenitiesResponse.data || []
       } catch {
         roomTypeAmenitiesMap[roomType.id] = []
