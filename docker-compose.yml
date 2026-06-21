@@ -1,71 +1,118 @@
 version: '3.8'
 
 services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ktx-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Hongtran021005@
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - ktx-network
+    restart: unless-stopped
+
   # Backend Services
   billing-maintenance-service:
     build:
       context: ./backend/services/BillingMaintenanceService
       dockerfile: Dockerfile
+    container_name: ktx-billing-service
     ports:
       - "5002:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=BillingMaintenanceDb;User Id=sa;Password=Hongtran021005@;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - Services__RoomBuildingService=http://room-building-service:8080
+    depends_on:
+      - sqlserver
     networks:
-      - app-network
+      - ktx-network
+    restart: unless-stopped
 
   contract-student-service:
     build:
       context: ./backend/services/ContractStudentService
       dockerfile: Dockerfile
+    container_name: ktx-contract-service
     ports:
       - "5001:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContractStudentDb;User Id=sa;Password=Hongtran021005@;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - Services__BillingService=http://billing-maintenance-service:8080
+      - Services__RoomBuildingService=http://room-building-service:8080
+    depends_on:
+      - sqlserver
+    volumes:
+      - contract-uploads:/app/wwwroot/uploads
     networks:
-      - app-network
+      - ktx-network
+    restart: unless-stopped
 
   room-building-service:
     build:
       context: ./backend/services/RoomBuildingService
       dockerfile: Dockerfile
+    container_name: ktx-room-service
     ports:
       - "5003:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=RoomBuildingDb;User Id=sa;Password=Hongtran021005@;TrustServerCertificate=True;MultipleActiveResultSets=true
+    depends_on:
+      - sqlserver
+    volumes:
+      - room-uploads:/app/wwwroot/uploads
     networks:
-      - app-network
+      - ktx-network
+    restart: unless-stopped
 
   api-gateway:
     build:
       context: ./backend/APIGateway
       dockerfile: Dockerfile
+    container_name: ktx-gateway
     ports:
       - "5000:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
     depends_on:
       - billing-maintenance-service
       - contract-student-service
       - room-building-service
     networks:
-      - app-network
+      - ktx-network
+    restart: unless-stopped
 
   # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: ktx-frontend
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - api-gateway
     networks:
-      - app-network
+      - ktx-network
+    restart: unless-stopped
 
 networks:
-  app-network:
+  ktx-network:
     driver: bridge
+
+volumes:
+  sqlserver-data:
+  contract-uploads:
+  room-uploads:

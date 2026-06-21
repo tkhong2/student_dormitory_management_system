@@ -2,16 +2,31 @@
 
 Hệ thống quản lý ký túc xá với kiến trúc Microservices + API Gateway + Vue 3 Frontend.
 
+**🌐 Live Demo**: http://ktxdnu.duckdns.org
+
 ---
 
 ## 📋 Mục lục
 
+- [🚀 Deploy với Docker](#-deploy-với-docker)
 - [Khởi tạo dự án từ đầu](#-khởi-tạo-dự-án-từ-đầu)
 - [Quick Start - Chạy dự án có sẵn](#-quick-start---khởi-động-siêu-nhanh)
 - [Cấu trúc Project](#-cấu-trúc-project)
 - [Kiến trúc Microservices](#-kiến-trúc-microservices)
 - [Tính năng chính](#-tính-năng-chính)
 - [Tech Stack](#-tech-stack)
+
+---
+
+## 🚀 Deploy với Docker
+
+**Cách deploy nhanh nhất (1 lệnh):**
+
+```bash
+docker-compose up -d
+```
+
+➡️ Xem chi tiết: [DEPLOY.md](./DEPLOY.md)
 
 ---
 
