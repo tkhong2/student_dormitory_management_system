@@ -8,9 +8,11 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Add Ocelot configuration - always use ocelot.json
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-Console.WriteLine($"🔧 Loading Ocelot config: ocelot.json");
+// Add Ocelot configuration - use different config based on environment
+var environment = builder.Environment.EnvironmentName;
+var ocelotConfigFile = environment == "Production" ? "ocelot.Docker.json" : "ocelot.json";
+builder.Configuration.AddJsonFile(ocelotConfigFile, optional: false, reloadOnChange: true);
+Console.WriteLine($"🔧 Loading Ocelot config: {ocelotConfigFile}");
 
 // Add CORS
 builder.Services.AddCors(options =>
