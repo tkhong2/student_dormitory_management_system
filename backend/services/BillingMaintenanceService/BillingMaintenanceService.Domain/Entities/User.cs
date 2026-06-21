@@ -18,6 +18,12 @@ public class User : BaseEntity
     public string? Gender { get; set; }                         // Male / Female / Other
     public DateOnly? DateOfBirth { get; set; }
     public string? Address { get; set; }                        // Địa chỉ thường trú
+    
+    // Social Media Links
+    public string? FacebookUrl { get; set; }                    // Link Facebook cá nhân
+    public string? ZaloPhone { get; set; }                      // Số điện thoại Zalo
+    public string? InstagramUrl { get; set; }                   // Link Instagram
+    public string? LinkedInUrl { get; set; }                    // Link LinkedIn
 
     // Ref ID sang ContractService (nếu Role = Student)
     public int? StudentId { get; set; }                         // ref → ContractDB.Students

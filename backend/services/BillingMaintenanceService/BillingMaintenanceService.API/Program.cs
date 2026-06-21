@@ -26,7 +26,11 @@ if (!string.IsNullOrEmpty(connectionString))
                warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 }
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

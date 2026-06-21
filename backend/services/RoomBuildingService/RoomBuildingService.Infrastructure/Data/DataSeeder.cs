@@ -378,6 +378,73 @@ public static class DataSeeder
             Console.WriteLine($"ℹ️  Rooms already exist ({existingRoomNumbers.Count} rooms), skipping room seeding");
         }
 
+        // 7. Seed SharedUtilities (only add if not exists)
+        var existingUtilityIds = context.SharedUtilities.Select(u => u.UtilityId).ToList();
+        var utilities = new List<SharedUtility>();
+
+        var utilitiesToAdd = new[]
+        {
+            // Tòa A - Nam
+            new { BuildingName = "Tòa A", Name = "Máy giặt tầng 1", Category = "WashingMachine", Brand = "Samsung", UtilityId = "WM-A-01", Location = "Tầng 1, phòng giặt", Fee = 15000m },
+            new { BuildingName = "Tòa A", Name = "Máy sấy tầng 1", Category = "Dryer", Brand = "LG", UtilityId = "DRY-A-01", Location = "Tầng 1, phòng giặt", Fee = 20000m },
+            new { BuildingName = "Tòa A", Name = "Phòng Gym tầng 2", Category = "Gym", Brand = "Gym Equipment", UtilityId = "GYM-A-01", Location = "Tầng 2", Fee = 0m },
+            new { BuildingName = "Tòa A", Name = "Máy giặt tầng 5", Category = "WashingMachine", Brand = "Samsung", UtilityId = "WM-A-02", Location = "Tầng 5, phòng giặt", Fee = 15000m },
+            
+            // Tòa B - Nữ
+            new { BuildingName = "Tòa B", Name = "Máy giặt tầng 1", Category = "WashingMachine", Brand = "Electrolux", UtilityId = "WM-B-01", Location = "Tầng 1, phòng giặt", Fee = 15000m },
+            new { BuildingName = "Tòa B", Name = "Máy sấy tầng 1", Category = "Dryer", Brand = "Samsung", UtilityId = "DRY-B-01", Location = "Tầng 1, phòng giặt", Fee = 20000m },
+            new { BuildingName = "Tòa B", Name = "Phòng học tầng 3", Category = "StudyRoom", Brand = "", UtilityId = "STUDY-B-01", Location = "Tầng 3", Fee = 0m },
+            new { BuildingName = "Tòa B", Name = "Bếp chung tầng 4", Category = "Kitchen", Brand = "", UtilityId = "KITCHEN-B-01", Location = "Tầng 4", Fee = 0m },
+            
+            // Tòa C - Mixed
+            new { BuildingName = "Tòa C", Name = "Máy giặt tầng 1", Category = "WashingMachine", Brand = "LG", UtilityId = "WM-C-01", Location = "Tầng 1, phòng giặt", Fee = 15000m },
+            new { BuildingName = "Tòa C", Name = "Máy giặt tầng 1 (2)", Category = "WashingMachine", Brand = "Samsung", UtilityId = "WM-C-02", Location = "Tầng 1, phòng giặt", Fee = 15000m },
+            new { BuildingName = "Tòa C", Name = "Máy sấy tầng 1", Category = "Dryer", Brand = "Electrolux", UtilityId = "DRY-C-01", Location = "Tầng 1, phòng giặt", Fee = 20000m },
+            new { BuildingName = "Tòa C", Name = "Phòng Gym VIP", Category = "Gym", Brand = "", UtilityId = "GYM-C-01", Location = "Tầng 5", Fee = 0m },
+            new { BuildingName = "Tòa C", Name = "Phòng giải trí", Category = "RecreationRoom", Brand = "", UtilityId = "REC-C-01", Location = "Tầng 6", Fee = 0m }
+        };
+
+        foreach (var u in utilitiesToAdd)
+        {
+            if (!existingUtilityIds.Contains(u.UtilityId))
+            {
+                var building = buildings.FirstOrDefault(b => b.Name == u.BuildingName);
+                if (building != null)
+                {
+                    var utility = new SharedUtility
+                    {
+                        BuildingId = building.Id,
+                        Name = u.Name,
+                        Category = u.Category,
+                        Brand = string.IsNullOrEmpty(u.Brand) ? null : u.Brand,
+                        UtilityId = u.UtilityId,
+                        Status = "Available",
+                        Location = u.Location,
+                        FeePerUse = u.Fee > 0 ? u.Fee : null,
+                        OperatingHours = "6:00 - 22:00",
+                        ManagerName = building.ManagerName,
+                        ManagerPhone = building.ManagerPhone,
+                        Description = $"{u.Name} - {(u.Fee > 0 ? $"Phí sử dụng: {u.Fee:N0}đ/lần" : "Miễn phí")}",
+                        PurchaseDate = DateTime.UtcNow.AddYears(-2),
+                        InstallationDate = DateTime.UtcNow.AddYears(-2).AddDays(7),
+                        TotalUsageCount = 0
+                    };
+                    utilities.Add(utility);
+                    await context.SharedUtilities.AddAsync(utility);
+                }
+            }
+        }
+
+        if (utilities.Any())
+        {
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✅ Added {utilities.Count} new shared utilities");
+        }
+        else
+        {
+            Console.WriteLine($"ℹ️  Shared utilities already exist");
+        }
+
         Console.WriteLine("=== RoomBuildingDb Data Seeding Complete ===");
     }
 }

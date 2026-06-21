@@ -19,7 +19,7 @@ export const studentService = {
    * Get by user ID
    */
   getByUserId(userId) {
-    return api.get(`/students/user/${userId}`);
+    return api.get(`/students/by-user/${userId}`);
   },
 
   /**

@@ -110,4 +110,90 @@ namespace RoomBuildingService.Application.Interfaces
         Task UpdateAsync(RoomTypeAmenity roomTypeAmenity);
         Task DeleteAsync(RoomTypeAmenity roomTypeAmenity);
     }
+
+    public interface IRoomAmenityInspectionRepository
+    {
+        Task<RoomAmenityInspection?> GetByIdAsync(int id);
+        Task<IEnumerable<RoomAmenityInspection>> GetAllAsync();
+        Task<IEnumerable<RoomAmenityInspection>> GetByRoomInspectionIdAsync(int roomInspectionId);
+        Task<IEnumerable<RoomAmenityInspection>> GetByRoomIdAsync(int roomId);
+        Task<IEnumerable<RoomAmenityInspection>> GetNeedMaintenanceAsync();
+        Task AddAsync(RoomAmenityInspection inspection);
+        Task UpdateAsync(RoomAmenityInspection inspection);
+        Task DeleteAsync(RoomAmenityInspection inspection);
+    }
+
+    public interface IPublicFacilityRepository
+    {
+        Task<PublicFacility?> GetByIdAsync(int id);
+        Task<IEnumerable<PublicFacility>> GetAllAsync();
+        Task<IEnumerable<PublicFacility>> GetVisibleOnHomepageAsync();
+        Task<IEnumerable<PublicFacility>> GetByBuildingIdAsync(int? buildingId);
+        Task<IEnumerable<PublicFacility>> GetByCategoryAsync(string category);
+        Task AddAsync(PublicFacility facility);
+        Task UpdateAsync(PublicFacility facility);
+        Task DeleteAsync(PublicFacility facility);
+    }
+
+    public interface IFacilityBookingRepository
+    {
+        Task<FacilityBooking?> GetByIdAsync(int id);
+        Task<IEnumerable<FacilityBooking>> GetAllAsync();
+        Task<IEnumerable<FacilityBooking>> GetByFacilityIdAsync(int facilityId);
+        Task<IEnumerable<FacilityBooking>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<FacilityBooking>> GetByDateRangeAsync(DateOnly from, DateOnly to);
+        Task AddAsync(FacilityBooking booking);
+        Task UpdateAsync(FacilityBooking booking);
+        Task DeleteAsync(FacilityBooking booking);
+    }
+
+    public interface IFacilityReviewRepository
+    {
+        Task<FacilityReview?> GetByIdAsync(int id);
+        Task<IEnumerable<FacilityReview>> GetAllAsync();
+        Task<IEnumerable<FacilityReview>> GetByFacilityIdAsync(int facilityId);
+        Task<IEnumerable<FacilityReview>> GetApprovedByFacilityIdAsync(int facilityId);
+        Task AddAsync(FacilityReview review);
+        Task UpdateAsync(FacilityReview review);
+        Task DeleteAsync(FacilityReview review);
+    }
+
+    public interface ISharedUtilityRepository
+    {
+        Task<SharedUtility?> GetByIdAsync(int id);
+        Task<IEnumerable<SharedUtility>> GetAllAsync();
+        Task<IEnumerable<SharedUtility>> GetByBuildingIdAsync(int buildingId);
+        Task<IEnumerable<SharedUtility>> GetByCategoryAsync(string category);
+        Task<IEnumerable<SharedUtility>> GetByStatusAsync(string status);
+        Task<SharedUtility?> GetByUtilityIdAsync(string utilityId);
+        Task AddAsync(SharedUtility utility);
+        Task UpdateAsync(SharedUtility utility);
+        Task DeleteAsync(SharedUtility utility);
+    }
+
+    public interface IUtilityEventRepository
+    {
+        Task<UtilityEvent?> GetByIdAsync(int id);
+        Task<IEnumerable<UtilityEvent>> GetAllAsync();
+        Task<IEnumerable<UtilityEvent>> GetBySharedUtilityIdAsync(int sharedUtilityId);
+        Task<IEnumerable<UtilityEvent>> GetByStatusAsync(string status);
+        Task<IEnumerable<UtilityEvent>> GetByDateRangeAsync(DateTime from, DateTime to);
+        Task<IEnumerable<UtilityEvent>> GetUpcomingMaintenanceAsync();
+        Task AddAsync(UtilityEvent utilityEvent);
+        Task UpdateAsync(UtilityEvent utilityEvent);
+        Task DeleteAsync(UtilityEvent utilityEvent);
+    }
+
+    public interface IUtilityUsageLogRepository
+    {
+        Task<UtilityUsageLog?> GetByIdAsync(int id);
+        Task<IEnumerable<UtilityUsageLog>> GetAllAsync();
+        Task<IEnumerable<UtilityUsageLog>> GetBySharedUtilityIdAsync(int sharedUtilityId);
+        Task<IEnumerable<UtilityUsageLog>> GetByStudentIdAsync(int studentId);
+        Task<IEnumerable<UtilityUsageLog>> GetUnpaidAsync();
+        Task<IEnumerable<UtilityUsageLog>> GetByDateRangeAsync(DateTime from, DateTime to);
+        Task AddAsync(UtilityUsageLog log);
+        Task UpdateAsync(UtilityUsageLog log);
+        Task DeleteAsync(UtilityUsageLog log);
+    }
 }

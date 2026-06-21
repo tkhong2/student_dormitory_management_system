@@ -18,6 +18,8 @@ export default defineConfig({
     exclude: ['core-js'],
   },
   server: {
+    port: 5173,
+    host: true,
     watch: {
       usePolling: false,
       ignored: ['**/node_modules/**', '**/.git/**']

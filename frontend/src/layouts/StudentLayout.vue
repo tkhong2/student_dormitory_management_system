@@ -409,6 +409,7 @@ const menu = computed(() => [
   { title: 'Phòng của tôi', icon: 'mdi-door-closed', to: '/student/my-room' },
   { title: 'Hợp đồng', icon: 'mdi-file-document-outline', to: '/student/my-contract' },
   { title: 'Thanh toán', icon: 'mdi-credit-card-outline', to: '/student/my-payments' },
+  { title: 'Tiện ích chung', icon: 'mdi-washing-machine', to: '/student/my-facilities' },
   { title: 'Yêu cầu sửa chữa', icon: 'mdi-wrench-outline', to: '/student/maintenance' },
   { title: 'Thông báo', icon: 'mdi-bell-outline', to: '/student/notifications' },
   { title: 'Hồ sơ cá nhân', icon: 'mdi-account-outline', to: '/student/profile' },

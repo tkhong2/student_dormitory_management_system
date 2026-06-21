@@ -77,11 +77,13 @@
     >
       <a-form layout="vertical">
         <a-form-item label="Phòng">
-          <a-select v-model:value="form.roomId" show-search>
-            <a-select-option v-for="r in rooms" :key="r.id" :value="r.id">
-              {{ r.roomNumber }} - {{ r.buildingName }}
-            </a-select-option>
-          </a-select>
+          <a-select 
+            v-model:value="form.roomId" 
+            show-search
+            placeholder="Chọn phòng"
+            :options="roomOptions"
+            :filter-option="filterOption"
+          />
         </a-form-item>
         <a-form-item label="Ngày kiểm tra">
           <a-input v-model:value="form.inspectionDate" type="date" />
@@ -114,7 +116,7 @@
     <a-modal
       v-model:open="detailDialog"
       title="Chi tiết biên bản kiểm tra"
-      width="800px"
+      width="600px"
       :footer="null"
     >
       <a-descriptions v-if="selectedInspection" :column="2" bordered size="small">
@@ -136,59 +138,12 @@
           </a-tag>
         </a-descriptions-item>
         
-        <a-descriptions-item label="Điện" :span="1">
-          <a-tag :color="selectedInspection.electricalStatus === 'OK' ? 'green' : 'orange'">
-            {{ selectedInspection.electricalStatus || 'OK' }}
-          </a-tag>
-        </a-descriptions-item>
-        <a-descriptions-item label="Nước" :span="1">
-          <a-tag :color="selectedInspection.plumbingStatus === 'OK' ? 'green' : 'orange'">
-            {{ selectedInspection.plumbingStatus || 'OK' }}
-          </a-tag>
-        </a-descriptions-item>
-        
-        <a-descriptions-item label="Nội thất" :span="1">
-          <a-tag :color="selectedInspection.furnitureStatus === 'OK' ? 'green' : 'orange'">
-            {{ selectedInspection.furnitureStatus || 'OK' }}
-          </a-tag>
-        </a-descriptions-item>
-        <a-descriptions-item label="Tường" :span="1">
-          <a-tag :color="selectedInspection.wallStatus === 'OK' ? 'green' : 'orange'">
-            {{ selectedInspection.wallStatus || 'OK' }}
-          </a-tag>
-        </a-descriptions-item>
-        
-        <a-descriptions-item label="Sàn nhà" :span="1">
-          <a-tag :color="selectedInspection.floorStatus === 'OK' ? 'green' : 'orange'">
-            {{ selectedInspection.floorStatus || 'OK' }}
-          </a-tag>
-        </a-descriptions-item>
-        <a-descriptions-item label="Người kiểm tra" :span="1">
+        <a-descriptions-item label="Người kiểm tra" :span="2">
           {{ selectedInspection.inspectorName }}
-        </a-descriptions-item>
-        
-        <a-descriptions-item v-if="selectedInspection.electricityReading" label="Chỉ số điện" :span="1">
-          {{ selectedInspection.electricityReading }} kWh
-        </a-descriptions-item>
-        <a-descriptions-item v-if="selectedInspection.waterReading" label="Chỉ số nước" :span="1">
-          {{ selectedInspection.waterReading }} m³
         </a-descriptions-item>
         
         <a-descriptions-item v-if="selectedInspection.notes" label="Ghi chú" :span="2">
           {{ selectedInspection.notes }}
-        </a-descriptions-item>
-        
-        <a-descriptions-item label="Trạng thái duyệt" :span="2">
-          <a-tag :color="selectedInspection.isApproved ? 'green' : 'orange'">
-            {{ selectedInspection.isApproved ? 'Đã duyệt' : 'Chờ duyệt' }}
-          </a-tag>
-          <span v-if="selectedInspection.isApproved && selectedInspection.approvedByName" style="margin-left: 8px;">
-            bởi {{ selectedInspection.approvedByName }} - {{ formatDate(selectedInspection.approvedAt) }}
-          </span>
-        </a-descriptions-item>
-        
-        <a-descriptions-item v-if="selectedInspection.nextInspectionDate" label="Lần kiểm tra tiếp theo" :span="2">
-          {{ formatDate(selectedInspection.nextInspectionDate) }}
         </a-descriptions-item>
       </a-descriptions>
     </a-modal>
@@ -209,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { roomInspectionService } from '@/services/roomInspectionService'
 import { roomService } from '@/services/roomService'
@@ -238,6 +193,13 @@ const form = ref({
   notes: ''
 })
 
+const roomOptions = computed(() => {
+  return rooms.value.map(r => ({
+    value: r.id,
+    label: `${r.roomNumber} - ${r.buildingName || 'N/A'}`
+  }))
+})
+
 const columns = [
   { title: 'Phòng', dataIndex: 'roomNumber', key: 'roomNumber', width: 100 },
   { title: 'Ngày', key: 'inspectionDate', width: 120 },
@@ -247,6 +209,10 @@ const columns = [
   { title: 'Trạng thái', key: 'isApproved', width: 120 },
   { title: 'Thao tác', key: 'actions', width: 220, fixed: 'right' }
 ]
+
+function filterOption(input, option) {
+  return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+}
 
 function getTypeLabel(type) {
   const map = { Routine: 'Định kỳ', CheckIn: 'Nhận phòng', CheckOut: 'Trả phòng', Incident: 'Sự cố' }
@@ -286,9 +252,16 @@ async function loadInspections() {
 
 async function loadRooms() {
   try {
-    rooms.value = await roomService.getAll()
+    const data = await roomService.getAll()
+    console.log('Loaded rooms:', data)
+    rooms.value = data || []
+    if (rooms.value.length === 0) {
+      message.warning('Không có phòng nào trong hệ thống')
+    }
   } catch (err) {
     console.error('Error loading rooms:', err)
+    message.error('Không thể tải danh sách phòng: ' + (err.message || 'Lỗi không xác định'))
+    rooms.value = []
   }
 }
 

@@ -389,6 +389,11 @@ const menuItems = computed(() => {
             icon: () => h(ToolOutlined),
             label: "Yêu cầu bảo trì",
           },
+          {
+            key: "/staff/utility-payments",
+            icon: () => h(DollarOutlined),
+            label: "Thanh toán tiện ích",
+          },
         ],
       },
       {
@@ -461,6 +466,16 @@ const menuItems = computed(() => {
           key: "/admin/amenities",
           icon: () => h(AppstoreOutlined),
           label: "Tiện nghi",
+        },
+        {
+          key: "/admin/shared-utilities",
+          icon: () => h(ToolOutlined),
+          label: "Tiện ích chung",
+        },
+        {
+          key: "/admin/utility-payments",
+          icon: () => h(DollarOutlined),
+          label: "Thanh toán tiện ích",
         },
         {
           key: "/admin/room-inspections",

@@ -26,20 +26,118 @@ namespace BillingMaintenanceService.API.Controllers
         }
 
         /// <summary>
-        /// Webhook endpoint to receive payment notifications from Sepay
+        /// DEBUG: Log raw request body to see exact format from SePay
         /// </summary>
-        [HttpPost("webhook")]
-        public async Task<IActionResult> Webhook([FromBody] SepayWebhookDto webhookData)
+        [HttpPost("webhook-debug")]
+        public async Task<IActionResult> WebhookDebug()
         {
             try
             {
-                _logger.LogInformation("Received Sepay webhook: {Data}", JsonSerializer.Serialize(webhookData));
-
-                // Validate webhook (optional: check signature if Sepay provides one)
+                using var reader = new StreamReader(Request.Body);
+                var rawBody = await reader.ReadToEndAsync();
                 
-                // Parse transfer content to get invoice code
-                var transferContent = webhookData.TransferContent ?? webhookData.Description ?? "";
-                _logger.LogInformation("Transfer content: {Content}", transferContent);
+                _logger.LogInformation("=== RAW SEPAY REQUEST ===");
+                _logger.LogInformation("Headers: {Headers}", JsonSerializer.Serialize(Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString())));
+                _logger.LogInformation("Body: {Body}", rawBody);
+                _logger.LogInformation("Content-Type: {ContentType}", Request.ContentType);
+                _logger.LogInformation("=========================");
+                
+                return Ok(new { 
+                    message = "Debug info logged",
+                    receivedBody = rawBody,
+                    contentType = Request.ContentType,
+                    headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString())
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in webhook debug");
+                return StatusCode(500, new { message = "Error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Webhook endpoint to receive payment notifications from Sepay
+        /// </summary>
+        [HttpPost("webhook")]
+        public async Task<IActionResult> Webhook([FromBody] SepayWebhookDto? webhookData)
+        {
+            try
+            {
+                // Log raw body first for debugging
+                Request.EnableBuffering();
+                using var reader = new StreamReader(Request.Body, leaveOpen: true);
+                var rawBody = await reader.ReadToEndAsync();
+                Request.Body.Position = 0;
+                
+                _logger.LogInformation("=== SEPAY WEBHOOK RECEIVED ===");
+                _logger.LogInformation("Raw Body: {RawBody}", rawBody);
+                _logger.LogInformation("Content-Type: {ContentType}", Request.ContentType);
+                
+                // Check if model binding failed
+                if (webhookData == null)
+                {
+                    _logger.LogError("Model binding failed - webhookData is null. Raw body: {Body}", rawBody);
+                    return BadRequest(new { message = "Invalid request format", receivedBody = rawBody });
+                }
+                
+                _logger.LogInformation("Parsed Sepay webhook: {Data}", JsonSerializer.Serialize(webhookData));
+
+                // Extract content field (nội dung chuyển khoản)
+                string transferContent = webhookData.content ?? "";
+                decimal amount = webhookData.transferAmount;
+                
+                _logger.LogInformation("Transfer content: {Content}, Amount: {Amount}", transferContent, amount);
+
+                // Check if this is a utility payment (format: TIENICH {usageLogId} {studentCode})
+                var utilityMatch = System.Text.RegularExpressions.Regex.Match(transferContent, @"TIENICH\s+(\d+)");
+                if (utilityMatch.Success)
+                {
+                    int usageLogId = int.Parse(utilityMatch.Groups[1].Value);
+                    _logger.LogInformation("Detected utility payment for usageLogId: {Id}", usageLogId);
+
+                    // Call RoomBuildingService to mark as paid
+                    try
+                    {
+                        using var httpClient = new HttpClient();
+                        var roomBuildingServiceUrl = _configuration["Services:RoomBuildingService"] ?? "http://localhost:5003";
+                        var apiUrl = $"{roomBuildingServiceUrl}/api/utilityusagelogs/{usageLogId}/mark-paid-from-webhook";
+                        
+                        var markPaidDto = new
+                        {
+                            transactionCode = webhookData.id.ToString(),
+                            amount = amount
+                        };
+                        
+                        var jsonContent = new StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(markPaidDto),
+                            System.Text.Encoding.UTF8,
+                            "application/json"
+                        );
+                        
+                        var response = await httpClient.PostAsync(apiUrl, jsonContent);
+                        
+                        if (response.IsSuccessStatusCode)
+                        {
+                            _logger.LogInformation("Successfully marked utility usage {Id} as paid", usageLogId);
+                            return Ok(new { 
+                                message = "Utility payment processed successfully",
+                                usageLogId = usageLogId,
+                                isPaid = true
+                            });
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to mark utility usage as paid: {StatusCode}", response.StatusCode);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error calling RoomBuildingService for utility payment");
+                    }
+                    
+                    return Ok(new { message = "Utility payment webhook received but failed to update" });
+                }
 
                 // Extract invoice code from content (format: "PTT202606001 SV000133" or just "PTT202606001")
                 var invoiceCode = ExtractInvoiceCode(transferContent);
@@ -70,7 +168,7 @@ namespace BillingMaintenanceService.API.Controllers
                 }
 
                 // Get payment amount
-                var amountReceived = webhookData.Amount;
+                var amountReceived = amount;
                 
                 _logger.LogInformation("Processing payment: Invoice={Code}, Amount={Amount}", invoiceCode, amountReceived);
 
@@ -88,13 +186,11 @@ namespace BillingMaintenanceService.API.Controllers
                     InvoiceId = invoice.Id,
                     Amount = amountReceived,
                     Method = "BankTransfer",
-                    PaymentDate = webhookData.TransactionDate.HasValue 
-                        ? DateOnly.FromDateTime(webhookData.TransactionDate.Value) 
-                        : DateOnly.FromDateTime(DateTime.Now),
+                    PaymentDate = DateOnly.FromDateTime(DateTime.Now),
                     PaidAt = DateTime.Now,
-                    TransactionCode = webhookData.TransactionId ?? webhookData.ReferenceNumber,
-                    BankName = "BIDV",
-                    BankAccountNumber = webhookData.AccountNumber,
+                    TransactionCode = webhookData.id.ToString(),
+                    BankName = webhookData.gateway ?? "BIDV",
+                    BankAccountNumber = webhookData.accountNumber,
                     ReceivedByUserId = receivedByUserId,
                     ReceivedByName = receivedByName,
                     Note = $"Thanh toán qua Sepay - {transferContent}"
@@ -193,12 +289,18 @@ namespace BillingMaintenanceService.API.Controllers
                                 // Process the payment automatically
                                 var webhookData = new SepayWebhookDto
                                 {
-                                    TransactionId = matchingTransaction.Id,
-                                    Amount = matchingTransaction.Amount,
-                                    TransferContent = matchingTransaction.TransactionContent,
-                                    TransactionDate = matchingTransaction.TransactionDate,
-                                    AccountNumber = sepayAccountNumber,
-                                    BankCode = matchingTransaction.BankBrandName
+                                    id = int.TryParse(matchingTransaction.Id, out int txId) ? txId : 0,
+                                    gateway = matchingTransaction.BankBrandName,
+                                    transactionDate = matchingTransaction.TransactionDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    accountNumber = sepayAccountNumber,
+                                    subAccount = null,
+                                    transferType = "In",
+                                    transferAmount = matchingTransaction.Amount,
+                                    accumulated = matchingTransaction.Amount,
+                                    code = matchingTransaction.BankBrandName,
+                                    content = matchingTransaction.TransactionContent,
+                                    referenceCode = matchingTransaction.Id,
+                                    description = "Auto-detected from SePay API"
                                 };
                                 
                                 await Webhook(webhookData);
@@ -246,7 +348,7 @@ namespace BillingMaintenanceService.API.Controllers
         {
             try
             {
-                _logger.LogInformation("🧪 TEST: Simulating payment for invoice: {Code}", dto.InvoiceCode);
+                _logger.LogInformation("TEST: Simulating payment for invoice: {Code}", dto.InvoiceCode);
 
                 // Find invoice
                 var invoices = await _invoiceRepository.GetAllAsync();
@@ -263,21 +365,27 @@ namespace BillingMaintenanceService.API.Controllers
                     return Ok(new { message = "Invoice already paid" });
                 }
 
-                // Simulate webhook data
+                // Simulate webhook data with new DTO format
                 var webhookData = new SepayWebhookDto
                 {
-                    TransactionId = $"TEST{DateTime.Now:yyyyMMddHHmmss}",
-                    Amount = dto.Amount > 0 ? dto.Amount : invoice.DebtAmount,
-                    TransferContent = $"{invoice.InvoiceCode} {invoice.StudentCode}",
-                    TransactionDate = DateTime.Now,
-                    AccountNumber = "8871422018",
-                    BankCode = "970418"
+                    id = 0,
+                    gateway = "SePay",
+                    transactionDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    accountNumber = "8871422018",
+                    subAccount = null,
+                    transferType = "In",
+                    transferAmount = dto.Amount > 0 ? dto.Amount : invoice.DebtAmount,
+                    accumulated = dto.Amount > 0 ? dto.Amount : invoice.DebtAmount,
+                    code = "SEPAYTLS",
+                    content = $"{invoice.InvoiceCode} {invoice.StudentCode}",
+                    referenceCode = $"TEST{DateTime.Now:yyyyMMddHHmmss}",
+                    description = "Test payment simulation"
                 };
 
                 // Call webhook method
                 var result = await Webhook(webhookData);
                 
-                _logger.LogInformation("🧪 TEST: Payment simulation completed for invoice: {Code}", dto.InvoiceCode);
+                _logger.LogInformation("TEST: Payment simulation completed for invoice: {Code}", dto.InvoiceCode);
 
                 return result;
             }
@@ -297,24 +405,84 @@ namespace BillingMaintenanceService.API.Controllers
             var match = System.Text.RegularExpressions.Regex.Match(content, @"PT[DTRO]\d+");
             return match.Success ? match.Value : "";
         }
+
+        /// <summary>
+        /// Check payment for utility usage (from RoomBuildingService)
+        /// Format: TIENICH {usageLogId} {studentCode}
+        /// </summary>
+        [HttpPost("check-utility-payment")]
+        public async Task<IActionResult> CheckUtilityPayment([FromBody] CheckUtilityPaymentDto dto)
+        {
+            try
+            {
+                _logger.LogInformation("Checking utility payment for usageLogId: {Id}", dto.UsageLogId);
+
+                // Call RoomBuildingService to check and update payment status
+                using var httpClient = new HttpClient();
+                
+                // Get RoomBuildingService URL from configuration or use default
+                var roomBuildingServiceUrl = _configuration["Services:RoomBuildingService"] ?? "http://localhost:5002";
+                var apiUrl = $"{roomBuildingServiceUrl}/api/utilityusagelogs/{dto.UsageLogId}/check-payment";
+                
+                _logger.LogInformation("Calling RoomBuildingService: {Url}", apiUrl);
+                
+                var response = await httpClient.PostAsync(apiUrl, null);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<CheckUtilityPaymentResponseDto>(content);
+                    
+                    return Ok(result);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error from RoomBuildingService: {StatusCode}, {Content}", response.StatusCode, errorContent);
+                    return StatusCode((int)response.StatusCode, new { message = "Error checking utility payment", error = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking utility payment");
+                return StatusCode(500, new { message = "Error checking utility payment", error = ex.Message });
+            }
+        }
     }
 
-    // DTOs for Sepay webhook
+    // DTOs for Sepay webhook - Simple version matching SePay's actual format
     public class SepayWebhookDto
     {
-        public string? TransactionId { get; set; }
-        public string? ReferenceNumber { get; set; }
-        public decimal Amount { get; set; }
-        public string? TransferContent { get; set; }
-        public string? Description { get; set; }
-        public DateTime? TransactionDate { get; set; }
-        public string? AccountNumber { get; set; }
-        public string? BankCode { get; set; }
+        public int id { get; set; }
+        public string? gateway { get; set; }
+        public string? transactionDate { get; set; }
+        public string? accountNumber { get; set; }
+        public string? subAccount { get; set; }
+        public string? transferType { get; set; }
+        public decimal transferAmount { get; set; }
+        public decimal accumulated { get; set; }
+        public string? code { get; set; }
+        public string? content { get; set; }
+        public string? referenceCode { get; set; }
+        public string? description { get; set; }
     }
 
     public class CheckPaymentDto
     {
         public string InvoiceCode { get; set; } = null!;
+    }
+
+    public class CheckUtilityPaymentDto
+    {
+        public int UsageLogId { get; set; }
+    }
+
+    public class CheckUtilityPaymentResponseDto
+    {
+        public int Id { get; set; }
+        public bool IsPaid { get; set; }
+        public decimal? FeeCharged { get; set; }
+        public string? Message { get; set; }
     }
 
     public class SimulatePaymentDto

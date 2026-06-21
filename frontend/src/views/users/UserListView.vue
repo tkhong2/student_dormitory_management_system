@@ -267,6 +267,54 @@
               />
             </a-form-item>
           </a-col>
+          
+          <!-- Social Media Links Section -->
+          <a-col :span="24">
+            <a-divider orientation="left">
+              <ShareAltOutlined /> Liên kết mạng xã hội
+            </a-divider>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Facebook">
+              <a-input 
+                v-model:value="form.facebookUrl" 
+                placeholder="https://facebook.com/username"
+                prefix="@"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Zalo">
+              <a-input 
+                v-model:value="form.zaloPhone" 
+                placeholder="Số điện thoại Zalo"
+                prefix="📱"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="Instagram">
+              <a-input 
+                v-model:value="form.instagramUrl" 
+                placeholder="https://instagram.com/username"
+                prefix="@"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="LinkedIn">
+              <a-input 
+                v-model:value="form.linkedInUrl" 
+                placeholder="https://linkedin.com/in/username"
+                prefix="@"
+              />
+            </a-form-item>
+          </a-col>
+          
+          <a-col :span="24">
+            <a-divider />
+          </a-col>
+          
           <a-col :span="12">
             <a-form-item 
               label="Vai trò"
@@ -394,7 +442,8 @@ import {
   LoadingOutlined,
   CameraOutlined,
   DownloadOutlined,
-  UploadOutlined
+  UploadOutlined,
+  ShareAltOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import axios from 'axios'
@@ -428,7 +477,11 @@ const form = ref({
   gender: undefined,
   dateOfBirth: null,
   address: '',
-  avatarUrl: null
+  avatarUrl: null,
+  facebookUrl: '',
+  zaloPhone: '',
+  instagramUrl: '',
+  linkedInUrl: ''
 })
 
 const uploadingAvatar = ref(false)
@@ -595,6 +648,10 @@ function openEditDialog(user) {
       dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
       address: userData.address || '',
       avatarUrl: userData.avatarUrl,
+      facebookUrl: userData.facebookUrl || '',
+      zaloPhone: userData.zaloPhone || '',
+      instagramUrl: userData.instagramUrl || '',
+      linkedInUrl: userData.linkedInUrl || '',
       password: '',
       confirmPassword: ''
     }

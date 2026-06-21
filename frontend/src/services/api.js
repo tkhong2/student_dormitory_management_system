@@ -31,19 +31,26 @@ function createApi(baseURL) {
   return api
 }
 
-// API Gateway base URL - all services should go through gateway
+// API Gateway base URL - all services should go through gateway  
+// baseURL includes /api because all routes in services don't have /api prefix
 const API_GATEWAY_URL = 'http://localhost:5000/api'
 
 const api = createApi(
-  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
+  import.meta.env.VITE_API_GATEWAY_URL 
+    ? `${import.meta.env.VITE_API_GATEWAY_URL}/api`
+    : API_GATEWAY_URL
 )
 
 export const contractStudentApi = createApi(
-  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
+  import.meta.env.VITE_API_GATEWAY_URL 
+    ? `${import.meta.env.VITE_API_GATEWAY_URL}/api`
+    : API_GATEWAY_URL
 )
 
 export const billingMaintenanceApi = createApi(
-  import.meta.env.VITE_API_GATEWAY_URL || API_GATEWAY_URL
+  import.meta.env.VITE_API_GATEWAY_URL 
+    ? `${import.meta.env.VITE_API_GATEWAY_URL}/api`
+    : API_GATEWAY_URL
 )
 
 export default api

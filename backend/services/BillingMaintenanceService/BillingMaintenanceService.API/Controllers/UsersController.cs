@@ -134,6 +134,10 @@ namespace BillingMaintenanceService.API.Controllers
                 Gender = dto.Gender,
                 DateOfBirth = dto.DateOfBirth,
                 Address = dto.Address,
+                FacebookUrl = dto.FacebookUrl,
+                ZaloPhone = dto.ZaloPhone,
+                InstagramUrl = dto.InstagramUrl,
+                LinkedInUrl = dto.LinkedInUrl,
                 IsActive = true,
                 IsDeleted = false,  // IMPORTANT: Set IsDeleted = false explicitly
                 CreatedAt = DateTime.UtcNow
@@ -162,6 +166,10 @@ namespace BillingMaintenanceService.API.Controllers
             user.Gender = dto.Gender;
             user.DateOfBirth = dto.DateOfBirth;
             user.Address = dto.Address;
+            user.FacebookUrl = dto.FacebookUrl;
+            user.ZaloPhone = dto.ZaloPhone;
+            user.InstagramUrl = dto.InstagramUrl;
+            user.LinkedInUrl = dto.LinkedInUrl;
             user.IsActive = dto.IsActive;
 
             await _userRepository.UpdateAsync(user);
@@ -562,6 +570,10 @@ namespace BillingMaintenanceService.API.Controllers
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
                 Address = user.Address,
+                FacebookUrl = user.FacebookUrl,
+                ZaloPhone = user.ZaloPhone,
+                InstagramUrl = user.InstagramUrl,
+                LinkedInUrl = user.LinkedInUrl,
                 IsActive = user.IsActive,
                 LastLoginAt = user.LastLoginAt,
                 CreatedAt = user.CreatedAt

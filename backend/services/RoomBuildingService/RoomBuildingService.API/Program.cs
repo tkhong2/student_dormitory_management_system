@@ -43,6 +43,13 @@ builder.Services.AddScoped<IRoomInspectionRepository, RoomInspectionRepository>(
 builder.Services.AddScoped<IRoomReservationRepository, RoomReservationRepository>();
 builder.Services.AddScoped<IRoomStatusLogRepository, RoomStatusLogRepository>();
 builder.Services.AddScoped<IRoomTypeAmenityRepository, RoomTypeAmenityRepository>();
+builder.Services.AddScoped<IRoomAmenityInspectionRepository, RoomAmenityInspectionRepository>();
+builder.Services.AddScoped<IPublicFacilityRepository, PublicFacilityRepository>();
+builder.Services.AddScoped<IFacilityBookingRepository, FacilityBookingRepository>();
+builder.Services.AddScoped<IFacilityReviewRepository, FacilityReviewRepository>();
+builder.Services.AddScoped<ISharedUtilityRepository, SharedUtilityRepository>();
+builder.Services.AddScoped<IUtilityEventRepository, UtilityEventRepository>();
+builder.Services.AddScoped<IUtilityUsageLogRepository, UtilityUsageLogRepository>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

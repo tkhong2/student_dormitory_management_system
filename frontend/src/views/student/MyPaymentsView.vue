@@ -268,9 +268,9 @@
       >
         <template #description>
           <p style="margin-bottom: 8px;"><strong>Vui lòng chuyển khoản đến:</strong></p>
-          <p style="margin: 4px 0;"><strong>🏦 Ngân hàng:</strong> BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</p>
+          <p style="margin: 4px 0;"><strong>🏦 Ngân hàng:</strong> Sacombank - Ngân hàng TMCP Sài Gòn Thương Tín</p>
           <p style="margin: 4px 0;"><strong>👤 Chủ tài khoản:</strong> TRAN KHAC HONG</p>
-          <p style="margin: 4px 0;"><strong>💳 Số tài khoản:</strong> <a-typography-text copyable strong>8871422018</a-typography-text></p>
+          <p style="margin: 4px 0;"><strong>💳 Số tài khoản:</strong> <a-typography-text copyable strong>025202102005</a-typography-text></p>
           <p style="margin: 4px 0;"><strong>💰 Số tiền:</strong> <span style="color: #ff9800; font-weight: bold;">{{ formatCurrency(detailTarget.debtAmount) }}</span></p>
           <p style="margin: 4px 0;"><strong>✍️ Nội dung:</strong> <a-typography-text copyable strong type="danger">{{ detailTarget.invoiceCode }} {{ detailTarget.studentCode }}</a-typography-text></p>
         </template>
@@ -364,13 +364,13 @@
         <!-- Bank Info -->
         <a-descriptions bordered size="small" style="margin-top: 16px;">
           <a-descriptions-item label="Ngân hàng" :span="2">
-            <strong>BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</strong>
+            <strong>Sacombank - Ngân hàng TMCP Sài Gòn Thương Tín</strong>
           </a-descriptions-item>
           <a-descriptions-item label="Chủ tài khoản" :span="2">
             TRAN KHAC HONG
           </a-descriptions-item>
           <a-descriptions-item label="Số tài khoản" :span="2">
-            <a-typography-text copyable strong>8871422018</a-typography-text>
+            <a-typography-text copyable strong>025202102005</a-typography-text>
           </a-descriptions-item>
           <a-descriptions-item label="Nội dung chuyển khoản" :span="2">
             <a-typography-text copyable strong type="danger">
@@ -396,6 +396,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { CreditCardOutlined, EyeOutlined, QrcodeOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { API_URLS, getAuthHeaders } from '@/services/apiService'
 import axios from 'axios'
 
 const authStore = useAuthStore()
@@ -558,10 +559,8 @@ const fetchInvoices = async () => {
     // The Student table in ContractStudentService has UserId that links to BillingMaintenanceService User
     try {
       console.log('Method 1: Fetching student by userId:', currentUser.id)
-      const studentResponse = await axios.get(`http://localhost:5001/api/students/by-user/${currentUser.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const studentResponse = await axios.get(`${API_URLS.STUDENTS}/by-user/${currentUser.id}`, {
+        headers: getAuthHeaders()
       })
       studentId = studentResponse.data.id
       console.log('✓ Student found in ContractStudentService:', studentResponse.data)
@@ -574,10 +573,8 @@ const fetchInvoices = async () => {
       if (currentUser.studentCode && /^SV\d+$/.test(currentUser.studentCode)) {
         try {
           console.log('Method 2: Trying by studentCode:', currentUser.studentCode)
-          const studentResponse = await axios.get(`http://localhost:5001/api/students/code/${currentUser.studentCode}`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+          const studentResponse = await axios.get(`${API_URLS.STUDENTS}/code/${currentUser.studentCode}`, {
+            headers: getAuthHeaders()
           })
           studentId = studentResponse.data.id
           console.log('✓ Student ID from ContractStudentService (by code):', studentId)
@@ -599,10 +596,8 @@ const fetchInvoices = async () => {
     
     // Call Invoice API with student ID
     console.log('Fetching invoices for student ID:', studentId)
-    const response = await axios.get(`http://localhost:5002/api/invoices/student/${studentId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+    const response = await axios.get(`${API_URLS.INVOICES}/student/${studentId}`, {
+      headers: getAuthHeaders()
     })
     
     console.log('✓ Invoices loaded:', response.data.length, 'invoices')
@@ -634,10 +629,8 @@ const fetchInvoices = async () => {
 
 const viewInvoiceDetail = async (record) => {
   try {
-    const response = await axios.get(`http://localhost:5002/api/invoices/${record.id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+    const response = await axios.get(`${API_URLS.INVOICES}/${record.id}`, {
+      headers: getAuthHeaders()
     })
     detailTarget.value = response.data
     detailDialog.value = true
@@ -655,13 +648,13 @@ const openQRPayment = async (record) => {
   
   try {
     // Generate QR Code using VietQR API
-    // Bank: BIDV (970418), Account: 8871422018, Owner: TRAN KHAC HONG
+    // Bank: Sacombank (970403), Account: 025202102005, Owner: TRAN KHAC HONG
     const amount = record.debtAmount
     const description = `${record.invoiceCode} ${record.studentCode}`
     
     // VietQR API format
-    const bankCode = '970418' // BIDV bank code
-    const accountNo = '8871422018'
+    const bankCode = '970403' // Sacombank bank code
+    const accountNo = '025202102005'
     const accountName = 'TRAN KHAC HONG'
     const template = 'compact2' // or 'compact', 'qr_only', 'print'
     
@@ -715,12 +708,10 @@ const checkPaymentStatusSilent = async () => {
   
   try {
     // Call check payment API
-    const response = await axios.post('http://localhost:5002/api/sepay/check-payment', {
+    const response = await axios.post(`${API_URLS.SEPAY}/check-payment`, {
       invoiceCode: selectedInvoice.value.invoiceCode
     }, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: getAuthHeaders()
     })
     
     const result = response.data
@@ -776,12 +767,10 @@ const checkPaymentStatus = async () => {
   qrLoading.value = true
   try {
     // Call check payment API
-    const response = await axios.post('http://localhost:5002/api/sepay/check-payment', {
+    const response = await axios.post(`${API_URLS.SEPAY}/check-payment`, {
       invoiceCode: selectedInvoice.value.invoiceCode
     }, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: getAuthHeaders()
     })
     
     console.log('Payment check response:', response.data)

@@ -10,6 +10,7 @@ const routes = [
       { path: 'about', name: 'about', meta: { title: 'Giới thiệu' }, component: () => import('../views/public/AboutPage.vue') },
       { path: 'rooms', name: 'room-registration', meta: { title: 'Đăng ký phòng' }, component: () => import('../views/public/RoomRegistrationPage.vue') },
       { path: 'rooms/:id', name: 'room-detail', meta: { title: 'Chi tiết phòng' }, component: () => import('../views/public/RoomDetailPage.vue') },
+      { path: 'facilities', name: 'facilities', meta: { title: 'Tiện ích chung' }, component: () => import('../views/public/FacilitiesPage.vue') },
       { path: 'news', name: 'news', meta: { title: 'Tin tức' }, component: () => import('../views/public/NewsPage.vue') },
       { path: 'rules', name: 'rules', meta: { title: 'Nội quy' }, component: () => import('../views/public/RulesPage.vue') },
       { path: 'contact', name: 'contact', meta: { title: 'Liên hệ' }, component: () => import('../views/public/ContactPage.vue') },
@@ -28,6 +29,7 @@ const routes = [
       { path: 'my-room', name: 'my-room', meta: { title: 'Phòng của tôi' }, component: () => import('../views/student/MyRoomView.vue') },
       { path: 'my-contract', name: 'my-contract', meta: { title: 'Hợp đồng' }, component: () => import('../views/student/MyContractView.vue') },
       { path: 'my-payments', name: 'my-payments', meta: { title: 'Thanh toán' }, component: () => import('../views/student/MyPaymentsView.vue') },
+      { path: 'my-facilities', name: 'my-facilities', meta: { title: 'Tiện ích chung' }, component: () => import('../views/student/MyFacilitiesView.vue') },
       { path: 'maintenance', name: 'student-maintenance', meta: { title: 'Yêu cầu sửa chữa' }, component: () => import('../views/student/StudentMaintenanceView.vue') },
       { path: 'notifications', name: 'student-notifications', meta: { title: 'Thông báo' }, component: () => import('../views/student/NotificationsView.vue') },
       { path: 'profile', name: 'student-profile', meta: { title: 'Hồ sơ cá nhân' }, component: () => import('../views/student/StudentProfileView.vue') },
@@ -72,6 +74,9 @@ const routes = [
       // Quản lý bảo trì
       { path: 'maintenance-requests', name: 'staff-maintenance-requests', meta: { title: 'Yêu cầu bảo trì' }, component: () => import('../views/staff/StaffMaintenanceView.vue') },
       
+      // Quản lý thanh toán tiện ích
+      { path: 'utility-payments', name: 'staff-utility-payments', meta: { title: 'Thanh toán tiện ích' }, component: () => import('../views/facilities/UtilityPaymentManagementView.vue') },
+      
       // === SINH VIÊN ===
       
       { path: 'students', name: 'staff-students', meta: { title: 'Danh sách sinh viên' }, component: () => import('../views/students/StudentListView.vue') },
@@ -95,6 +100,8 @@ const routes = [
       { path: 'room-types', name: 'room-types', meta: { title: 'Loại phòng' }, component: () => import('../views/room-types/RoomTypeListView.vue') },
       { path: 'rooms', name: 'rooms', meta: { title: 'Quản lý phòng' }, component: () => import('../views/rooms/RoomListView.vue') },
       { path: 'amenities', name: 'amenities', meta: { title: 'Tiện nghi' }, component: () => import('../views/amenities/AmenityListView.vue') },
+      { path: 'shared-utilities', name: 'shared-utilities', meta: { title: 'Tiện ích chung' }, component: () => import('../views/utilities/SharedUtilitiesView.vue') },
+      { path: 'utility-payments', name: 'admin-utility-payments', meta: { title: 'Thanh toán tiện ích' }, component: () => import('../views/facilities/UtilityPaymentManagementView.vue') },
       { path: 'users', name: 'users', meta: { title: 'Người dùng' }, component: () => import('../views/users/UserListView.vue') },
       
       // === VẬN HÀNH ===
@@ -150,7 +157,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Public routes that don't require authentication
-  const publicPaths = ['/', '/about', '/rooms', '/news', '/rules', '/contact', '/login']
+  const publicPaths = ['/', '/about', '/rooms', '/facilities', '/news', '/rules', '/contact', '/login']
   const isPublicRoute = publicPaths.includes(to.path) || 
                         to.path.startsWith('/public') || 
                         to.path.startsWith('/rooms/') // Allow room detail pages

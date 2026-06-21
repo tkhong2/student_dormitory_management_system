@@ -17,6 +17,13 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? Gender { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? Address { get; set; }
+        
+        // Social Media Links
+        public string? FacebookUrl { get; set; }
+        public string? ZaloPhone { get; set; }
+        public string? InstagramUrl { get; set; }
+        public string? LinkedInUrl { get; set; }
+        
         public bool IsActive { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -37,6 +44,12 @@ namespace BillingMaintenanceService.Application.DTOs
         public string? Gender { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? Address { get; set; }
+        
+        // Social Media Links
+        public string? FacebookUrl { get; set; }
+        public string? ZaloPhone { get; set; }
+        public string? InstagramUrl { get; set; }
+        public string? LinkedInUrl { get; set; }
     }
 
     // ===== Invoice DTOs =====

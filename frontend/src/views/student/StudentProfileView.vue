@@ -72,23 +72,46 @@
               <span style="font-size: 14px;">{{ profileData.address || 'Chưa cập nhật' }}</span>
             </div>
           </div>
+          
+          <!-- Social Media Links -->
+          <a-divider style="margin: 16px 0;">Mạng xã hội</a-divider>
+          <SocialMediaLinks 
+            :facebook-url="profileData.facebookUrl"
+            :zalo-phone="profileData.zaloPhone"
+            :instagram-url="profileData.instagramUrl"
+            :linked-in-url="profileData.linkedInUrl"
+          />
         </a-card>
       </a-col>
 
       <!-- Edit form -->
       <a-col :xs="24" :md="16">
+        <!-- Debug panel - remove after fixing -->
+        <a-alert v-if="profileData.id" type="info" style="margin-bottom: 16px;">
+          <template #message>
+            <div style="font-size: 12px;">
+              <strong>Debug Info:</strong><br>
+              Student ID: {{ profileData.id }}<br>
+              Student Code: {{ profileData.studentCode }}<br>
+              Full Name: {{ profileData.fullName }}<br>
+              Email: {{ profileData.email }}<br>
+              Phone: {{ profileData.phone }}
+            </div>
+          </template>
+        </a-alert>
+        
         <a-card :bordered="true" style="padding: 24px; margin-bottom: 16px;">
           <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 20px;">Chỉnh sửa thông tin</h3>
           <a-form :model="editForm" layout="vertical">
             <a-row :gutter="16">
               <a-col :span="12">
                 <a-form-item label="Mã sinh viên">
-                  <a-input v-model:value="profileData.studentCode" disabled />
+                  <a-input :value="profileData.studentCode" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Họ và tên">
-                  <a-input v-model:value="editForm.fullName" disabled />
+                  <a-input :value="profileData.fullName" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
@@ -103,27 +126,70 @@
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Ngày sinh">
-                  <a-input v-model:value="editForm.dateOfBirth" type="date" disabled />
+                  <a-input :value="profileData.dateOfBirth" type="date" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Giới tính">
-                  <a-select v-model:value="editForm.gender" :options="[{label: 'Nam', value: 'Nam'}, {label: 'Nữ', value: 'Nữ'}, {label: 'Khác', value: 'Khác'}]" disabled />
+                  <a-select :value="profileData.gender" :options="[{label: 'Nam', value: 'Male'}, {label: 'Nữ', value: 'Female'}, {label: 'Không xác định', value: 'Unknown'}]" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Lớp">
-                  <a-input v-model:value="profileData.classCode" disabled />
+                  <a-input :value="profileData.classCode" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="Khoa">
-                  <a-input v-model:value="profileData.faculty" disabled />
+                  <a-input :value="profileData.faculty" disabled />
                 </a-form-item>
               </a-col>
               <a-col :span="24">
                 <a-form-item label="Địa chỉ thường trú">
-                  <a-textarea v-model:value="editForm.address" :rows="2" disabled />
+                  <a-textarea v-model:value="editForm.address" :rows="2" />
+                </a-form-item>
+              </a-col>
+              
+              <!-- Social Media Section -->
+              <a-col :span="24">
+                <a-divider orientation="left">
+                  <share-alt-outlined /> Liên kết mạng xã hội
+                </a-divider>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="Facebook">
+                  <a-input v-model:value="editForm.facebookUrl" placeholder="https://facebook.com/username">
+                    <template #prefix>
+                      <facebook-outlined style="color: #1877f2;" />
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="Zalo">
+                  <a-input v-model:value="editForm.zaloPhone" placeholder="Số điện thoại Zalo">
+                    <template #prefix>
+                      <phone-outlined style="color: #0068ff;" />
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="Instagram">
+                  <a-input v-model:value="editForm.instagramUrl" placeholder="https://instagram.com/username">
+                    <template #prefix>
+                      <instagram-outlined style="color: #e4405f;" />
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="LinkedIn">
+                  <a-input v-model:value="editForm.linkedInUrl" placeholder="https://linkedin.com/in/username">
+                    <template #prefix>
+                      <linkedin-outlined style="color: #0077b5;" />
+                    </template>
+                  </a-input>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -169,7 +235,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { message } from 'ant-design-vue'
-import axios from 'axios'
+import { studentService } from '@/services/studentService'
+import { fileService } from '@/services/fileService'
+import SocialMediaLinks from '@/components/SocialMediaLinks.vue'
 import { 
   CameraOutlined, 
   UploadOutlined, 
@@ -178,7 +246,11 @@ import {
   MailOutlined,
   PhoneOutlined,
   BankOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  ShareAltOutlined,
+  FacebookOutlined,
+  InstagramOutlined,
+  LinkedinOutlined
 } from '@ant-design/icons-vue'
 
 const authStore = useAuthStore()
@@ -200,6 +272,10 @@ const profileData = ref({
   faculty: '',
   address: '',
   avatarUrl: null,
+  facebookUrl: '',
+  zaloPhone: '',
+  instagramUrl: '',
+  linkedInUrl: '',
   // Full student data for API update
   major: '',
   academicYear: 0,
@@ -229,7 +305,11 @@ const editForm = ref({
   phone: '',
   dateOfBirth: '',
   gender: '',
-  address: ''
+  address: '',
+  facebookUrl: '',
+  zaloPhone: '',
+  instagramUrl: '',
+  linkedInUrl: ''
 })
 
 const passwordForm = ref({
@@ -244,7 +324,9 @@ const userAvatarUrl = computed(() => {
     if (profileData.value.avatarUrl.startsWith('http')) {
       return profileData.value.avatarUrl
     }
-    return `http://localhost:5003${profileData.value.avatarUrl}`
+    // Use API_GATEWAY_URL from env or default
+    const baseUrl = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:5000'
+    return `${baseUrl}${profileData.value.avatarUrl}`
   }
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.value.fullName || 'SV')}&background=1890ff&color=fff&size=256`
 })
@@ -259,17 +341,46 @@ const loadProfile = async () => {
       return
     }
 
-    console.log('Loading profile for user:', user.id)
+    console.log('Loading profile for user:', user)
+    console.log('User ID:', user.id)
+    console.log('Username:', user.username)
 
-    // Get student info from ContractStudentService via API Gateway
-    const response = await axios.get(`http://localhost:5000/api/students/by-user/${user.id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    // Get student info using studentService
+    let student = null
+    try {
+      student = await studentService.getByUserId(user.id)
+      console.log('Student data loaded by userId:', student)
+    } catch (error) {
+      console.error('Error loading student by userId:', error)
+      
+      // If not found by userId, try to get all students and find by username/studentCode
+      if (error.status === 404) {
+        console.log('Trying to find student by username...')
+        try {
+          const allStudents = await studentService.getAll()
+          console.log('All students:', allStudents)
+          
+          // Try to find by username or studentCode
+          student = allStudents.find(s => 
+            s.studentCode === user.username || 
+            s.email === user.email ||
+            s.userId === user.id
+          )
+          
+          if (student) {
+            console.log('Found student by matching:', student)
+          }
+        } catch (getAllError) {
+          console.error('Error getting all students:', getAllError)
+        }
       }
-    })
+    }
+    
+    if (!student) {
+      throw new Error('Không tìm thấy thông tin sinh viên. Vui lòng liên hệ quản trị viên.')
+    }
 
-    const student = response.data
-    console.log('Student data loaded:', student)
+    console.log('Final student data:', student)
     
     // Format dates
     let formattedDateOfBirth = ''
@@ -297,6 +408,10 @@ const loadProfile = async () => {
       faculty: student.faculty || '',
       address: student.permanentAddress || '',
       avatarUrl: student.avatarUrl || null,
+      facebookUrl: '',
+      zaloPhone: '',
+      instagramUrl: '',
+      linkedInUrl: '',
       // Full data for API
       major: student.major || '',
       academicYear: student.academicYear || 2024,
@@ -319,6 +434,27 @@ const loadProfile = async () => {
       notes: student.notes || '',
       userId: student.userId
     }
+    
+    // Get social media data from User service
+    try {
+      const billingApiUrl = import.meta.env.VITE_BILLING_API_URL || 'http://localhost:5002/api'
+      const userResponse = await fetch(`${billingApiUrl}/users/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json()
+        profileData.value.facebookUrl = userData.facebookUrl || ''
+        profileData.value.zaloPhone = userData.zaloPhone || ''
+        profileData.value.instagramUrl = userData.instagramUrl || ''
+        profileData.value.linkedInUrl = userData.linkedInUrl || ''
+      }
+    } catch (error) {
+      console.error('Error loading user social media:', error)
+      // Don't fail the whole load if social media fails
+    }
 
     // Copy editable fields to edit form
     editForm.value = {
@@ -327,18 +463,22 @@ const loadProfile = async () => {
       phone: profileData.value.phone,
       dateOfBirth: profileData.value.dateOfBirth,
       gender: profileData.value.gender,
-      address: profileData.value.address
+      address: profileData.value.address,
+      facebookUrl: profileData.value.facebookUrl,
+      zaloPhone: profileData.value.zaloPhone,
+      instagramUrl: profileData.value.instagramUrl,
+      linkedInUrl: profileData.value.linkedInUrl
     }
 
   } catch (error) {
     console.error('Error loading profile:', error)
     
-    if (error.response?.status === 404) {
+    if (error.status === 404 || error.message.includes('không tìm thấy')) {
       message.error({
         content: 'Không tìm thấy hồ sơ sinh viên! Vui lòng liên hệ quản trị viên để tạo hồ sơ.',
         duration: 5
       })
-    } else if (error.response?.status === 401) {
+    } else if (error.status === 401) {
       message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
       authStore.logout()
     } else {
@@ -391,11 +531,47 @@ const saveProfile = async () => {
       userId: profileData.value.userId
     }
 
-    await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    await studentService.update(profileData.value.id, updateData)
+    
+    // Update social media in User service
+    try {
+      const user = authStore.user
+      const billingApiUrl = import.meta.env.VITE_BILLING_API_URL || 'http://localhost:5002/api'
+      const userUpdateResponse = await fetch(`${billingApiUrl}/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          id: user.id,
+          username: user.username,
+          fullName: editForm.value.fullName,
+          email: editForm.value.email,
+          phone: editForm.value.phone,
+          role: user.role,
+          studentCode: profileData.value.studentCode,
+          faculty: profileData.value.faculty,
+          classCode: profileData.value.classCode,
+          gender: editForm.value.gender,
+          dateOfBirth: editForm.value.dateOfBirth,
+          address: editForm.value.address,
+          avatarUrl: profileData.value.avatarUrl,
+          facebookUrl: editForm.value.facebookUrl,
+          zaloPhone: editForm.value.zaloPhone,
+          instagramUrl: editForm.value.instagramUrl,
+          linkedInUrl: editForm.value.linkedInUrl,
+          isActive: true
+        })
+      })
+      
+      if (!userUpdateResponse.ok) {
+        console.error('Failed to update user social media')
       }
-    })
+    } catch (error) {
+      console.error('Error updating user social media:', error)
+      // Don't fail the whole save if social media update fails
+    }
 
     // Update local data
     profileData.value.fullName = editForm.value.fullName
@@ -404,6 +580,10 @@ const saveProfile = async () => {
     profileData.value.dateOfBirth = editForm.value.dateOfBirth
     profileData.value.gender = editForm.value.gender
     profileData.value.address = editForm.value.address
+    profileData.value.facebookUrl = editForm.value.facebookUrl
+    profileData.value.zaloPhone = editForm.value.zaloPhone
+    profileData.value.instagramUrl = editForm.value.instagramUrl
+    profileData.value.linkedInUrl = editForm.value.linkedInUrl
     
     // Update auth store
     authStore.user.fullName = editForm.value.fullName
@@ -452,31 +632,18 @@ const changePassword = async () => {
 
   changingPassword.value = true
   try {
-    await axios.post('http://localhost:5002/api/auth/change-password', {
-      userId: authStore.user.id,
-      currentPassword: passwordForm.value.currentPassword,
-      newPassword: passwordForm.value.newPassword
-    }, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-
+    // TODO: Implement change password API
+    message.warning('Tính năng đổi mật khẩu đang được phát triển!')
+    
     // Clear password form
     passwordForm.value = {
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     }
-
-    message.success('Đổi mật khẩu thành công!')
   } catch (error) {
     console.error('Error changing password:', error)
-    if (error.response?.status === 400) {
-      message.error('Mật khẩu hiện tại không đúng!')
-    } else {
-      message.error('Lỗi đổi mật khẩu!')
-    }
+    message.error('Lỗi đổi mật khẩu!')
   } finally {
     changingPassword.value = false
   }
@@ -500,19 +667,11 @@ const handleAvatarChange = async (event) => {
 
   uploading.value = true
   try {
-    const formData = new FormData()
-    formData.append('file', file)
+    const uploadedUrl = await fileService.upload(file)
 
-    const response = await axios.post('http://localhost:5003/api/files/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-
-    if (response.data?.url) {
+    if (uploadedUrl) {
       // Update avatarUrl in profileData and save
-      profileData.value.avatarUrl = response.data.url
+      profileData.value.avatarUrl = uploadedUrl
       
       // Build full update DTO
       const updateData = {
@@ -542,19 +701,15 @@ const handleAvatarChange = async (event) => {
         emergencyContactPhone: profileData.value.emergencyContactPhone,
         emergencyContactRelation: profileData.value.emergencyContactRelation,
         emergencyContactAddress: profileData.value.emergencyContactAddress,
-        avatarUrl: response.data.url,
+        avatarUrl: uploadedUrl,
         isActive: profileData.value.isActive,
         notes: profileData.value.notes,
         userId: profileData.value.userId
       }
       
-      await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      await studentService.update(profileData.value.id, updateData)
 
-      authStore.user.avatarUrl = response.data.url
+      authStore.user.avatarUrl = uploadedUrl
       localStorage.setItem('user', JSON.stringify(authStore.user))
       
       message.success('Cập nhật ảnh đại diện thành công!')
@@ -611,11 +766,7 @@ const removeAvatar = async () => {
       userId: profileData.value.userId
     }
     
-    await axios.put(`http://localhost:5000/api/students/${profileData.value.id}`, updateData, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    await studentService.update(profileData.value.id, updateData)
 
     profileData.value.avatarUrl = null
     authStore.user.avatarUrl = null

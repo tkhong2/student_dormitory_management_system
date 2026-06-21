@@ -148,6 +148,7 @@ const navItems = [
   { title:'Trang chủ', to:'/', icon:'mdi-home-outline' },
   { title:'Giới thiệu', to:'/about', icon:'mdi-information-outline' },
   { title:'Đăng ký phòng', to:'/rooms', icon:'mdi-home-search-outline' },
+  { title:'Tiện ích chung', to:'/facilities', icon:'mdi-washing-machine' },
   { title:'Tin tức', to:'/news', icon:'mdi-newspaper-variant-outline' },
   { title:'Nội quy', to:'/rules', icon:'mdi-book-open-outline' },
   { title:'Liên hệ', to:'/contact', icon:'mdi-phone-outline' },
