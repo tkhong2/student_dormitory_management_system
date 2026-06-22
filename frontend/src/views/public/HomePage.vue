@@ -4,7 +4,7 @@
     <section class="hero">
       <v-carousel
         cycle
-        height="650"
+        :height="$vuetify.display.mobile ? 500 : $vuetify.display.smAndDown ? 550 : 650"
         hide-delimiter-background
         show-arrows="hover"
         :interval="5000"
@@ -16,23 +16,25 @@
           cover
         >
           <div class="hero-overlay">
-            <v-container style="max-width: 1280px">
+            <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px">
               <v-row align="center" style="height: 100%">
                 <v-col cols="12" md="8" lg="7">
-                  <div class="hero-badge mb-6">
-                    <v-icon size="20" class="mr-2">mdi-shield-check</v-icon>
+                  <div class="hero-badge" :class="$vuetify.display.mobile ? 'mb-4' : 'mb-6'">
+                    <v-icon :size="$vuetify.display.mobile ? 16 : 20" class="mr-2">mdi-shield-check</v-icon>
                     <span>HỆ THỐNG KÝ TÚC XÁ HIỆN ĐẠI</span>
                   </div>
                   <h1 class="hero-title">{{ slide.title }}</h1>
                   <p class="hero-subtitle">{{ slide.desc }}</p>
-                  <div class="d-flex ga-4 mt-10 flex-wrap">
+                  <div class="d-flex mt-6 mt-md-10" :class="$vuetify.display.mobile ? 'flex-column ga-3' : 'ga-4 flex-wrap'">
                     <v-btn
                       color="white"
-                      size="x-large"
-                      class="font-weight-bold px-10 rounded-xl text-primary"
-                      height="60"
+                      :size="$vuetify.display.mobile ? 'large' : 'x-large'"
+                      class="font-weight-bold rounded-xl text-primary"
+                      :class="$vuetify.display.mobile ? 'px-6' : 'px-10'"
+                      :height="$vuetify.display.mobile ? 48 : 60"
                       to="/rooms"
                       elevation="8"
+                      block-on-mobile
                     >
                       <v-icon class="mr-2">mdi-home-search</v-icon>
                       ĐĂNG KÝ PHÒNG
@@ -40,10 +42,12 @@
                     <v-btn
                       variant="outlined"
                       color="white"
-                      size="x-large"
-                      class="font-weight-bold px-10 rounded-xl"
-                      height="60"
+                      :size="$vuetify.display.mobile ? 'large' : 'x-large'"
+                      class="font-weight-bold rounded-xl"
+                      :class="$vuetify.display.mobile ? 'px-6' : 'px-10'"
+                      :height="$vuetify.display.mobile ? 48 : 60"
                       to="/about"
+                      block-on-mobile
                     >
                       <v-icon class="mr-2">mdi-information</v-icon>
                       TÌM HIỂU THÊM
@@ -51,7 +55,7 @@
                   </div>
 
                   <!-- Stats Row -->
-                  <div class="hero-stats mt-12">
+                  <div class="hero-stats" :class="$vuetify.display.mobile ? 'mt-8' : 'mt-12'">
                     <div class="stat-item">
                       <div class="stat-value">2.000+</div>
                       <div class="stat-label">Sinh viên</div>
@@ -74,7 +78,7 @@
     </section>
 
     <!-- ═══ QUICK INFO ═══ -->
-    <v-container class="py-12" style="max-width: 1280px">
+    <v-container :class="$vuetify.display.mobile ? 'py-8 px-4' : 'py-12 px-3'" style="max-width: 1280px">
       <v-row>
         <v-col
           v-for="info in quickInfos"
@@ -83,16 +87,17 @@
           sm="6"
           md="3"
         >
-          <v-card flat border class="info-card pa-8 rounded-xl h-100">
-            <v-icon :color="info.color" size="48" class="mb-4">{{
+          <v-card flat border class="info-card rounded-xl h-100" :class="$vuetify.display.mobile ? 'pa-6' : 'pa-8'">
+            <v-icon :color="info.color" :size="$vuetify.display.mobile ? 40 : 48" class="mb-4">{{
               info.icon
             }}</v-icon>
-            <h3 class="text-h6 font-weight-bold mb-2">{{ info.title }}</h3>
+            <h3 :class="$vuetify.display.mobile ? 'text-subtitle-1' : 'text-h6'" class="font-weight-bold mb-2">{{ info.title }}</h3>
             <p class="text-body-2 text-medium-emphasis mb-4">{{ info.desc }}</p>
             <v-btn
               variant="text"
               :color="info.color"
               class="pa-0 font-weight-bold"
+              :size="$vuetify.display.mobile ? 'small' : 'default'"
               append-icon="mdi-chevron-right"
               >Xem chi tiết</v-btn
             >
@@ -102,11 +107,11 @@
     </v-container>
 
     <!-- ═══ REGISTRATION PROCESS ═══ -->
-    <section class="bg-slate-50 py-16">
-      <v-container style="max-width: 1280px">
-        <div class="text-center mb-12">
-          <h2 class="section-title mb-4">QUY TRÌNH ĐĂNG KÝ Ở KTX</h2>
-          <p class="text-body-1 text-medium-emphasis">
+    <section class="bg-slate-50" :class="$vuetify.display.mobile ? 'py-10' : 'py-16'">
+      <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px">
+        <div class="text-center" :class="$vuetify.display.mobile ? 'mb-8' : 'mb-12'">
+          <h2 :class="$vuetify.display.mobile ? 'text-h5' : ''" class="section-title mb-4">QUY TRÌNH ĐĂNG KÝ Ở KTX</h2>
+          <p class="text-body-1 text-medium-emphasis" :class="$vuetify.display.mobile ? 'text-body-2' : ''">
             4 bước đơn giản để trở thành cư dân KTX Đại học Đại Nam
           </p>
         </div>
@@ -119,20 +124,21 @@
             sm="6"
             md="3"
           >
-            <v-card flat border class="process-card pa-6 rounded-xl h-100 text-center">
+            <v-card flat border class="process-card rounded-xl h-100 text-center" :class="$vuetify.display.mobile ? 'pa-5' : 'pa-6'">
               <div class="step-number mb-4 mx-auto">{{ index + 1 }}</div>
-              <v-icon :color="step.color" size="48" class="mb-4">{{ step.icon }}</v-icon>
-              <h3 class="text-h6 font-weight-bold mb-3">{{ step.title }}</h3>
+              <v-icon :color="step.color" :size="$vuetify.display.mobile ? 40 : 48" class="mb-4">{{ step.icon }}</v-icon>
+              <h3 :class="$vuetify.display.mobile ? 'text-subtitle-1' : 'text-h6'" class="font-weight-bold mb-3">{{ step.title }}</h3>
               <p class="text-body-2 text-medium-emphasis">{{ step.desc }}</p>
             </v-card>
           </v-col>
         </v-row>
 
-        <div class="text-center mt-8">
+        <div class="text-center mt-6 mt-md-8">
           <v-btn
             color="primary"
-            size="large"
-            class="font-weight-bold px-8 rounded-lg text-white"
+            :size="$vuetify.display.mobile ? 'default' : 'large'"
+            class="font-weight-bold rounded-lg text-white"
+            :class="$vuetify.display.mobile ? 'px-6' : 'px-8'"
             to="/rooms"
           >
             BẮT ĐẦU ĐĂNG KÝ

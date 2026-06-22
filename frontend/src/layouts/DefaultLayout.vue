@@ -3,17 +3,20 @@
     <!-- Sidebar -->
     <v-navigation-drawer
       v-model="drawer"
-      width="280"
+      :width="280"
       border="none"
       class="elevation-4"
+      :permanent="$vuetify.display.lgAndUp"
+      :temporary="!$vuetify.display.lgAndUp"
     >
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
         <router-link
           to="/admin"
-          class="d-flex align-center ga-2 pa-8 text-decoration-none border-b"
+          class="d-flex align-center ga-2 text-decoration-none border-b"
+          :class="$vuetify.display.mobile ? 'pa-4' : 'pa-8'"
         >
-          <div class="uni-logo-sm">
+          <div class="uni-logo-sm" :style="$vuetify.display.mobile ? 'width: 40px; height: 40px;' : ''">
             <img
               src="/images/logo.png"
               style="width: 100%; height: 100%; object-fit: contain"
@@ -21,7 +24,7 @@
             />
           </div>
           <div>
-            <div class="text-h6 font-weight-black text-primary leading-tight">
+            <div :class="$vuetify.display.mobile ? 'text-subtitle-1' : 'text-h6'" class="font-weight-black text-primary leading-tight">
               DNU KTX
             </div>
             <div
@@ -140,7 +143,7 @@
 
     <!-- Content Area -->
     <v-main>
-      <v-container fluid class="pa-6" style="max-width: 1600px">
+      <v-container fluid :class="$vuetify.display.mobile ? 'pa-3' : 'pa-6'" style="max-width: 1600px">
         <router-view v-slot="{ Component }">
           <transition name="page" mode="out-in">
             <component :is="Component" />
@@ -155,7 +158,10 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
-const drawer = ref(true);
+import { useDisplay } from 'vuetify'
+
+const { lgAndUp } = useDisplay()
+const drawer = ref(lgAndUp.value);
 const router = useRouter();
 
 const menu = [
@@ -247,13 +253,19 @@ const logout = () => {
 }
 
 .user-info-fixed {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 280px;
   padding: 16px;
   background: #fff;
   border-top: 1px solid #e0e0e0;
-  z-index: 10;
+  margin-top: auto;
+}
+
+@media (min-width: 1280px) {
+  .user-info-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 280px;
+    z-index: 10;
+  }
 }
 </style>

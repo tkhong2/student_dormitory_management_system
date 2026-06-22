@@ -39,3 +39,95 @@ html, body {
 .fade-enter-active { transition: opacity .2s; }
 .fade-leave-active { transition: opacity .15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ── Responsive Typography ──────────────────────── */
+@media (max-width: 599px) {
+  .hero-title {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  .hero-badge {
+    font-size: 0.7rem !important;
+    padding: 6px 12px !important;
+  }
+  
+  .section-title {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .hero-title {
+    font-size: 2.25rem !important;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.05rem !important;
+  }
+}
+
+/* ── Hero Stats Responsive ──────────────────────── */
+.hero-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 599px) {
+  .hero-stats {
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .hero-stats .stat-item {
+    flex: 1;
+    min-width: 90px;
+    max-width: 120px;
+  }
+  
+  .hero-stats .stat-value {
+    font-size: 1.5rem !important;
+  }
+  
+  .hero-stats .stat-label {
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .hero-stats {
+    gap: 32px;
+  }
+}
+
+/* ── Responsive Buttons ──────────────────────── */
+@media (max-width: 599px) {
+  .v-btn.block-on-mobile {
+    width: 100% !important;
+  }
+}
+
+/* ── Responsive Containers ──────────────────────── */
+@media (max-width: 599px) {
+  .v-container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* ── Data Tables Responsive ──────────────────────── */
+@media (max-width: 959px) {
+  .v-data-table {
+    overflow-x: auto;
+  }
+  
+  .v-data-table-header th {
+    white-space: nowrap;
+  }
+}

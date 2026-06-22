@@ -2,51 +2,51 @@
   <div class="room-registration-page">
     <!-- Hero Section -->
     <section class="hero-section">
-      <v-container style="max-width: 1280px" class="hero-container">
+      <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px" class="hero-container">
         <v-row align="center">
           <!-- Left Content -->
-          <v-col cols="12" md="6">
-            <div class="hero-badge mb-4">
+          <v-col cols="12" md="6" :class="$vuetify.display.mobile ? 'mb-6' : ''">
+            <div class="hero-badge" :class="$vuetify.display.mobile ? 'mb-3' : 'mb-4'">
               <i class="fas fa-calendar-alt mr-2"></i>
               NĂM HỌC 2024-2025
             </div>
             
-            <h1 class="hero-title mb-4">
-              Tìm phòng phù hợp<br>với bạn
+            <h1 :class="$vuetify.display.mobile ? 'text-h4' : ''" class="hero-title mb-4">
+              Tìm phòng phù hợp<br class="d-none d-md-inline">{{ $vuetify.display.mobile ? ' ' : '' }}với bạn
             </h1>
             
-            <p class="hero-subtitle mb-8">
-              Chọn phòng theo nhu cầu và ngân sách. Đăng ký nhanh,<br>
+            <p :class="$vuetify.display.mobile ? 'text-body-2 mb-6' : 'hero-subtitle mb-8'">
+              Chọn phòng theo nhu cầu và ngân sách. Đăng ký nhanh,<br class="d-none d-md-inline">{{ $vuetify.display.mobile ? ' ' : '' }}
               nhận phòng dễ dàng tại Ký túc xá Đại học Đà Nẵng.
             </p>
 
             <!-- Stats -->
-            <v-row class="stats-row mt-8">
+            <v-row :class="$vuetify.display.mobile ? 'stats-row mt-6' : 'stats-row mt-8'">
               <v-col cols="4">
-                <div class="stat-number">{{ stats.totalRooms }}</div>
-                <div class="stat-label">PHÒNG CÓ SẴN</div>
+                <div :class="$vuetify.display.mobile ? 'text-h6' : 'stat-number'">{{ stats.totalRooms }}</div>
+                <div :class="$vuetify.display.mobile ? 'text-caption' : 'stat-label'">PHÒNG CÓ SẴN</div>
               </v-col>
               <v-col cols="4">
-                <div class="stat-number">{{ stats.totalBuildings }}</div>
-                <div class="stat-label">TÒA NHÀ</div>
+                <div :class="$vuetify.display.mobile ? 'text-h6' : 'stat-number'">{{ stats.totalBuildings }}</div>
+                <div :class="$vuetify.display.mobile ? 'text-caption' : 'stat-label'">TÒA NHÀ</div>
               </v-col>
               <v-col cols="4">
-                <div class="stat-number">{{ stats.totalRoomTypes }}</div>
-                <div class="stat-label">LOẠI PHÒNG</div>
+                <div :class="$vuetify.display.mobile ? 'text-h6' : 'stat-number'">{{ stats.totalRoomTypes }}</div>
+                <div :class="$vuetify.display.mobile ? 'text-caption' : 'stat-label'">LOẠI PHÒNG</div>
               </v-col>
             </v-row>
           </v-col>
 
           <!-- Right Filter Card -->
           <v-col cols="12" md="6">
-            <v-card class="filter-card pa-6 rounded-xl" elevation="4">
-              <div class="filter-header mb-6">
+            <v-card :class="$vuetify.display.mobile ? 'pa-4' : 'pa-6'" class="filter-card rounded-xl" elevation="4">
+              <div class="filter-header" :class="$vuetify.display.mobile ? 'mb-4' : 'mb-6'">
                 <i class="fas fa-search text-orange mr-2"></i>
                 <span class="filter-title">Tìm phòng phù hợp</span>
               </div>
 
               <div class="mb-4">
-                <div class="input-label mb-2">TÒA NHÀ</div>
+                <div :class="$vuetify.display.mobile ? 'text-caption' : 'input-label'" class="mb-2 font-weight-bold">TÒA NHÀ</div>
                 <select 
                   v-model="filters.building" 
                   class="filter-select"
@@ -59,8 +59,8 @@
               </div>
 
               <v-row class="mb-4">
-                <v-col cols="6" class="pr-2">
-                  <div class="input-label mb-2">LOẠI PHÒNG</div>
+                <v-col :cols="$vuetify.display.mobile ? 12 : 6" :class="$vuetify.display.mobile ? '' : 'pr-2'">
+                  <div :class="$vuetify.display.mobile ? 'text-caption' : 'input-label'" class="mb-2 font-weight-bold">LOẠI PHÒNG</div>
                   <select 
                     v-model="filters.roomType" 
                     class="filter-select"
@@ -71,8 +71,8 @@
                     </option>
                   </select>
                 </v-col>
-                <v-col cols="6" class="pl-2">
-                  <div class="input-label mb-2">MỨC GIÁ</div>
+                <v-col :cols="$vuetify.display.mobile ? 12 : 6" :class="$vuetify.display.mobile ? '' : 'pl-2'">
+                  <div :class="$vuetify.display.mobile ? 'text-caption' : 'input-label'" class="mb-2 font-weight-bold">MỨC GIÁ</div>
                   <select 
                     v-model="filters.priceRange" 
                     class="filter-select"
@@ -87,7 +87,7 @@
 
               <v-btn
                 block
-                size="large"
+                :size="$vuetify.display.mobile ? 'default' : 'large'"
                 class="search-btn"
                 @click="searchRooms"
               >
@@ -101,14 +101,14 @@
     </section>
 
     <!-- Announcement Bar -->
-    <div class="announcement-bar">
-      <v-container style="max-width: 1280px">
-        <div class="announcement-content">
-          <div v-for="building in buildingStats" :key="building.name" class="announcement-item">
+    <div class="announcement-bar" :style="$vuetify.display.mobile ? 'padding: 12px 0;' : ''">
+      <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px">
+        <div class="announcement-content" :style="$vuetify.display.mobile ? 'flex-direction: column; gap: 8px; align-items: flex-start;' : ''">
+          <div v-for="building in buildingStats" :key="building.name" class="announcement-item" :class="$vuetify.display.mobile ? 'text-caption' : ''">
             <i class="fas fa-map-marker-alt mr-2 announcement-icon"></i>
             {{ building.name }}: {{ building.availableRooms }} phòng trống
           </div>
-          <div class="announcement-deadline">
+          <div class="announcement-deadline" :class="$vuetify.display.mobile ? 'text-caption font-weight-bold' : ''">
             <i class="fas fa-calendar-check mr-2 announcement-icon"></i>
             Hạn đăng ký: 30/06/2025
           </div>
@@ -117,17 +117,17 @@
     </div>
 
     <!-- Room List Section -->
-    <section class="room-list-section py-12">
-      <v-container style="max-width: 1280px">
+    <section :class="$vuetify.display.mobile ? 'py-8' : 'py-12'" class="room-list-section">
+      <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px">
         <!-- Header -->
-        <div class="section-header mb-6">
+        <div class="section-header mb-6" :style="$vuetify.display.mobile ? 'flex-direction: column; align-items: flex-start; gap: 16px;' : ''">
           <div>
-            <h2 class="section-title">Phòng có sẵn</h2>
-            <p class="section-subtitle">Tìm thấy {{ filteredRooms.length }} phòng phù hợp</p>
+            <h2 :class="$vuetify.display.mobile ? 'text-h5' : ''" class="section-title">Phòng có sẵn</h2>
+            <p :class="$vuetify.display.mobile ? 'text-caption' : ''" class="section-subtitle">Tìm thấy {{ filteredRooms.length }} phòng phù hợp</p>
           </div>
 
           <!-- View Toggle -->
-          <div class="view-toggle">
+          <div class="view-toggle" v-if="!$vuetify.display.mobile">
             <button
               :class="['view-btn', { active: viewMode === 'grid' }]"
               @click="viewMode = 'grid'"
@@ -144,9 +144,9 @@
         </div>
 
         <!-- Filter Chips -->
-        <div class="filter-chips mb-6">
+        <div class="filter-chips mb-6" :style="$vuetify.display.mobile ? 'overflow-x: auto; -webkit-overflow-scrolling: touch;' : ''">
           <button
-            :class="['filter-chip', { active: filterChip === 'all' }]"
+            :class="['filter-chip', { active: filterChip === 'all' }, $vuetify.display.mobile ? 'text-caption' : '']"
             @click="filterChip = 'all'"
           >
             Tất cả

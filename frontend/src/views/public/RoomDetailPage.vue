@@ -10,15 +10,27 @@
     <div v-else-if="room" class="detail-content">
       <!-- Hero Image -->
       <section class="hero-image-section">
-        <v-img :src="room.image" height="400" cover class="room-hero-image" />
+        <v-img 
+          :src="room.image" 
+          :height="$vuetify.display.mobile ? 250 : $vuetify.display.smAndDown ? 300 : 400" 
+          cover 
+          class="room-hero-image" 
+        />
         <div class="hero-overlay">
-          <v-container style="max-width: 1280px">
-            <v-btn icon variant="text" color="white" @click="goBack" class="back-btn">
+          <v-container :class="$vuetify.display.mobile ? 'px-4' : 'px-3'" style="max-width: 1280px">
+            <v-btn 
+              icon 
+              variant="text" 
+              color="white" 
+              @click="goBack" 
+              :size="$vuetify.display.mobile ? 'small' : 'default'"
+              class="back-btn"
+            >
               <i class="fas fa-arrow-left"></i>
             </v-btn>
             <div class="hero-content">
-              <h1 class="hero-title">Phòng {{ room.name }}</h1>
-              <p class="hero-subtitle">
+              <h1 :class="$vuetify.display.mobile ? 'text-h5' : ''" class="hero-title">Phòng {{ room.name }}</h1>
+              <p :class="$vuetify.display.mobile ? 'text-body-2' : ''" class="hero-subtitle">
                 <i class="fas fa-building mr-2"></i>
                 {{ room.building }} · {{ room.roomTypeName }}
               </p>
@@ -28,13 +40,13 @@
       </section>
 
       <!-- Main Content -->
-      <v-container style="max-width: 1280px" class="py-8">
+      <v-container :class="$vuetify.display.mobile ? 'py-6 px-4' : 'py-8 px-3'" style="max-width: 1280px">
         <v-row>
           <!-- Left Column - Info -->
           <v-col cols="12" md="8">
             <!-- Status Badge -->
             <div class="mb-6">
-              <span :class="['status-badge', room.available > 0 ? 'success' : 'full']">
+              <span :class="['status-badge', room.available > 0 ? 'success' : 'full', $vuetify.display.mobile ? 'text-caption' : '']">
                 <i :class="['fas', room.available > 0 ? 'fa-check-circle' : 'fa-times-circle', 'mr-2']"></i>
                 {{ room.available > 0 ? `Còn ${room.available} chỗ trống` : 'Hết chỗ' }}
               </span>
@@ -82,40 +94,40 @@
 
             <!-- Room Information -->
             <v-card class="mb-6">
-              <v-card-title class="section-title">
+              <v-card-title :class="$vuetify.display.mobile ? 'pa-4 text-subtitle-1' : 'section-title'">
                 <i class="fas fa-info-circle mr-2"></i>
                 Thông tin phòng
               </v-card-title>
-              <v-card-text>
+              <v-card-text :class="$vuetify.display.mobile ? 'pa-4' : ''">
                 <div class="info-table">
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Loại phòng:</span>
                     <strong>{{ room.roomTypeName }}</strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Số phòng:</span>
                     <strong>{{ room.name }}</strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Tòa nhà:</span>
                     <strong>{{ room.building }}</strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Giới tính:</span>
                     <strong>
                       <i :class="['fas', room.buildingGender === 'Male' ? 'fa-mars' : room.buildingGender === 'Female' ? 'fa-venus' : 'fa-venus-mars', 'mr-1']"></i>
                       {{ room.buildingGender === 'Male' ? 'Nam' : room.buildingGender === 'Female' ? 'Nữ' : 'Cả hai' }}
                     </strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Sức chứa:</span>
                     <strong>{{ room.capacity }} người</strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Diện tích:</span>
                     <strong>{{ room.area }} m²</strong>
                   </div>
-                  <div class="info-row">
+                  <div :class="['info-row', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <span class="info-label">Hiện tại:</span>
                     <strong>{{ room.capacity - room.available }}/{{ room.capacity }} người</strong>
                   </div>
@@ -125,13 +137,13 @@
 
             <!-- Amenities -->
             <v-card>
-              <v-card-title class="section-title">
+              <v-card-title :class="$vuetify.display.mobile ? 'pa-4 text-subtitle-1' : 'section-title'">
                 <i class="fas fa-star mr-2"></i>
                 Tiện nghi phòng
               </v-card-title>
-              <v-card-text>
-                <div class="amenities-grid">
-                  <div v-for="amenity in room.amenities" :key="amenity" class="amenity-item">
+              <v-card-text :class="$vuetify.display.mobile ? 'pa-4' : ''">
+                <div class="amenities-grid" :style="$vuetify.display.mobile ? 'grid-template-columns: 1fr;' : ''">
+                  <div v-for="amenity in room.amenities" :key="amenity" :class="['amenity-item', $vuetify.display.mobile ? 'text-body-2' : '']">
                     <i class="fas fa-check-circle amenity-icon"></i>
                     <span>{{ amenity }}</span>
                   </div>
@@ -146,8 +158,8 @@
           <!-- Right Column - Booking -->
           <v-col cols="12" md="4">
             <!-- Price Card -->
-            <v-card class="price-card sticky-card mb-4">
-              <v-card-text>
+            <v-card :class="['price-card', $vuetify.display.mdAndUp ? 'sticky-card' : '', 'mb-4']">
+              <v-card-text :class="$vuetify.display.mobile ? 'pa-4' : ''">
                 <div class="price-header">
                   <i class="fas fa-tag mr-2"></i>
                   Giá thuê

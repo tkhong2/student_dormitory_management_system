@@ -2,13 +2,12 @@
   <v-app style="background-color: #f8fafc">
     <!-- Student Sidebar -->
     <v-navigation-drawer 
-      :model-value="true"
-      width="280" 
+      v-model="drawer"
+      :width="280" 
       border="none" 
       class="elevation-4"
-      :scrim="false"
-      permanent
-      :rail="false"
+      :permanent="$vuetify.display.lgAndUp"
+      :temporary="!$vuetify.display.lgAndUp"
     >
       <div class="d-flex flex-column fill-height">
         <!-- Logo Area -->
@@ -19,23 +18,24 @@
         ">
           <router-link
             to="/student"
-            style="display:flex;align-items:center;gap:14px;padding:20px 24px;text-decoration:none;"
+            :style="`display:flex;align-items:center;gap:14px;padding:${$vuetify.display.mobile ? '16px 20px' : '20px 24px'};text-decoration:none;`"
           >
             <!-- Logo box -->
-            <div style="
-              width:48px;height:48px;flex-shrink:0;
+            <div :style="`
+              ${$vuetify.display.mobile ? 'width:40px;height:40px;' : 'width:48px;height:48px;'}
+              flex-shrink:0;
               background:#fff7f0;
               border:2px solid #ff6b00;
               border-radius:10px;
               display:flex;align-items:center;justify-content:center;
               padding:6px;
               box-shadow:0 2px 8px rgba(255,107,0,0.2);
-            ">
+            `">
               <img src="/images/logo.png" style="width:100%;height:100%;object-fit:contain;" alt="DNU Logo" />
             </div>
             <!-- Text -->
             <div>
-              <div style="font-size:17px;font-weight:900;color:#1e293b;letter-spacing:0.3px;line-height:1.2;">DNU KTX</div>
+              <div :style="`font-size:${$vuetify.display.mobile ? '15px' : '17px'};font-weight:900;color:#1e293b;letter-spacing:0.3px;line-height:1.2;`">DNU KTX</div>
               <div style="font-size:10px;font-weight:600;color:#ff6b00;text-transform:uppercase;letter-spacing:2px;margin-top:2px;">Cổng sinh viên</div>
             </div>
           </router-link>
@@ -79,20 +79,29 @@
     </v-navigation-drawer>
 
     <!-- Top bar -->
-    <v-app-bar flat height="72" style="
+    <v-app-bar flat :height="$vuetify.display.mobile ? 64 : 72" style="
       background: rgba(255,255,255,0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(0,0,0,0.07);
       box-shadow: 0 2px 16px rgba(0,0,0,0.06);
     ">
-      <div class="d-flex align-center w-100 px-6" style="height: 100%;">
+      <div class="d-flex align-center w-100" :class="$vuetify.display.mobile ? 'px-4' : 'px-6'" style="height: 100%;">
+        
+        <!-- Mobile Menu Toggle -->
+        <v-btn 
+          icon="mdi-menu" 
+          variant="text" 
+          size="small" 
+          class="d-lg-none mr-2"
+          @click="drawer = !drawer"
+        />
 
         <!-- Breadcrumb -->
         <div class="d-none d-sm-flex align-center ga-2">
           <v-icon size="16" color="indigo-darken-2" style="opacity:0.7">mdi-home-variant</v-icon>
-          <span style="font-size:12px; font-weight:600; color:#1890ff; opacity:0.75; text-transform:uppercase; letter-spacing:0.8px;">Cổng SV</span>
-          <v-icon size="14" style="opacity:0.3">mdi-chevron-right</v-icon>
+          <span class="d-none d-md-inline" style="font-size:12px; font-weight:600; color:#1890ff; opacity:0.75; text-transform:uppercase; letter-spacing:0.8px;">Cổng SV</span>
+          <v-icon size="14" style="opacity:0.3" class="d-none d-md-inline">mdi-chevron-right</v-icon>
           <span style="font-size:12px; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.8px;">{{ $route.meta?.title || 'Trang chủ' }}</span>
         </div>
 
@@ -102,7 +111,7 @@
         <div class="d-none d-md-flex align-center mr-4">
           <v-chip
             variant="flat"
-            size="small"
+            :size="$vuetify.display.mobile ? 'x-small' : 'small'"
             :style="roomLabel === 'Chưa xếp phòng' 
               ? { background: '#64748b', color: 'white', fontWeight: '700', fontSize: '12px' } 
               : { background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: '700', fontSize: '12px', boxShadow: '0 2px 8px rgba(16,185,129,0.4)' }"
@@ -113,7 +122,7 @@
         </div>
 
         <!-- Notification bell -->
-        <v-btn icon variant="text" class="mr-1" style="color:#475569;" @click="$router.push('/student/notifications')">
+        <v-btn icon variant="text" :size="$vuetify.display.mobile ? 'small' : 'default'" class="mr-1" style="color:#475569;" @click="$router.push('/student/notifications')">
           <v-badge 
             :content="unreadNotificationCount" 
             :model-value="unreadNotificationCount > 0"
@@ -194,7 +203,7 @@
 
     <!-- Main Content -->
     <v-main>
-      <v-container fluid class="pa-8" style="max-width: 1400px">
+      <v-container fluid :class="$vuetify.display.mobile ? 'pa-4' : 'pa-8'" style="max-width: 1400px">
         <router-view v-slot="{ Component }">
           <transition name="page" mode="out-in">
             <component :is="Component" />
@@ -204,14 +213,14 @@
     </v-main>
 
     <!-- Change Password Dialog -->
-    <v-dialog v-model="showChangePasswordDialog" max-width="450" persistent>
+    <v-dialog v-model="showChangePasswordDialog" :max-width="$vuetify.display.mobile ? '95%' : '450'" persistent>
       <v-card rounded="xl">
-        <v-card-title class="d-flex align-center pa-6 bg-indigo-darken-4 text-white">
+        <v-card-title :class="$vuetify.display.mobile ? 'pa-4' : 'pa-6'" class="d-flex align-center bg-indigo-darken-4 text-white">
           <v-icon start>mdi-key-outline</v-icon>
           Đổi mật khẩu
         </v-card-title>
 
-        <v-card-text class="pa-6">
+        <v-card-text :class="$vuetify.display.mobile ? 'pa-4' : 'pa-6'">
           <v-form ref="passwordForm">
             <v-text-field
               label="Mật khẩu hiện tại"
@@ -241,7 +250,7 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="pa-6 pt-0">
+        <v-card-actions :class="$vuetify.display.mobile ? 'pa-4 pt-0' : 'pa-6 pt-0'" class="flex-wrap">
           <v-spacer />
           <v-btn 
             variant="text" 
@@ -261,14 +270,14 @@
     </v-dialog>
 
     <!-- Settings Dialog -->
-    <v-dialog v-model="showSettingsDialog" max-width="500" persistent>
+    <v-dialog v-model="showSettingsDialog" :max-width="$vuetify.display.mobile ? '95%' : '500'" persistent>
       <v-card rounded="xl">
-        <v-card-title class="d-flex align-center pa-6 bg-indigo-darken-4 text-white">
+        <v-card-title :class="$vuetify.display.mobile ? 'pa-4' : 'pa-6'" class="d-flex align-center bg-indigo-darken-4 text-white">
           <v-icon start>mdi-cog-outline</v-icon>
           Cài đặt
         </v-card-title>
 
-        <v-card-text class="pa-6">
+        <v-card-text :class="$vuetify.display.mobile ? 'pa-4' : 'pa-6'">
           <v-list class="pa-0">
             <v-list-item>
               <template v-slot:prepend>
@@ -302,7 +311,7 @@
           </v-list>
         </v-card-text>
 
-        <v-card-actions class="pa-6 pt-0">
+        <v-card-actions :class="$vuetify.display.mobile ? 'pa-4 pt-0' : 'pa-6 pt-0'" class="flex-wrap">
           <v-spacer />
           <v-btn 
             variant="text" 
@@ -329,9 +338,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { contractService } from '@/services/contractService'
 import { roomApplicationService } from '@/services/roomApplicationService'
+import { useDisplay } from 'vuetify'
 import axios from 'axios'
 
-const drawer = ref(true) // Always keep drawer open
+const { lgAndUp } = useDisplay()
+const drawer = ref(lgAndUp.value)
 const router = useRouter()
 const authStore = useAuthStore()
 const roomLabel = ref('Chưa xếp phòng')
